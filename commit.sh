@@ -10,3 +10,5 @@ MESSAGE=$@
 git add .
 git commit -m "${MESSAGE}"
 git push
+
+echo "提交成功"

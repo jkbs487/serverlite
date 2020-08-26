@@ -10,14 +10,14 @@ public:
     string convert(string s, int numRows) {
         string ans;
         if(numRows <= 1) return s.empty() ? ans : s;
-        vector<string> vec(numRows);
-        for(int i = 0; i < s.size(); ++i)
-        {
-            int quo = i / (numRows - 1);
+        vector<string> arr(numRows);
+        int len = s.size();
+        for(int i = 0; i < len; ++i) {
+            int div = i / (numRows - 1);
             int rem = i % (numRows - 1);
-            (quo & 1 ? vec.at(numRows - rem - 1) : vec.at(rem)) += s.at(i);
+            (div & 1 ? arr.at(numRows - rem - 1) : arr.at(rem)) += s.at(i);
         }
-        for(const auto x : vec) ans += x;
+        for(const auto a : arr) ans += a;
         return ans;
     }
 };
