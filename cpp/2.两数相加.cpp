@@ -2,6 +2,7 @@
  * @lc app=leetcode.cn id=2 lang=cpp
  *
  * [2] 两数相加
+ * 关键字：链表
  */
 
 // @lc code=start

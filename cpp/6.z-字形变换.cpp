@@ -2,6 +2,7 @@
  * @lc app=leetcode.cn id=6 lang=cpp
  *
  * [6] Z 字形变换
+ * 关键字：字符串
  */
 
 // @lc code=start

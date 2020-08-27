@@ -2,6 +2,7 @@
  * @lc app=leetcode.cn id=1 lang=cpp
  *
  * [1] 两数之和
+ * 关键字：数组，哈希表
  */
 
 // @lc code=start

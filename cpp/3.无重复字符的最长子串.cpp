@@ -2,6 +2,7 @@
  * @lc app=leetcode.cn id=3 lang=cpp
  *
  * [3] 无重复字符的最长子串
+ * 关键字：字符串，滑动窗口
  */
 
 // @lc code=start
