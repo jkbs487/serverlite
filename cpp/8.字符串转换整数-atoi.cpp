@@ -19,7 +19,7 @@ public:
         if(str[index] > '9' || str[index] < '0') return 0;
         for(int i = index; i < str.size(); i++) {
             if(str[i] <= '9' && str[i] >= '0') 
-                ans = 10*ans + (str[i] - '0');
+                ans = 10 * ans + (str[i] - '0');
             else break;
             if(ans >= (long long)INT_MAX) break;
         }
