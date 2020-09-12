@@ -19,17 +19,6 @@ public:
         return board;
     }
 
-    int computeMines(vector<vector<char>>& board, int x, int y) {
-        int mines = 0;
-        for(pair<int, int> dir : direction) {
-            int posX = x + dir.first;
-            int posY = y + dir.second;
-            if(posX >= 0 && posX < board.size() && posY >= 0 && posY < board[0].size() && board[posX][posY] == 'M') 
-                mines++;
-        }
-    return mines;
-    }
-
     void dfs(vector<vector<char>>& board, vector<vector<int>>& visit, int x, int y) {
         if(x >= board.size() || x < 0 || y >= board[0].size() || y < 0 || board[x][y] != 'E') 
             return;
@@ -46,6 +35,17 @@ public:
             }
         }
         return;
+    }
+    
+    int computeMines(vector<vector<char>>& board, int x, int y) {
+        int mines = 0;
+        for(pair<int, int> dir : direction) {
+            int posX = x + dir.first;
+            int posY = y + dir.second;
+            if(posX >= 0 && posX < board.size() && posY >= 0 && posY < board[0].size() && board[posX][posY] == 'M') 
+                mines++;
+        }
+        return mines;
     }
 };
 // @lc code=end
