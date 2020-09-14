@@ -2,6 +2,7 @@
  * @lc app=leetcode.cn id=8 lang=cpp
  *
  * [8] 字符串转换整数 (atoi)
+ * 关键词：字符串 整数溢出
  */
 
 // @lc code=start

@@ -2,7 +2,7 @@
  * @lc app=leetcode.cn id=7 lang=cpp
  *
  * [7] 整数反转
- * 关键字：整数
+ * 关键字：整数操作
  */
 
 // @lc code=start

@@ -2,6 +2,7 @@
  * @lc app=leetcode.cn id=9 lang=cpp
  *
  * [9] 回文数
+ * 关键词：整数操作
  */
 
 // @lc code=start
