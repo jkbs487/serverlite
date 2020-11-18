@@ -15,7 +15,6 @@ public:
         dfs(ans, digits, "", len, 0);
         return ans;
     }
-
     void dfs(vector<string> &ans, string digits, string temp, int len, int index) {
         if(index == len) {
             ans.push_back(temp);
