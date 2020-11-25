@@ -11,7 +11,7 @@ git add .
 git commit -m "${MESSAGE}"
 git push
 
-if [ $0 -eq 0 ]; then
+if [ $! -eq 0 ]; then
     echo "提交成功"
 else
     echo "提交失败"
