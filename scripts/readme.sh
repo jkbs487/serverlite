@@ -29,7 +29,8 @@ if [ $# -lt 1 ] || [[ ! -f ${1} ]]; then
 fi
 
 DIR=`cd $(dirname ${1}) && pwd -P`
-FILE=${DIR}/$(basename ${1})
+FILE=${1}
+#FILE=${DIR}/$(basename ${1})
 
 URL=`grep Source ${FILE} | awk '{print $4}'`
 
