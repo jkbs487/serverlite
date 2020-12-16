@@ -38,3 +38,4 @@
 |402|[Remove K Digits](https://leetcode-cn.com/problems/remove-k-digits/) | [C++](cpp/RemoveKDigits.cpp)|Medium|
 |856|[Score of Parentheses](https://leetcode-cn.com/problems/score-of-parentheses/) | [C++](cpp/ScoreOfParentheses.cpp)|Medium|
 |19|[Remove Nth Node From End of List](https://leetcode-cn.com/problems/remove-nth-node-from-end-of-list/) | [C++](cpp/RemoveNthNodeFromEndOfList.cpp)|Medium|
+|290|[Word Pattern](https://leetcode-cn.com/problems/word-pattern/) | [C++](cpp/WordPattern.cpp), [Python3](python/WordPattern.py)|Easy|
