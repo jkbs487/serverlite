@@ -1,6 +1,6 @@
 // Source : https://leetcode-cn.com/problems/video-stitching/
 // Author : jkbs487
-// Date   : 2020-12-14
+// Date   : 2020-12-15
 
 /***************************************************************************************************** 
  *
@@ -53,6 +53,7 @@
  * 	0 <= clips[i][0] <= clips[i][1] <= 100
  * 	0 <= T <= 100
  ******************************************************************************************************/
+
 class Solution {
 public:
     int videoStitching(vector<vector<int>>& clips, int T) {
@@ -74,4 +75,3 @@ public:
         return maxNum >= T ? ans : -1;
     }
 };
-
