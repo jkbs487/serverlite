@@ -3,7 +3,7 @@ set -e
 
 AUTHOR="NOBODY"
 COMMENT_TAG="//"
-FILE_EXT=".py"
+FILE_EXT=".cpp"
 
 pushd `dirname $0` > /dev/null
 SCRIPTPATH=`pwd -P`
