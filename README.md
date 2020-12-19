@@ -27,6 +27,7 @@
 |78|[Subsets](https://leetcode-cn.com/problems/subsets/) | [C++](cpp/Subsets.cpp)|Medium|
 |89|[Gray Code](https://leetcode-cn.com/problems/gray-code/) | [C++](cpp/GrayCode.cpp)|Medium|
 |113|[Path Sum II](https://leetcode-cn.com/problems/path-sum-ii/) | [C++](cpp/PathSumIi.cpp)|Medium|
+|153|[Find Minimum in Rotated Sorted Array](https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array/) | [C++](cpp/FindMinimumInRotatedSortedArray.cpp)|Medium|
 |171|[Excel Sheet Column Number](https://leetcode-cn.com/problems/excel-sheet-column-number/submissions/) | [C++](cpp/ExcelSheetColumnNumber.cpp)|Easy|
 |208|[Implement Trie (Prefix Tree)](https://leetcode-cn.com/problems/implement-trie-prefix-tree/) | [C++](cpp/ImplementTriePrefixTree.cpp)|Medium|
 |290|[Word Pattern](https://leetcode-cn.com/problems/word-pattern/) | [C++](cpp/WordPattern.cpp)|Easy|
