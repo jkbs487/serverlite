@@ -4,6 +4,7 @@
 ### Algorithm
 - keep thinking and keep coding...
 - C++ tianxiadiyi!
+
 | # | Title | Solution | Difficulty |
 |---| ----- | -------- | ---------- |
 |1|[Two Sum](https://leetcode-cn.com/problems/two-sum/) | [C++](TwoSum.cpp)|Easy|

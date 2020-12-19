@@ -6,6 +6,7 @@ echo ""
 echo "### Algorithm"
 echo "- keep thinking and keep coding..."
 echo "- C++ tianxiadiyi!"
+echo ""
 
 echo "| # | Title | Solution | Difficulty |"
 echo "|---| ----- | -------- | ---------- |"
