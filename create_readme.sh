@@ -11,10 +11,8 @@ echo ""
 echo "| # | Title | Solution | Difficulty |"
 echo "|---| ----- | -------- | ---------- |"
 
-cd cpp
-
-for i in `ls`;
-    do echo `../scripts/readme.sh $i` >> tmp;
+for i in `ls cpp`;
+    do echo `scripts/readme.sh cpp/$i` >> tmp;
 done
 
 for i in `awk '{split($1,a,"[\|\|]");print NR,a[2]}' tmp | sort -n -k2 | awk '{print $1}'`; 
