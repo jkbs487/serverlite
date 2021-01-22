@@ -30,8 +30,8 @@
 |153|[Find Minimum in Rotated Sorted Array](https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array/) | [C++](cpp/FindMinimumInRotatedSortedArray.cpp)|Medium|
 |171|[Excel Sheet Column Number](https://leetcode-cn.com/problems/excel-sheet-column-number/submissions/) | [C++](cpp/ExcelSheetColumnNumber.cpp)|Easy|
 |208|[Implement Trie (Prefix Tree)](https://leetcode-cn.com/problems/implement-trie-prefix-tree/) | [C++](cpp/ImplementTriePrefixTree.cpp)|Medium|
-|290|[Word Pattern](https://leetcode-cn.com/problems/word-pattern/) | [C++](cpp/WordPattern.cpp) [python](python/WordPattern.cpp)|Easy|
-|389|[Find the Difference](https://leetcode-cn.com/problems/find-the-difference/submissions/) | [C++](cpp/FindTheDifference.cpp)[python](python/FindTheDifference.cpp)|Easy|
+|290|[Word Pattern](https://leetcode-cn.com/problems/word-pattern/) | [C++](cpp/WordPattern.cpp), [python](python/WordPattern.py)|Easy|
+|389|[Find the Difference](https://leetcode-cn.com/problems/find-the-difference/submissions/) | [C++](cpp/FindTheDifference.cpp), [python](python/FindTheDifference.py)|Easy|
 |402|[Remove K Digits](https://leetcode-cn.com/problems/remove-k-digits/) | [C++](cpp/RemoveKDigits.cpp)|Medium|
 |529|[Minesweeper](https://leetcode-cn.com/problems/minesweeper/) | [C++](cpp/Minesweeper.cpp)|Medium|
 |538|[Convert BST to Greater Tree](https://leetcode-cn.com/problems/convert-bst-to-greater-tree/) | [C++](cpp/ConvertBstToGreaterTree.cpp)|Medium|
