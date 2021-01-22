@@ -1,0 +1,67 @@
+// Source : https://leetcode-cn.com/problems/add-to-array-form-of-integer/
+// Author : jkbs487
+// Date   : 2021-01-22
+
+/***************************************************************************************************** 
+ *
+ * For a non-negative integer X, the array-form of X is an array of its digits in left to right order. 
+ *  For example, if X = 1231, then the array form is [1,2,3,1].
+ * 
+ * Given the array-form A of a non-negative integer X, return the array-form of the integer X+K.
+ * 
+ * Example 1:
+ * 
+ * Input: A = [1,2,0,0], K = 34
+ * Output: [1,2,3,4]
+ * Explanation: 1200 + 34 = 1234
+ * 
+ * Example 2:
+ * 
+ * Input: A = [2,7,4], K = 181
+ * Output: [4,5,5]
+ * Explanation: 274 + 181 = 455
+ * 
+ * Example 3:
+ * 
+ * Input: A = [2,1,5], K = 806
+ * Output: [1,0,2,1]
+ * Explanation: 215 + 806 = 1021
+ * 
+ * Example 4:
+ * 
+ * Input: A = [9,9,9,9,9,9,9,9,9,9], K = 1
+ * Output: [1,0,0,0,0,0,0,0,0,0,0]
+ * Explanation: 9999999999 + 1 = 10000000000
+ * 
+ * Note：
+ * 
+ * 	1 <= A.length <= 10000
+ * 	0 <= A[i] <= 9
+ * 	0 <= K <= 10000
+ * 	If A.length > 1, then A[0] != 0
+ * 
+ ******************************************************************************************************/
+
+class Solution {
+public:
+    vector<int> addToArrayForm(vector<int>& A, int K) {
+        deque<int> temp;
+        int carry = 0;
+        int i = A.size()-1;
+        while(K > 0 || i >= 0) {
+            int remain;
+            if(i >= 0)
+                remain = carry + A[i] + K%10;
+            else
+                remain = carry + K%10;
+            remain >= 10 ? carry = 1 : carry = 0;
+            remain = remain % 10;
+            temp.push_front(remain);
+            K /= 10;
+            i--;
+        }
+        if(carry) temp.push_front(1);
+        vector<int> result(temp.begin(), temp.end());
+        return result;
+    }
+};
