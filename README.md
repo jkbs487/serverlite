@@ -43,3 +43,5 @@
 |1122|[Relative Sort Array](https://leetcode-cn.com/problems/relative-sort-array/) | [C++](cpp/RelativeSortArray.cpp)|Easy|
 |1291|[Sequential Digits](https://leetcode-cn.com/problems/sequential-digits/) | [C++](cpp/SequentialDigits.cpp)|Medium|
 |1370|[Increasing Decreasing String](https://leetcode-cn.com/problems/increasing-decreasing-string/) | [C++](cpp/IncreasingDecreasingString.cpp)|Easy|
+|1749|[Maximum Absolute Sum of Any Subarray](https://leetcode-cn.com/problems/maximum-absolute-sum-of-any-subarray/) | [C++](cpp/MaximumAbsoluteSumOfAnySubarray.cpp)|Medium|
+
