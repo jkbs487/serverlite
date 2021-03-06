@@ -32,6 +32,7 @@
 |208|[Implement Trie (Prefix Tree)](https://leetcode-cn.com/problems/implement-trie-prefix-tree/) | [C++](cpp/ImplementTriePrefixTree.cpp)|Medium|
 |290|[Word Pattern](https://leetcode-cn.com/problems/word-pattern/) | [C++](cpp/WordPattern.cpp), [python](python/WordPattern.py)|Easy|
 |389|[Find the Difference](https://leetcode-cn.com/problems/find-the-difference/submissions/) | [C++](cpp/FindTheDifference.cpp), [python](python/FindTheDifference.py)|Easy|
+|395|[Longest Substring with At Least K Repeating Characters](https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/) | [C++](cpp/LongestSubstringWithAtLeastKRepeatingCharacters.cpp), [python](python/LongestSubstringWithAtLeastKRepeatingCharacters.py)|Medium|
 |402|[Remove K Digits](https://leetcode-cn.com/problems/remove-k-digits/) | [C++](cpp/RemoveKDigits.cpp)|Medium|
 |529|[Minesweeper](https://leetcode-cn.com/problems/minesweeper/) | [C++](cpp/Minesweeper.cpp)|Medium|
 |538|[Convert BST to Greater Tree](https://leetcode-cn.com/problems/convert-bst-to-greater-tree/) | [C++](cpp/ConvertBstToGreaterTree.cpp)|Medium|
