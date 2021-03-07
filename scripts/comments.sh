@@ -3,7 +3,6 @@ set -e
 
 AUTHOR="NOBODY"
 COMMENT_TAG="//"
-FILE_EXT=".cpp"
 
 pushd `dirname $0` > /dev/null
 SCRIPTPATH=`pwd -P`
@@ -18,15 +17,15 @@ source ${SCRIPTPATH}/lib/query_problem.sh
 function usage()
 {
 
-    echo -e "Usage: ${0} [url] [source_file]"
+    echo -e "Usage: ${0} [url] [source_file] [language]"
     echo -e ""
     echo -e "Example:"
     echo -e ""
     echo -e "   1) Create a file named largestNumber.cpp, and add Copyright & Problem description"
-    echo -e "   ${0} https://leetcode-cn.com/problems/largest-number/"
+    echo -e "   ${0} https://leetcode-cn.com/problems/largest-number/ cpp"
     echo -e ""
     echo -e "   2) Add Copyright & Problem description into existed file"
-    echo -e "   ${0} https://leetcode-cn.com/problems/largest-number/ largestNumber.cpp"
+    echo -e "   ${0} https://leetcode-cn.com/problems/largest-number/ cpp largestNumber.cpp"
     echo -e ""
 }
 
@@ -66,6 +65,7 @@ fi
 
 
 leetcode_url=$1
+FILE_EXT=$2
 current_time=`date +%Y-%m-%d`
 platform=`detect_os`
 
@@ -87,8 +87,8 @@ if [ "${QUESTION_CATEGORY}" == "Shell" ]; then
     FILE_EXT='.sh'
 fi
 
-if [ $# -gt 1 ] && [ -f $2 ]; then
-    source_file=$2
+if [ $# -gt 2 ] && [ -f $3 ]; then
+    source_file=$3
     if [[ "$platform" == "linux" ]]; then
         current_time=`stat -c %x ${source_file} | awk '{print \$1}'`
     elif [[ "$platform" == "macos" ]]; then
@@ -200,4 +200,3 @@ rm -f ${source_file}.bak
 rm -f /tmp/tmp.txt
 
 echo "${source_file} updated !"
-
