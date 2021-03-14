@@ -37,6 +37,7 @@
 |402|[Remove K Digits](https://leetcode-cn.com/problems/remove-k-digits/) | [C++](cpp/RemoveKDigits.cpp)|Medium|
 |529|[Minesweeper](https://leetcode-cn.com/problems/minesweeper/) | [C++](cpp/Minesweeper.cpp)|Medium|
 |538|[Convert BST to Greater Tree](https://leetcode-cn.com/problems/convert-bst-to-greater-tree/) | [C++](cpp/ConvertBstToGreaterTree.cpp)|Medium|
+|706|[Design HashMap](https://leetcode-cn.com/problems/design-hashmap/) | [C++](cpp/DesignHashmap.cpp)|Easy|
 |856|[Score of Parentheses](https://leetcode-cn.com/problems/score-of-parentheses/) | [C++](cpp/ScoreOfParentheses.cpp)|Medium|
 |865|[Smallest Subtree with all the Deepest Nodes](https://leetcode-cn.com/problems/smallest-subtree-with-all-the-deepest-nodes/) | [C++](cpp/SmallestSubtreeWithAllTheDeepestNodes.cpp)|Medium|
 |925|[Long Pressed Name](https://leetcode-cn.com/problems/long-pressed-name/) | [C++](cpp/LongPressedName.cpp)|Easy|
