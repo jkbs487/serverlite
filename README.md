@@ -17,7 +17,7 @@
 |9|[Palindrome Number](https://leetcode-cn.com/problems/palindrome-number/) | [C++](cpp/PalindromeNumber.cpp)|Easy|
 |11|[Container With Most Water](https://leetcode-cn.com/problems/container-with-most-water/) | [C++](cpp/ContainerWithMostWater.cpp)|Medium|
 |12|[Integer to Roman](https://leetcode-cn.com/problems/integer-to-roman/) | [C++](cpp/IntegerToRoman.cpp)|Medium|
-|14|[Longest Common Prefix](https://leetcode-cn.com/problems/longest-common-prefix/) | [C++](cpp/LongestCommonPrefix.cpp)|Easy|
+|14|[Longest Common Prefix](https://leetcode-cn.com/problems/longest-common-prefix/) | [C++](cpp/LongestCommonPrefix.cpp), [Python](python/LongestCommonPrefix.py)|Easy|
 |15|[3Sum](https://leetcode-cn.com/problems/3sum/) | [C++](cpp/3sum.cpp)|Medium|
 |16|[3Sum Closest](https://leetcode-cn.com/problems/3sum-closest/) | [C++](cpp/3sumClosest.cpp)|Medium|
 |17|[Letter Combinations of a Phone Number](https://leetcode-cn.com/problems/letter-combinations-of-a-phone-number/) | [C++](cpp/LetterCombinationsOfAPhoneNumber.cpp)|Medium|
@@ -31,8 +31,9 @@
 |153|[Find Minimum in Rotated Sorted Array](https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array/) | [C++](cpp/FindMinimumInRotatedSortedArray.cpp)|Medium|
 |171|[Excel Sheet Column Number](https://leetcode-cn.com/problems/excel-sheet-column-number/submissions/) | [C++](cpp/ExcelSheetColumnNumber.cpp)|Easy|
 |208|[Implement Trie (Prefix Tree)](https://leetcode-cn.com/problems/implement-trie-prefix-tree/) | [C++](cpp/ImplementTriePrefixTree.cpp)|Medium|
-|290|[Word Pattern](https://leetcode-cn.com/problems/word-pattern/) | [C++](cpp/WordPattern.cpp), [python](python/WordPattern.py)|Easy|
-|389|[Find the Difference](https://leetcode-cn.com/problems/find-the-difference/submissions/) | [C++](cpp/FindTheDifference.cpp), [python](python/FindTheDifference.py)|Easy|
+|290|[Word Pattern](https://leetcode-cn.com/problems/word-pattern/) | [C++](cpp/WordPattern.cpp), [Python](python/WordPattern.py)|Easy|
+|341|[Flatten Nested List Iterator](https://leetcode-cn.com/problems/flatten-nested-list-iterator/) | [C++](FlattenNestedListIterator.cpp)|Medium|
+|389|[Find the Difference](https://leetcode-cn.com/problems/find-the-difference/submissions/) | [C++](cpp/FindTheDifference.cpp), [Python](python/FindTheDifference.py)|Easy|
 |395|[Longest Substring with At Least K Repeating Characters](https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/) | [C++](cpp/LongestSubstringWithAtLeastKRepeatingCharacters.cpp), [python](python/LongestSubstringWithAtLeastKRepeatingCharacters.py)|Medium|
 |402|[Remove K Digits](https://leetcode-cn.com/problems/remove-k-digits/) | [C++](cpp/RemoveKDigits.cpp)|Medium|
 |529|[Minesweeper](https://leetcode-cn.com/problems/minesweeper/) | [C++](cpp/Minesweeper.cpp)|Medium|
