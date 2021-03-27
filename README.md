@@ -24,6 +24,7 @@
 |19|[Remove Nth Node From End of List](https://leetcode-cn.com/problems/remove-nth-node-from-end-of-list/) | [C++](cpp/RemoveNthNodeFromEndOfList.cpp)|Medium|
 |39|[Combination Sum](https://leetcode-cn.com/problems/combination-sum/) | [C++](cpp/CombinationSum.cpp)|Medium|
 |40|[Combination Sum II](https://leetcode-cn.com/problems/combination-sum-ii/) | [C++](cpp/CombinationSumIi.cpp)|Medium|
+|61|[Rotate List](https://leetcode-cn.com/problems/rotate-list/) | [C++](cpp/RotateList.cpp)|Medium|
 |78|[Subsets](https://leetcode-cn.com/problems/subsets/) | [C++](cpp/Subsets.cpp)|Medium|
 |89|[Gray Code](https://leetcode-cn.com/problems/gray-code/) | [C++](cpp/GrayCode.cpp)|Medium|
 |113|[Path Sum II](https://leetcode-cn.com/problems/path-sum-ii/) | [C++](cpp/PathSumIi.cpp)|Medium|
