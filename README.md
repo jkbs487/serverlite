@@ -51,4 +51,5 @@
 |1370|[Increasing Decreasing String](https://leetcode-cn.com/problems/increasing-decreasing-string/) | [C++](cpp/IncreasingDecreasingString.cpp)|Easy|
 |1749|[Maximum Absolute Sum of Any Subarray](https://leetcode-cn.com/problems/maximum-absolute-sum-of-any-subarray/) | [C++](cpp/MaximumAbsoluteSumOfAnySubarray.cpp)|Medium|
 |1750|[Minimum Length of String After Deleting Similar Ends](https://leetcode-cn.com/problems/minimum-length-of-string-after-deleting-similar-ends/) | [C++](./cpp/MinimumLengthOfStringAfterDeletingSimilarEnds.cpp)|Medium|
-
+|5705|[Determine Color of a Chessboard Square](https://leetcode-cn.com/problems/determine-color-of-a-chessboard-square/) | [C++](cpp/DetermineColorOfAChessboardSquare.cpp)|Easy|
+|5706|[Sentence Similarity III](https://leetcode-cn.com/problems/sentence-similarity-iii/) | [C++](python/SentenceSimilarityIii.py)|Medium|
