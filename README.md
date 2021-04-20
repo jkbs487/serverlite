@@ -22,6 +22,7 @@
 |16|[3Sum Closest](https://leetcode-cn.com/problems/3sum-closest/) | [C++](cpp/3sumClosest.cpp)|Medium|
 |17|[Letter Combinations of a Phone Number](https://leetcode-cn.com/problems/letter-combinations-of-a-phone-number/) | [C++](cpp/LetterCombinationsOfAPhoneNumber.cpp)|Medium|
 |19|[Remove Nth Node From End of List](https://leetcode-cn.com/problems/remove-nth-node-from-end-of-list/) | [C++](cpp/RemoveNthNodeFromEndOfList.cpp)|Medium|
+|28|[Implement strStr()](https://leetcode-cn.com/problems/implement-strstr/) | [C++](cpp/ImplementStrstr.cpp)|Easy|
 |39|[Combination Sum](https://leetcode-cn.com/problems/combination-sum/) | [C++](cpp/CombinationSum.cpp)|Medium|
 |40|[Combination Sum II](https://leetcode-cn.com/problems/combination-sum-ii/) | [C++](cpp/CombinationSumIi.cpp)|Medium|
 |44|[Wildcard Matching](https://leetcode-cn.com/problems/wildcard-matching/) | [C++](cpp/WildcardMatching.cpp)|Hard|
