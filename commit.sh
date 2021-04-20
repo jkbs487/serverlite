@@ -12,7 +12,7 @@ git commit -m "${MESSAGE}"
 git push
 
 if [ $? -eq 0 ]; then
-    echo "提交成功"
+    echo "push success!"
 else
-    echo "提交失败"
+    echo "push fail!"
 fi
