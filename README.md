@@ -37,6 +37,7 @@
 |208|[Implement Trie (Prefix Tree)](https://leetcode-cn.com/problems/implement-trie-prefix-tree/) | [C++](cpp/ImplementTriePrefixTree.cpp)|Medium|
 |290|[Word Pattern](https://leetcode-cn.com/problems/word-pattern/) | [C++](cpp/WordPattern.cpp), [Python](python/WordPattern.py)|Easy|
 |341|[Flatten Nested List Iterator](https://leetcode-cn.com/problems/flatten-nested-list-iterator/) | [C++](FlattenNestedListIterator.cpp)|Medium|
+|382|[Linked List Random Node](https://leetcode-cn.com/problems/linked-list-random-node/) | [C++](cpp/LinkedListRandomNode.cpp)|Medium|
 |389|[Find the Difference](https://leetcode-cn.com/problems/find-the-difference/submissions/) | [C++](cpp/FindTheDifference.cpp), [Python](python/FindTheDifference.py)|Easy|
 |395|[Longest Substring with At Least K Repeating Characters](https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/) | [C++](cpp/LongestSubstringWithAtLeastKRepeatingCharacters.cpp), [python](python/LongestSubstringWithAtLeastKRepeatingCharacters.py)|Medium|
 |402|[Remove K Digits](https://leetcode-cn.com/problems/remove-k-digits/) | [C++](cpp/RemoveKDigits.cpp)|Medium|
