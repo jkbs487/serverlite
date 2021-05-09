@@ -53,6 +53,7 @@
 |1122|[Relative Sort Array](https://leetcode-cn.com/problems/relative-sort-array/) | [C++](cpp/RelativeSortArray.cpp)|Easy|
 |1291|[Sequential Digits](https://leetcode-cn.com/problems/sequential-digits/) | [C++](cpp/SequentialDigits.cpp)|Medium|
 |1370|[Increasing Decreasing String](https://leetcode-cn.com/problems/increasing-decreasing-string/) | [C++](cpp/IncreasingDecreasingString.cpp)|Easy|
+|1482|[Minimum Number of Days to Make m Bouquets](https://leetcode-cn.com/problems/minimum-number-of-days-to-make-m-bouquets/) | [C++](cpp/MinimumNumberOfDaysToMakeMBouquets.cpp)|Medium|
 |1749|[Maximum Absolute Sum of Any Subarray](https://leetcode-cn.com/problems/maximum-absolute-sum-of-any-subarray/) | [C++](cpp/MaximumAbsoluteSumOfAnySubarray.cpp)|Medium|
 |1750|[Minimum Length of String After Deleting Similar Ends](https://leetcode-cn.com/problems/minimum-length-of-string-after-deleting-similar-ends/) | [C++](./cpp/MinimumLengthOfStringAfterDeletingSimilarEnds.cpp)|Medium|
 |1813|[Sentence Similarity III](https://leetcode-cn.com/problems/sentence-similarity-iii/) | [Python](python/SentenceSimilarityIii.py)|Medium|
