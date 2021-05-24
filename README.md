@@ -41,6 +41,7 @@
 |389|[Find the Difference](https://leetcode-cn.com/problems/find-the-difference/submissions/) | [C++](cpp/FindTheDifference.cpp), [Python](python/FindTheDifference.py)|Easy|
 |395|[Longest Substring with At Least K Repeating Characters](https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/) | [C++](cpp/LongestSubstringWithAtLeastKRepeatingCharacters.cpp), [Python](python/LongestSubstringWithAtLeastKRepeatingCharacters.py)|Medium|
 |402|[Remove K Digits](https://leetcode-cn.com/problems/remove-k-digits/) | [C++](cpp/RemoveKDigits.cpp)|Medium|
+|421|[Maximum XOR of Two Numbers in an Array](https://leetcode-cn.com/problems/maximum-xor-of-two-numbers-in-an-array/) | [C++](cpp/MaximumXorOfTwoNumbersInAnArray.cpp)|Medium|
 |529|[Minesweeper](https://leetcode-cn.com/problems/minesweeper/) | [C++](cpp/Minesweeper.cpp)|Medium|
 |538|[Convert BST to Greater Tree](https://leetcode-cn.com/problems/convert-bst-to-greater-tree/) | [C++](cpp/ConvertBstToGreaterTree.cpp)|Medium|
 |706|[Design HashMap](https://leetcode-cn.com/problems/design-hashmap/) | [C++](cpp/DesignHashmap.cpp)|Easy|
