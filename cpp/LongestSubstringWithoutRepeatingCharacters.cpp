@@ -36,19 +36,24 @@
  * 	s consists of English letters, digits, symbols and spaces.
  ******************************************************************************************************/
 
+//sliding window
 class Solution {
 public:
     int lengthOfLongestSubstring(string s) {
         int ans = 0;
+        //windows left and right boundary
         int left = 0, right = 0;
         unordered_set<char> pool;
         if(s.empty()) return 0;
         while(right < s.size()){
+            //if next elem is not in the window, increases to the right 
             if(pool.find(s[right]) == pool.end()){
                 pool.insert(s[right++]);
+                //update the window max length
                 ans = max(right-left, ans);
             }
             else{
+                //if next elem is in the windows, increases to the left
                 pool.erase(s[left]);
                 left++;
             }
