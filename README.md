@@ -34,6 +34,8 @@
 |153|[Find Minimum in Rotated Sorted Array](https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array/) | [C++](cpp/FindMinimumInRotatedSortedArray.cpp)|Medium|
 |171|[Excel Sheet Column Number](https://leetcode-cn.com/problems/excel-sheet-column-number/submissions/) | [C++](cpp/ExcelSheetColumnNumber.cpp)|Easy|
 |173|[Binary Search Tree Iterator](https://leetcode-cn.com/problems/binary-search-tree-iterator/) | [C++](cpp/BinarySearchTreeIterator.cpp)|Medium|
+|200|[Number of Islands](https://leetcode-cn.com/problems/number-of-islands/) | [C++](cpp/NumberOfIslands.cpp)|Medium|
+|203|[Remove Linked List Elements](https://leetcode-cn.com/problems/remove-linked-list-elements/) | [C++](cpp/RemoveLinkedListElements.cpp)|Easy|
 |206|[Reverse Linked List](https://leetcode-cn.com/problems/reverse-linked-list/) | [C++](cpp/ReverseLinkedList.cpp)|Easy|
 |208|[Implement Trie (Prefix Tree)](https://leetcode-cn.com/problems/implement-trie-prefix-tree/) | [C++](cpp/ImplementTriePrefixTree.cpp)|Medium|
 |290|[Word Pattern](https://leetcode-cn.com/problems/word-pattern/) | [C++](cpp/WordPattern.cpp), [Python](python/WordPattern.py)|Easy|
