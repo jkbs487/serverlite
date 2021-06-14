@@ -36,6 +36,7 @@
 |173|[Binary Search Tree Iterator](https://leetcode-cn.com/problems/binary-search-tree-iterator/) | [C++](cpp/BinarySearchTreeIterator.cpp)|Medium|
 |206|[Reverse Linked List](https://leetcode-cn.com/problems/reverse-linked-list/) | [C++](cpp/ReverseLinkedList.cpp)|Easy|
 |208|[Implement Trie (Prefix Tree)](https://leetcode-cn.com/problems/implement-trie-prefix-tree/) | [C++](cpp/ImplementTriePrefixTree.cpp)|Medium|
+|278|[First Bad Version](https://leetcode-cn.com/problems/first-bad-version/) | [C++](cpp/FirstBadVersion.cpp)|Easy|
 |290|[Word Pattern](https://leetcode-cn.com/problems/word-pattern/) | [C++](cpp/WordPattern.cpp), [Python](python/WordPattern.py)|Easy|
 |341|[Flatten Nested List Iterator](https://leetcode-cn.com/problems/flatten-nested-list-iterator/) | [C++](FlattenNestedListIterator.cpp)|Medium|
 |382|[Linked List Random Node](https://leetcode-cn.com/problems/linked-list-random-node/) | [C++](cpp/LinkedListRandomNode.cpp)|Medium|
