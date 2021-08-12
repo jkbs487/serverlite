@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/jiangkun/project/tcpserver/tcpserver.cc
+sys/epoll.h
+-
+string
+-
+iostream
+-
+functional
+-
+sys/types.h
+-
+sys/socket.h
+-
+arpa/inet.h
+-
+errno.h
+-
+unistd.h
+-
+signal.h
+-
+string.h
+-
+
