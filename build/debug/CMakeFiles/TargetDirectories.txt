@@ -1,5 +1,0 @@
-/home/jiangkun/project/tcpserver/build/debug/CMakeFiles/rebuild_cache.dir
-/home/jiangkun/project/tcpserver/build/debug/CMakeFiles/edit_cache.dir
-/home/jiangkun/project/tcpserver/build/debug/src/CMakeFiles/rebuild_cache.dir
-/home/jiangkun/project/tcpserver/build/debug/src/CMakeFiles/edit_cache.dir
-/home/jiangkun/project/tcpserver/build/debug/src/CMakeFiles/simple.dir
