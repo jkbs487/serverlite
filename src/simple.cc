@@ -1,12 +1,12 @@
 #include "TCPServer.h"
 
-#include <time.h>
+#include <ctime>
 #include <cstdio>
 
 void echo(TCPConnection *conn, std::string buffer)
 {
-    printf("%s", buffer.c_str());
-    fflush(NULL);
+    printf("echo %ld bytes\n", buffer.size());
+
     conn->send(buffer);
 }
 
@@ -30,6 +30,17 @@ void daytime(TCPConnection *conn)
     }
 }
 
+void time_(TCPConnection *conn)
+{
+    time_t now = ::time(NULL);
+
+    int32_t be32 = htobe32(static_cast<int32_t>(now));
+    if (conn->connected()) {
+        conn->send(std::to_string(be32));
+        conn->shutdown();
+    }
+}
+
 std::string message;
 
 void chargen(TCPConnection *conn)
@@ -41,7 +52,9 @@ void chargen(TCPConnection *conn)
 
 void onWriteComplete(TCPConnection *conn)
 {
-    conn->send(message);
+    if (conn->connected()) {
+        conn->send(message);
+    }
 }
 
 int main(int argc, char *argv[])
@@ -50,7 +63,7 @@ int main(int argc, char *argv[])
         printf("Usage: %s [service]\n", argv[0]);
         ::exit(1);
     }
-
+/*
     std::string line;
     for (int i = 33; i < 127; ++i)
     {
@@ -62,7 +75,7 @@ int main(int argc, char *argv[])
     {
       message += line.substr(i, 72) + '\n';
     }
-
+*/
 
     TCPServer tcpserver("0.0.0.0", 12345);
 
@@ -71,7 +84,7 @@ int main(int argc, char *argv[])
     } else if (!strcmp(argv[1], "daytime")) {
         tcpserver.setConnectionCallback(daytime);
     } else if (!strcmp(argv[1], "time")) {
-
+        tcpserver.setConnectionCallback(time_);
     } else if (!strcmp(argv[1], "echo")) {
         tcpserver.setMessageCallback(echo);
     } else if (!strcmp(argv[1], "chargen")) {

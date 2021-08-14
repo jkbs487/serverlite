@@ -1,9 +1,11 @@
-#include <sys/epoll.h>
+#pragma once
+
 #include <string>
 #include <iostream>
 #include <functional>
 #include <vector>
 
+#include <sys/epoll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -21,6 +23,7 @@ class TCPServer
     typedef std::function<void (TCPConnection*)> WriteCompleteCallback;
 public:
     TCPServer(std::string host, uint16_t port);
+    ~TCPServer();
     void start();
     void setConnectionCallback(const ConnectionCallback& cb) {
         connectionCallback_ = cb;
@@ -32,11 +35,10 @@ public:
         writeCompleteCallback_ = cb;
     }
 private:
+    int epfd_;
     std::string host_;
     uint16_t port_;
-    int listenfd_;
-    int epfd_;
-    std::vector<Channel*> channels_;
+    Channel *acceptChannel_;
     ConnectionCallback connectionCallback_;
     MessageCallback messageCallback_;
     WriteCompleteCallback writeCompleteCallback_;
@@ -51,11 +53,15 @@ private:
 
 TCPServer::TCPServer(std::string host, uint16_t port): host_(host), port_(port)
 {
-    listenfd_ = socket(AF_INET, SOCK_STREAM, 0);
+    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
+    
+    epfd_ = epoll_create(1);
+    acceptChannel_ = new Channel(epfd_, listenfd);
+    
     signal(SIGPIPE, SIG_IGN);
     
     int one = 1;
-    setsockopt(listenfd_, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+    setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof addr);
@@ -63,7 +69,7 @@ TCPServer::TCPServer(std::string host, uint16_t port): host_(host), port_(port)
     addr.sin_port = htons(port_);
     addr.sin_addr.s_addr = inet_addr(host.c_str());
 
-    if (bind(listenfd_, reinterpret_cast<struct sockaddr*>(&addr), sizeof addr) < 0) {
+    if (bind(listenfd, reinterpret_cast<struct sockaddr*>(&addr), sizeof addr) < 0) {
         perror("bind");
         exit(0);
     }
@@ -71,18 +77,18 @@ TCPServer::TCPServer(std::string host, uint16_t port): host_(host), port_(port)
     messageCallback_ = std::bind(&TCPServer::defaultMessageCallback, this, std::placeholders::_1, std::placeholders::_2);
 }
 
+TCPServer::~TCPServer()
+{
+    acceptChannel_->disableAll();
+    acceptChannel_->remove();
+    delete acceptChannel_;
+}
+
 void TCPServer::start()
 {
-    listen(listenfd_, 5);
-
-    this->epfd_ = epoll_create(1);
-    struct epoll_event event;
-
-    Channel *channel = new Channel(listenfd_);
-    channel->setRecvCallback(std::bind(&TCPServer::handleAccept, this));
-    event.data.ptr = channel;
-    event.events = EPOLLIN;
-    epoll_ctl(epfd_, EPOLL_CTL_ADD, listenfd_, &event);
+    listen(acceptChannel_->fd(), 5);
+    acceptChannel_->setRecvCallback(std::bind(&TCPServer::handleAccept, this));
+    acceptChannel_->enableRecv();
     loop();
 }
 
@@ -112,20 +118,27 @@ void TCPServer::loop()
 
 void TCPServer::handleAccept() 
 {
-    struct sockaddr_in client_addr;
-    memset(&client_addr, 0, sizeof client_addr);
-    socklen_t len = sizeof(client_addr);
+    struct sockaddr_in peerAddr;
+    ::bzero(&peerAddr, 0);
+    socklen_t peerLen = sizeof(peerAddr);
 
-    int clientfd = accept(listenfd_, reinterpret_cast<struct sockaddr*>(&client_addr), &len);
-    if (clientfd < 0) return;
+    int connfd = accept(acceptChannel_->fd(), reinterpret_cast<struct sockaddr*>(&peerAddr), &peerLen);
+    if (connfd < 0) {
+        perror("accept");
+        ::close(connfd);
+    }
 
-    TCPConnection *new_conn = new TCPConnection(clientfd, epfd_);
-    new_conn->setConnectionCallback(connectionCallback_);
-    new_conn->setMessageCallback(messageCallback_);
-    new_conn->setWriteCompleteCallback(writeCompleteCallback_);
-    new_conn->setCloseCallback(std::bind(&TCPServer::removeConnection, this, std::placeholders::_1));
-    new_conn->connectEstablished();
-    return ;
+    struct sockaddr_in localAddr;
+    socklen_t localLen = sizeof(localAddr);
+    getsockname(connfd, reinterpret_cast<struct sockaddr*>(&localAddr), &localLen);
+
+    TCPConnection *newConnection = new TCPConnection(epfd_, connfd, peerAddr, localAddr);
+    newConnection->setConnectionCallback(connectionCallback_);
+    newConnection->setMessageCallback(messageCallback_);
+    newConnection->setWriteCompleteCallback(writeCompleteCallback_);
+    newConnection->setCloseCallback(std::bind(&TCPServer::removeConnection, this, std::placeholders::_1));
+    newConnection->connectEstablished();
+    return;
 }
 
 void TCPServer::defaultConnectionCallback(TCPConnection *conn)
@@ -144,5 +157,7 @@ void TCPServer::defaultMessageCallback(TCPConnection *conn, std::string buffer)
 
 void TCPServer::removeConnection(TCPConnection *conn)
 {
+    // 这里删除连接，触发连接析构，关闭fd
     conn->connectDestroyed();
+    delete conn;
 }
