@@ -1,18 +1,18 @@
 #pragma once
 
-#include <string>
-#include <iostream>
-#include <functional>
-#include <vector>
-
 #include <sys/epoll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
+#include <string>
+#include <iostream>
+#include <functional>
+#include <vector>
 
 #include "TCPConnection.h"
 
@@ -63,6 +63,9 @@ TCPServer::TCPServer(std::string host, uint16_t port): host_(host), port_(port)
     int one = 1;
     setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 
+    int flags = fcntl(listenfd, F_GETFL, 0); 
+    fcntl(listenfd, F_SETFL, flags | O_NONBLOCK);
+
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof addr);
     addr.sin_family = AF_INET;
@@ -105,13 +108,8 @@ void TCPServer::loop()
 
         for (int i = 0; i < num_events; i++) {
             Channel *channel = static_cast<Channel*>(events_[i].data.ptr);
-            if (events_[i].events & EPOLLIN) {
-                channel->setEvent(EPOLLIN);
-            }
-            if (events_[i].events & EPOLLOUT) {
-                channel->setEvent(EPOLLOUT);
-            }
-            channel->handleEvent();
+            channel->setRevents(events_->events);
+            channel->handleEvents();
         }
     }
 }
@@ -127,6 +125,9 @@ void TCPServer::handleAccept()
         perror("accept");
         ::close(connfd);
     }
+
+    int flags = fcntl(connfd, F_GETFL, 0); 
+    fcntl(connfd, F_SETFL, flags | O_NONBLOCK);
 
     struct sockaddr_in localAddr;
     socklen_t localLen = sizeof(localAddr);

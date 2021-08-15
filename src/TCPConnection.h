@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <cstring>
 #include <unistd.h>
+#include <assert.h>
 #include <iostream>
 #include "Channel.h"
 
@@ -17,8 +18,8 @@ class TCPConnection
     typedef std::function<void (TCPConnection*)> CloseCallback;
     typedef std::function<void (TCPConnection*)> WriteCompleteCallback;
 public:
-    TCPConnection(int epfd, int fd, struct sockaddr_in localAddr, struct sockaddr_in peerAddr): 
-        epfd_(epfd), 
+    TCPConnection(int epfd, int fd, struct sockaddr_in localAddr, struct sockaddr_in peerAddr)
+    :   epfd_(epfd), 
         sockfd_(fd), 
         localAddr_(localAddr),
         peerAddr_(peerAddr),
@@ -27,6 +28,8 @@ public:
     {
         channel_->setRecvCallback(std::bind(&TCPConnection::handleRecv, this));
         channel_->setSendCallback(std::bind(&TCPConnection::handleSend, this));
+        channel_->setCloseCallback(std::bind(&TCPConnection::handleClose, this));
+        channel_->setErrorCallback(std::bind(&TCPConnection::handleError, this));
     }
     ~TCPConnection();
     void send(std::string data);
@@ -43,8 +46,6 @@ public:
     void setWriteCompleteCallback(const WriteCompleteCallback& cb) {
         writeCompleteCallback_ = cb;
     }
-    void handleClose();
-    void handleError();
     void connectEstablished();
     void connectDestroyed();
     bool connected() {
@@ -68,6 +69,8 @@ private:
     WriteCompleteCallback writeCompleteCallback_;
     void handleRecv();
     void handleSend();
+    void handleClose();
+    void handleError();
     void setState(ConnState state) {
         state_ = state;
     }
@@ -102,6 +105,7 @@ void TCPConnection::send(std::string data)
         else {
             nsend = 0;
             perror("send");
+            // EWOULDBLOCK 表示写缓冲区满，无需处理
             if (errno != EWOULDBLOCK) {
                 if (errno == EPIPE || errno == ECONNRESET) {
                     return;
@@ -143,19 +147,19 @@ void TCPConnection::sendFile(std::string filePath)
 void TCPConnection::handleRecv()
 {
     int fd = channel_->fd();
-    char buffer[1024];
+    char buffer[65535];
     memset(buffer, 0, sizeof buffer);
+    assert(channel_->isRecving() == true);
+    
     ssize_t ret = ::recv(fd, buffer, sizeof buffer, 0);
     recvBuf_.append(std::string(buffer));
-    if (ret < 0) {
-        if (errno == EINTR) return;
+    if (ret < 0 && errno != EINTR && errno != EWOULDBLOCK) {
         perror("recv");
-        channel_->remove();
-        closeCallback_(this);
+        handleError();
     } else if (ret == 0) {
         handleClose();
     } else {
-        messageCallback_(this, std::move(recvBuf_));
+        messageCallback_(this, recvBuf_);
     }
     return;
 }
@@ -220,5 +224,19 @@ void TCPConnection::shutdown()
     if (state_ == Connected) {
         setState(Disconnecting);
         ::shutdown(channel_->fd(), SHUT_WR);
+    }
+}
+
+void TCPConnection::handleError()
+{
+    int optval;
+    socklen_t optlen = static_cast<socklen_t>(sizeof optval);
+
+    if (::getsockopt(channel_->fd(), SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0) {
+        perror("getsockopt");
+    } else {
+        char buffer[512];
+        strerror_r(optval, buffer, sizeof buffer);
+        printf("%s\n", buffer);
     }
 }
