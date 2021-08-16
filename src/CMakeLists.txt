@@ -1,8 +1,14 @@
 set(net_SRCS
-Channel.h
-TCPConnection.h
-TCPServer.h
+    EventLoop.cc
+    Channel.cc
+    TCPConnection.cc
+    TCPServer.cc
 )
 
-add_executable(simple ${net_SRCS} simple.cc)
-add_executable(file ${net_SRCS} filetransfer.cc)
+add_library(net ${net_SRCS})
+
+add_executable(simple simple.cc)
+target_link_libraries(simple net)
+
+add_executable(file filetransfer.cc)
+target_link_libraries(file net)
