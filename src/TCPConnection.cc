@@ -19,7 +19,6 @@ TCPConnection::TCPConnection(EventLoop *eventLoop, int fd, struct sockaddr_in lo
     state_(Connecting), 
     channel_(new Channel(eventLoop, fd))
 {   
-    channel_->create();
     channel_->setRecvCallback(std::bind(&TCPConnection::handleRecv, this));
     channel_->setSendCallback(std::bind(&TCPConnection::handleSend, this));
     channel_->setCloseCallback(std::bind(&TCPConnection::handleClose, this));
@@ -137,7 +136,7 @@ void TCPConnection::handleSend()
             }
         } else {
             printf("handle send error\n");
-            channel_->disableSend();
+            //channel_->disableSend();
         }
     }
     else {
@@ -186,7 +185,7 @@ void TCPConnection::handleError()
         perror("getsockopt");
     } else {
         char buffer[512];
-        strerror_r(optval, buffer, sizeof buffer);
-        printf("%s\n", buffer);
+        ::bzero(buffer, sizeof buffer);
+        printf("ERROR: %s\n", strerror_r(optval, buffer, sizeof buffer));
     }
 }
