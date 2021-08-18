@@ -4,13 +4,14 @@
 
 class EventLoop;
 
+enum ChannelState { New, Add, Delete };
+
 class Channel 
 {
     typedef std::function<void ()> RecvCallback;
     typedef std::function<void ()> SendCallback;
     typedef std::function<void ()> CloseCallback;
     typedef std::function<void ()> ErrorCallback;
-
 public:
     Channel(EventLoop *eventLoop, int fd);
     ~Channel();
@@ -33,9 +34,15 @@ public:
     int events() {
         return events_;
     }
+    int state() {
+        return state_;
+    }
     void setRevents(int events) {
         revents_ = events; 
-    };
+    }
+    void setState(ChannelState state) {
+        state_ = state;
+    }
     void disableSend() {
         events_ &= ~SendEvent;
         update();
@@ -55,6 +62,9 @@ public:
     void disableAll() {
         events_ = NoneEvent;
         update();
+    }   
+    bool isNoneEvent() {
+        return events_ == NoneEvent;
     }
     bool isSending() {
         return events_ & SendEvent;
@@ -62,18 +72,17 @@ public:
     bool isRecving() {
         return events_ & RecvEvent;
     }
-
-    void create();
     void remove();
 private:
     void update();
     
     static const int SendEvent, RecvEvent, NoneEvent;
-    
+
     EventLoop* eventLoop_;
     int fd_;
     int events_;
     int revents_;
+    ChannelState state_;
     RecvCallback recvCallback_;
     SendCallback sendCallback_;
     CloseCallback closeCallback_;
