@@ -48,7 +48,7 @@ void TCPConnection::send(std::string data)
             remaining = data.size() - nsend; 
             if (remaining == 0 && writeCompleteCallback_) {
                 // 如果同步调用，有无限递归风险
-                writeCompleteCallback_(this);
+                writeCompleteCallback_(shared_from_this());
             }
         }
         else {
@@ -108,7 +108,7 @@ void TCPConnection::handleRecv()
     } else if (ret == 0) {
         handleClose();
     } else {
-        messageCallback_(this, recvBuf_);
+        messageCallback_(shared_from_this(), recvBuf_);
     }
     return;
 }
@@ -127,7 +127,7 @@ void TCPConnection::handleSend()
             if (sendBuf_.size() == 0) {
                 channel_->disableSend();
                 if (writeCompleteCallback_) {
-                    writeCompleteCallback_(this);
+                    writeCompleteCallback_(shared_from_this());
                 }
             }
             // 是否半关闭状态 
@@ -148,14 +148,15 @@ void TCPConnection::connectEstablished()
 {
     setState(Connected);
     channel_->enableRecv();
-    connectionCallback_(this);
+    channel_->tie(shared_from_this());
+    connectionCallback_(shared_from_this());
 }
 
 void TCPConnection::connectDestroyed()
 {
     if (state_ == Connected) {
         channel_->disableAll();
-        connectionCallback_(this);
+        connectionCallback_(shared_from_this());
     }
     channel_->remove();
 }
@@ -164,8 +165,8 @@ void TCPConnection::handleClose()
 {
     setState(Disconnected);
     channel_->disableAll();
-    connectionCallback_(this);
-    closeCallback_(this);
+    connectionCallback_(shared_from_this());
+    closeCallback_(shared_from_this());
 }
 
 void TCPConnection::shutdown()

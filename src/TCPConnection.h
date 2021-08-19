@@ -1,17 +1,21 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <netinet/in.h>
 
 class Channel;
 class EventLoop;
+class TCPConnection;
 
-class TCPConnection
+typedef std::shared_ptr<TCPConnection> TCPConnectionPtr;
+typedef std::function<void (const TCPConnectionPtr& conn)> ConnectionCallback;
+typedef std::function<void (const TCPConnectionPtr& conn, std::string)> MessageCallback;
+typedef std::function<void (const TCPConnectionPtr& conn)> CloseCallback;
+typedef std::function<void (const TCPConnectionPtr& conn)> WriteCompleteCallback;
+
+class TCPConnection: public std::enable_shared_from_this<TCPConnection>
 {
-    typedef std::function<void (TCPConnection*)> ConnectionCallback;
-    typedef std::function<void (TCPConnection*, std::string)> MessageCallback;
-    typedef std::function<void (TCPConnection*)> CloseCallback;
-    typedef std::function<void (TCPConnection*)> WriteCompleteCallback;
 public:
     TCPConnection(EventLoop *eventLoop, int fd, struct sockaddr_in localAddr, struct sockaddr_in peerAddr);
     ~TCPConnection();

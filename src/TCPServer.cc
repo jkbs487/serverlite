@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <string.h>
 #include <string>
+#include <algorithm>
 
 TCPServer::TCPServer(std::string host, uint16_t port): 
     host_(host), 
@@ -23,7 +24,6 @@ TCPServer::TCPServer(std::string host, uint16_t port):
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
     
     acceptChannel_ = new Channel(eventLoop_, listenfd);
-    acceptChannel_->create();
     
     signal(SIGPIPE, SIG_IGN);
     
@@ -55,7 +55,6 @@ TCPServer::TCPServer(std::string host, uint16_t port, EventLoop *eventLoop):
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
     
     acceptChannel_ = new Channel(eventLoop_, listenfd);
-    acceptChannel_->create();
     
     signal(SIGPIPE, SIG_IGN);
     
@@ -111,16 +110,18 @@ void TCPServer::handleAccept()
     socklen_t localLen = sizeof(localAddr);
     getsockname(connfd, reinterpret_cast<struct sockaddr*>(&localAddr), &localLen);
 
-    TCPConnection *newConnection = new TCPConnection(eventLoop_, connfd, peerAddr, localAddr);
-    newConnection->setConnectionCallback(connectionCallback_);
-    newConnection->setMessageCallback(messageCallback_);
-    newConnection->setWriteCompleteCallback(writeCompleteCallback_);
-    newConnection->setCloseCallback(std::bind(&TCPServer::removeConnection, this, std::placeholders::_1));
-    newConnection->connectEstablished();
+    TCPConnectionPtr conn = std::make_shared<TCPConnection>(eventLoop_, connfd, peerAddr, localAddr);
+
+    connections_.push_back(conn);
+    conn->setConnectionCallback(connectionCallback_);
+    conn->setMessageCallback(messageCallback_);
+    conn->setWriteCompleteCallback(writeCompleteCallback_);
+    conn->setCloseCallback(std::bind(&TCPServer::removeConnection, this, std::placeholders::_1));
+    conn->connectEstablished();
     return;
 }
 
-void TCPServer::defaultConnectionCallback(TCPConnection *conn)
+void TCPServer::defaultConnectionCallback(const TCPConnectionPtr& conn)
 {
     if (conn->connected())
         printf("UP\n");
@@ -129,14 +130,17 @@ void TCPServer::defaultConnectionCallback(TCPConnection *conn)
     }
 }
 
-void TCPServer::defaultMessageCallback(TCPConnection *conn, std::string buffer)
+void TCPServer::defaultMessageCallback(const TCPConnectionPtr& conn, std::string buffer)
 {
     printf("recv: %s, bytes: %ld\n", buffer.c_str(), buffer.size());
 }
 
-void TCPServer::removeConnection(TCPConnection *conn)
+void TCPServer::removeConnection(const TCPConnectionPtr& conn)
 {
     // 这里删除连接，触发连接析构，关闭fd
+    auto it = std::find(connections_.begin(), connections_.end(), conn);
+    if (it != connections_.end()) {
+        connections_.erase(it);
+    }
     conn->connectDestroyed();
-    delete conn;
 }
