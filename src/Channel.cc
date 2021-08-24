@@ -14,13 +14,21 @@ Channel::Channel(EventLoop *eventLoop, int fd)
     fd_(fd), 
     events_(NoneEvent), 
     revents_(NoneEvent),
+    tied_(false),
+    eventHandling_(false),
     state_(New)
 {
 }
 
 Channel::~Channel()
 {
+    assert(!eventHandling_);
+}
 
+void Channel::tie(const std::shared_ptr<void>& owner)
+{
+    tie_ = owner;
+    tied_ = true;
 }
 
 void Channel::update()
@@ -36,20 +44,32 @@ void Channel::remove()
 
 void Channel::handleEvents()
 {
+    std::shared_ptr<void> guard;
+    if (tied_) {
+        guard = tie_.lock();
+        if (guard) {
+            handleEventsWithGuard();
+        }
+    }
+    else {
+        handleEventsWithGuard();
+    }
+}
+
+void Channel::handleEventsWithGuard()
+{
+    eventHandling_ = true;
     if ((revents_ & EPOLLHUP) && !(revents_ & EPOLLIN)) {
-        printf("Handle Close\n");
         if (closeCallback_) closeCallback_();
     }
     if (revents_ & (EPOLLERR)) {
-        printf("Handle Error\n");
         if (errorCallback_) errorCallback_();
     }
     if (revents_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)) {
-        printf("Handle Read\n");
         if (recvCallback_) recvCallback_();
     }
     if (revents_ & EPOLLOUT) {
-        printf("Handle Write\n");
         if (sendCallback_) sendCallback_();
     }
+    eventHandling_ = false;
 }

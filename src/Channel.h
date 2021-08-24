@@ -1,12 +1,13 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 class EventLoop;
 
 enum ChannelState { New, Add, Delete };
 
-class Channel 
+class Channel
 {
     typedef std::function<void ()> RecvCallback;
     typedef std::function<void ()> SendCallback;
@@ -15,6 +16,8 @@ class Channel
 public:
     Channel(EventLoop *eventLoop, int fd);
     ~Channel();
+    Channel(const Channel&) = delete;
+    void operator =(const Channel&) = delete;
     void setRecvCallback(const RecvCallback& cb) {
         recvCallback_ = cb;
     }
@@ -73,16 +76,25 @@ public:
         return events_ & RecvEvent;
     }
     void remove();
+
+    // extend self life, prevent destroy self in handleEvent.
+    void tie(const std::shared_ptr<void>& owner);
 private:
     void update();
-    
+    void handleEventsWithGuard();
+
     static const int SendEvent, RecvEvent, NoneEvent;
 
     EventLoop* eventLoop_;
     int fd_;
     int events_;
     int revents_;
+    bool tied_;
+    bool eventHandling_;
     ChannelState state_;
+
+    std::weak_ptr<void> tie_;
+
     RecvCallback recvCallback_;
     SendCallback sendCallback_;
     CloseCallback closeCallback_;
