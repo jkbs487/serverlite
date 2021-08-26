@@ -9,7 +9,7 @@ MESSAGE=$@
 
 git add .
 git commit -m "${MESSAGE}"
-git push github
+git push github master
 
 if [ $? -eq 0 ]; then
     echo "push success!"
