@@ -52,6 +52,7 @@
 |783|[Minimum Distance Between BST Nodes](https://leetcode-cn.com/problems/minimum-distance-between-bst-nodes/) | [C++](cpp/MinimumDistanceBetweenBstNodes.cpp)|Easy|
 |856|[Score of Parentheses](https://leetcode-cn.com/problems/score-of-parentheses/) | [C++](cpp/ScoreOfParentheses.cpp)|Medium|
 |865|[Smallest Subtree with all the Deepest Nodes](https://leetcode-cn.com/problems/smallest-subtree-with-all-the-deepest-nodes/) | [C++](cpp/SmallestSubtreeWithAllTheDeepestNodes.cpp)|Medium|
+|881|[Boats to Save People](https://leetcode-cn.com/problems/boats-to-save-people/) | [C++](cpp/BoatsToSavePeople.cpp)|Medium|
 |925|[Long Pressed Name](https://leetcode-cn.com/problems/long-pressed-name/) | [C++](cpp/LongPressedName.cpp)|Easy|
 |989|[Add to Array-Form of Integer](https://leetcode-cn.com/problems/add-to-array-form-of-integer/) | [C++](cpp/AddToArrayFormOfInteger.cpp)|Easy|
 |1024|[Video Stitching](https://leetcode-cn.com/problems/video-stitching/) | [C++](cpp/VideoStitching.cpp)|Medium|
