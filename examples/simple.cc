@@ -1,8 +1,10 @@
 #include "TCPServer.h"
 #include "EventLoop.h"
+#include "EventLoopThread.h"
 
 #include <ctime>
 #include <cstdio>
+#include <iostream>
 
 class EchoServer {
 public:
@@ -129,28 +131,22 @@ private:
 int main(int argc, char *argv[])
 {
     EventLoop eventLoop;
+    EventLoopThread eventLoopThread;
 
-    //EchoServer echoServer("0.0.0.0", 10001, &eventLoop);
-    //echoServer.start();
+    EchoServer echoServer("0.0.0.0", 10001, &eventLoop);
+    echoServer.start();
 
-    DiscardServer discardServer1("0.0.0.0", 10001, &eventLoop);
-    discardServer1.start();
-    DiscardServer discardServer2("0.0.0.0", 10002, &eventLoop);
-    discardServer2.start();
-    DiscardServer discardServer3("0.0.0.0", 10003, &eventLoop);
-    discardServer3.start();
-    DiscardServer discardServer4("0.0.0.0", 10004, &eventLoop);
-    discardServer4.start();
-    DiscardServer discardServer5("0.0.0.0", 10005, &eventLoop);
-    discardServer5.start();
-    //DaytimeServer daytimeServer("0.0.0.0", 10003, &eventLoop);
-    //daytimeServer.start();
+    DiscardServer discardServer("0.0.0.0", 10002, &eventLoop);
+    discardServer.start();
+    
+    DaytimeServer daytimeServer("0.0.0.0", 10003, &eventLoop);
+    daytimeServer.start();
 
-    //TimeServer timeServer("0.0.0.0", 10004, &eventLoop);
-    //timeServer.start();
+    TimeServer timeServer("0.0.0.0", 10004, &eventLoop);
+    timeServer.start();
 
-    //ChargenServer chargenServer("0.0.0.0", 10005, &eventLoop);
-    //chargenServer.start();
+    ChargenServer chargenServer("0.0.0.0", 10005, &eventLoop);
+    chargenServer.start();
 
     eventLoop.loop();
 
