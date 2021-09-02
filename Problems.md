@@ -16,3 +16,25 @@
     
     Channel has been destroy by Read Event (read eof, close connnection), cause to use the wild pointer (sendCallback).
     Channel maybe destroy when handleEvent, so need extend the life of the Channel. 
+
+
+
+
+
+
+
+- Cannot assign requested address
+
+    Insufficient ports.
+
+- The more connections, the slower and slower the connection speed
+
+    Single thread, full-connection queue is full, take connection speed is too slow.
+
+- terminate called without an active exception
+
+    std::thread do not use thread.join method.
+
+- How to know std::thread can join ?
+
+    use thread.joinable method.
