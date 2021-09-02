@@ -1,0 +1,7 @@
+add_executable(EventLoopThreadTest EventLoopThreadTest.cc)
+target_link_libraries(EventLoopThreadTest net)
+target_link_libraries(EventLoopThreadTest pthread)
+
+add_executable(EventLoopThreadPoolTest EventLoopThreadPoolTest.cc)
+target_link_libraries(EventLoopThreadPoolTest net)
+target_link_libraries(EventLoopThreadPoolTest pthread)

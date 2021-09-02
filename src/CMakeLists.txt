@@ -6,6 +6,7 @@ set(net_SRCS
     TCPConnection.cc
     TCPServer.cc
     EventLoopThread.cc
+    EventLoopThreadPool.cc
 )
 
 add_library(net ${net_SRCS})
@@ -17,5 +18,8 @@ set(HEADERS
     TCPConnection.h
     TCPServer.h
     EventLoopThread.h
+    EventLoopThreadPool.h
 )
 install(FILES ${HEADERS} DESTINATION include)
+
+add_subdirectory(test)
