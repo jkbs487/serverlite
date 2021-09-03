@@ -8,15 +8,34 @@
 #include <unistd.h>
 #include <iostream>
 
+__thread EventLoop* t_loopInThisThread = 0;
+
+ EventLoop* EventLoop::getEventLoopOfCurrentThread()
+ {
+     return t_loopInThisThread;
+ }
+
 EventLoop::EventLoop(): 
     epollFd_(epoll_create(1)),
     quit_(true),
-    doingTasking_(false),
+    doingTask_(false),
     wakeupFd_(::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC)),
     threadId_(std::this_thread::get_id()),
     wakeupChannel_(new Channel(this, wakeupFd_)),
     events_(32)
 {
+    std::cout << "EventLoop created " << this << " in thread " << threadId_ << std::endl;
+
+    // make shure on loop per thread
+    if (t_loopInThisThread)
+    {
+        std::cout << "Another EventLoop " << t_loopInThisThread
+                << " exists in this thread " << threadId_ << std::endl;
+    }
+    else
+    {
+        t_loopInThisThread = this;
+    }
     wakeupChannel_->setRecvCallback(std::bind(&EventLoop::handleRead, this));
     wakeupChannel_->enableRecv();
 }
@@ -33,7 +52,7 @@ EventLoop::~EventLoop()
 void EventLoop::quit()
 {
     quit_ = false;
-    if (!doingTasking_) {
+    if (!doingTask_) {
         wakeup();
     }
 }
@@ -81,7 +100,7 @@ void EventLoop::pushTask(const Functor &cb)
     }
 
     // No need to wake up only when doing network events
-    if (!isInLoopThread() || doingTasking_) {
+    if (!isInLoopThread() || doingTask_) {
         wakeup();
     }
 }
@@ -146,7 +165,7 @@ void EventLoop::wakeup()
 
 void EventLoop::doTask()
 {
-    doingTasking_ = true;
+    doingTask_ = true;
     
     std::vector<Functor> functors;
     {
@@ -157,5 +176,5 @@ void EventLoop::doTask()
         functor();
     }
     
-    doingTasking_ = false;
+    doingTask_ = false;
 }

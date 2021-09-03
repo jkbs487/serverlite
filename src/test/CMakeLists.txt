@@ -1,3 +1,11 @@
+add_executable(EchoServerTest EchoServerTest.cc)
+target_link_libraries(EchoServerTest net)
+target_link_libraries(EchoServerTest pthread)
+
+add_executable(EventLoopTest EventLoopTest.cc)
+target_link_libraries(EventLoopTest net)
+target_link_libraries(EventLoopTest pthread)
+
 add_executable(EventLoopThreadTest EventLoopThreadTest.cc)
 target_link_libraries(EventLoopThreadTest net)
 target_link_libraries(EventLoopThreadTest pthread)

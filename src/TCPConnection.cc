@@ -6,12 +6,16 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/sendfile.h>
+#include <arpa/inet.h>
+#include <netinet/tcp.h>
 #include <fcntl.h>
 #include <cstring>
 #include <unistd.h>
 #include <assert.h>
+#include <iostream>
 
-TCPConnection::TCPConnection(EventLoop *eventLoop, int fd, struct sockaddr_in localAddr, struct sockaddr_in peerAddr):   
+TCPConnection::TCPConnection(EventLoop *eventLoop, int fd, struct sockaddr_in localAddr, struct sockaddr_in peerAddr, std::string name):
+    name_(name),
     eventLoop_(eventLoop), 
     sockfd_(fd), 
     localAddr_(localAddr),
@@ -23,12 +27,46 @@ TCPConnection::TCPConnection(EventLoop *eventLoop, int fd, struct sockaddr_in lo
     channel_->setSendCallback(std::bind(&TCPConnection::handleSend, this));
     channel_->setCloseCallback(std::bind(&TCPConnection::handleClose, this));
     channel_->setErrorCallback(std::bind(&TCPConnection::handleError, this));
+    
+    std::cout << "TCPConnection::TCPConnection [" << name_ << "] at fd=" 
+    << channel_->fd() << " state=" << state_ << std::endl;
 }
 
-TCPConnection::~TCPConnection() {
+TCPConnection::~TCPConnection() 
+{
+    std::cout << "TCPConnection::~TCPConnection [" << name_ << "] at fd=" 
+    << channel_->fd() << " state=" << state_ << std::endl;
     // 关闭fd
     ::close(sockfd_);
     delete channel_;
+}
+
+std::string TCPConnection::getTcpInfoString() const
+{
+    char buf[1024];
+    struct tcp_info tcpi;
+    socklen_t len = sizeof(tcpi);
+    ::bzero(&tcpi, len);
+    ::getsockopt(sockfd_, SOL_TCP, TCP_INFO, &tcpi, &len);
+
+    snprintf(buf, len, "unrecovered=%u "
+            "rto=%u ato=%u snd_mss=%u rcv_mss=%u "
+            "lost=%u retrans=%u rtt=%u rttvar=%u "
+            "sshthresh=%u cwnd=%u total_retrans=%u",
+            tcpi.tcpi_retransmits,  // Number of unrecovered [RTO] timeouts
+            tcpi.tcpi_rto,          // Retransmit timeout in usec
+            tcpi.tcpi_ato,          // Predicted tick of soft clock in usec
+            tcpi.tcpi_snd_mss,
+            tcpi.tcpi_rcv_mss,
+            tcpi.tcpi_lost,         // Lost packets
+            tcpi.tcpi_retrans,      // Retransmitted packets out
+            tcpi.tcpi_rtt,          // Smoothed round trip time in usec
+            tcpi.tcpi_rttvar,       // Medium deviation
+            tcpi.tcpi_snd_ssthresh,
+            tcpi.tcpi_snd_cwnd,
+            tcpi.tcpi_total_retrans);  // Total retransmits for entire connection
+
+    return std::string(buf);
 }
 
 void TCPConnection::send(std::string data)
@@ -98,7 +136,7 @@ void TCPConnection::handleRecv()
     int fd = channel_->fd();
     char buffer[65535];
     memset(buffer, 0, sizeof buffer);
-    assert(channel_->isRecving() == true);
+    assert(channel_->isRecving());
     
     ssize_t ret = ::recv(fd, buffer, sizeof buffer, 0);
     recvBuf_.append(std::string(buffer));
@@ -127,7 +165,7 @@ void TCPConnection::handleSend()
             if (sendBuf_.size() == 0) {
                 channel_->disableSend();
                 if (writeCompleteCallback_) {
-                    writeCompleteCallback_(shared_from_this());
+                    eventLoop_->runTask(std::bind(&TCPConnection::writeCompleteCallback_, shared_from_this()));
                 }
             }
             // 是否半关闭状态 

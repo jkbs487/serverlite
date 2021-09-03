@@ -29,13 +29,15 @@ public:
     void removeChannel(Channel *channel);
 
     bool isInLoopThread() const { return threadId_ == std::this_thread::get_id(); }
+    static EventLoop *getEventLoopOfCurrentThread();
+
 private:
     void handleRead(); // for wake up
-    void doTask();
+    void doTask();  
 
     int epollFd_;
     bool quit_;
-    bool doingTasking_;
+    bool doingTask_;
     int wakeupFd_;
     std::mutex mutex_;
     std::thread::id threadId_;
