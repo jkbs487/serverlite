@@ -71,6 +71,15 @@ std::string TCPConnection::getTcpInfoString() const
 
 void TCPConnection::send(std::string data)
 {
+    if (eventLoop_->isInLoopThread()) {
+        sendInLoop(data);
+    } else {
+        eventLoop_->runTask(std::bind(&TCPConnection::sendInLoop, this, data));
+    }
+}
+
+void TCPConnection::sendInLoop(std::string data)
+{
     if (state_ == Disconnected) {
         printf("disconnected, give up send\n");
         return;
@@ -85,8 +94,8 @@ void TCPConnection::send(std::string data)
         if (nsend >= 0) {
             remaining = data.size() - nsend; 
             if (remaining == 0 && writeCompleteCallback_) {
-                // 如果同步调用，有无限递归风险
-                writeCompleteCallback_(shared_from_this());
+                // 如果rumtask调用，有无限递归风险
+                eventLoop_->pushTask(std::bind(writeCompleteCallback_, shared_from_this()));
             }
         }
         else {
@@ -133,6 +142,7 @@ void TCPConnection::sendFile(std::string filePath)
 
 void TCPConnection::handleRecv()
 {
+    eventLoop_->assertInLoopThread();
     int fd = channel_->fd();
     char buffer[65535];
     memset(buffer, 0, sizeof buffer);
@@ -153,6 +163,7 @@ void TCPConnection::handleRecv()
 
 void TCPConnection::handleSend()
 {
+    eventLoop_->assertInLoopThread();
     if (state_ == Disconnected) {
         printf("disconnected, give up send\n");
         return;
@@ -165,7 +176,7 @@ void TCPConnection::handleSend()
             if (sendBuf_.size() == 0) {
                 channel_->disableSend();
                 if (writeCompleteCallback_) {
-                    eventLoop_->runTask(std::bind(&TCPConnection::writeCompleteCallback_, shared_from_this()));
+                    eventLoop_->runTask(std::bind(writeCompleteCallback_, shared_from_this()));
                 }
             }
             // 是否半关闭状态 
@@ -174,7 +185,6 @@ void TCPConnection::handleSend()
             }
         } else {
             printf("handle send error\n");
-            //channel_->disableSend();
         }
     }
     else {

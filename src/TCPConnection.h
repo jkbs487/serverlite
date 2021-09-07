@@ -55,6 +55,7 @@ private:
     void setState(ConnState state) {
         state_ = state;
     }
+    void sendInLoop(std::string data);
 
     std::string name_;
     EventLoop *eventLoop_;
