@@ -7,26 +7,37 @@
 #include <sys/eventfd.h>
 #include <unistd.h>
 #include <iostream>
+#include <assert.h>
 
 __thread EventLoop* t_loopInThisThread = 0;
 
  EventLoop* EventLoop::getEventLoopOfCurrentThread()
- {
-     return t_loopInThisThread;
- }
+{
+    return t_loopInThisThread;
+}
+
+int createEventFd()
+{
+    int wakeupFd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+    if (wakeupFd < 0) {
+        std::cout << "eventfd error" << std::endl; 
+        abort();
+    }
+    return wakeupFd;
+}
 
 EventLoop::EventLoop(): 
     epollFd_(epoll_create(1)),
-    quit_(true),
+    quit_(false),
     doingTask_(false),
-    wakeupFd_(::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC)),
+    wakeupFd_(createEventFd()),
     threadId_(std::this_thread::get_id()),
     wakeupChannel_(new Channel(this, wakeupFd_)),
     events_(32)
 {
     std::cout << "EventLoop created " << this << " in thread " << threadId_ << std::endl;
 
-    // make shure on loop per thread
+    // make shure one loop per thread
     if (t_loopInThisThread)
     {
         std::cout << "Another EventLoop " << t_loopInThisThread
@@ -49,9 +60,14 @@ EventLoop::~EventLoop()
     ::close(wakeupFd_);
 }
 
+void EventLoop::assertInLoopThread()
+{
+    assert(isInLoopThread());
+}
+
 void EventLoop::quit()
 {
-    quit_ = false;
+    quit_ = true;
     if (!doingTask_) {
         wakeup();
     }
@@ -59,7 +75,8 @@ void EventLoop::quit()
 
 void EventLoop::loop()
 {
-    while (quit_)
+    assertInLoopThread();
+    while (!quit_)
     {
         int numEvents = epoll_wait(epollFd_, &*events_.begin(), static_cast<int>(events_.size()), -1);
         if (numEvents < 0) {

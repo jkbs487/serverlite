@@ -17,6 +17,8 @@ public:
     
     EventLoop();
     ~EventLoop();
+    EventLoop(const EventLoop&) = delete;
+    void operator=(const EventLoop&) = delete;
 
     void loop();
 
@@ -24,11 +26,12 @@ public:
     void wakeup();
     void runTask(const Functor &cb);
     void pushTask(const Functor &cb);
-    //void 
+
     void updateChannel(Channel *channel);
     void removeChannel(Channel *channel);
 
     bool isInLoopThread() const { return threadId_ == std::this_thread::get_id(); }
+    void assertInLoopThread();
     static EventLoop *getEventLoopOfCurrentThread();
 
 private:
