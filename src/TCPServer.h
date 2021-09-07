@@ -8,6 +8,7 @@
 #include <memory>
 
 class Channel;
+class Acceptor;
 class EventLoop;
 class EventLoopThreadPool;
 
@@ -32,15 +33,15 @@ public:
     }
     void setThreadNum(int numThreads);
 private:
-    void handleAccept();
+    void newConnection(int connfd, struct sockaddr_in peerAddr);
     void removeConnection(const TCPConnectionPtr& conn);
     void removeConnectionInLoop(const TCPConnectionPtr& conn);
 
     std::string name_;
     std::string host_;
     uint16_t port_;
-    Channel *acceptChannel_;
-    EventLoop *eventLoop_;
+    EventLoop* loop_;
+    Acceptor* acceptor_;
     //std::unordered_map<std::string, TCPConnectionPtr> connections_;
     std::vector<TCPConnectionPtr> connections_;
     std::shared_ptr<EventLoopThreadPool> threadPool_;

@@ -1,8 +1,9 @@
 #include "TCPServer.h"
 
+#include "Channel.h"
+#include "Acceptor.h"
 #include "EventLoop.h"
 #include "EventLoopThreadPool.h"
-#include "Channel.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -23,7 +24,7 @@ void defaultConnectionCallback(const TCPConnectionPtr& conn)
     << (conn->connected() ? " UP" : " DOWN") << std::endl;
 }
 
-void defaultMessageCallback(const TCPConnectionPtr& conn, std::string buffer)
+void defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer)
 {
     std::string data;
     data.swap(buffer);
@@ -33,72 +34,36 @@ void defaultMessageCallback(const TCPConnectionPtr& conn, std::string buffer)
 TCPServer::TCPServer(std::string host, uint16_t port, EventLoop *loop, std::string name): 
     name_(name),
     host_(host), 
-    port_(port), 
-    eventLoop_(loop),
-    threadPool_(new EventLoopThreadPool(eventLoop_)),
+    port_(port),
+    loop_(loop),
+    acceptor_(new Acceptor(host, port, loop)),
+    threadPool_(new EventLoopThreadPool(loop)),
     connectionCallback_(defaultConnectionCallback),
     messageCallback_(&defaultMessageCallback),
     nextConnId_(0)
 {
-    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    
-    acceptChannel_ = new Channel(eventLoop_, listenfd);
-    
-    signal(SIGPIPE, SIG_IGN);
-    
-    int one = 1;
-    setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-
-    int flags = fcntl(listenfd, F_GETFL, 0); 
-    fcntl(listenfd, F_SETFL, flags | O_NONBLOCK);
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof addr);
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port_);
-    addr.sin_addr.s_addr = inet_addr(host.c_str());
-
-    if (bind(listenfd, reinterpret_cast<struct sockaddr*>(&addr), sizeof addr) < 0) {
-        perror("bind");
-        exit(-1);
-    }
+    acceptor_->setNewConnectionCallback(
+        std::bind(&TCPServer::newConnection, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 TCPServer::~TCPServer()
 {
     std::cout << "TCPServer::~TCPServer [" << name_ << "]" << std::endl;
-    acceptChannel_->disableAll();
-    acceptChannel_->remove();
-    delete acceptChannel_;
-    delete eventLoop_;
+    for (TCPConnectionPtr& conn : connections_) {
+        conn.reset();
+        conn->getLoop()->runTask(std::bind(&TCPConnection::connectDestroyed, conn));
+    }
+    delete acceptor_;
 }
 
 void TCPServer::start()
 {
-    listen(acceptChannel_->fd(), 5);
-    acceptChannel_->setRecvCallback(std::bind(&TCPServer::handleAccept, this));
-    acceptChannel_->enableRecv();
     threadPool_->start();
+    loop_->runTask(std::bind(&Acceptor::listen, acceptor_));
 }
 
-void TCPServer::handleAccept() 
+void TCPServer::newConnection(int connfd, struct sockaddr_in peerAddr) 
 {
-    int connfd;
-    struct sockaddr_in peerAddr;
-    ::bzero(&peerAddr, 0);
-    socklen_t peerLen = sizeof(peerAddr);
-
-    connfd = accept(acceptChannel_->fd(), reinterpret_cast<struct sockaddr*>(&peerAddr), &peerLen);
-    if (connfd == -1) {
-        if (errno == EWOULDBLOCK || errno == EINTR) {
-            return;
-        } else {
-            perror("accept");
-            acceptChannel_->disableRecv();
-            return;
-        }
-    }
-
     int flags = fcntl(connfd, F_GETFL, 0); 
     fcntl(connfd, F_SETFL, flags | O_NONBLOCK);
 
@@ -125,7 +90,7 @@ void TCPServer::handleAccept()
 
 void TCPServer::removeConnection(const TCPConnectionPtr& conn)
 {
-    eventLoop_->runTask(std::bind(&TCPServer::removeConnectionInLoop, this, conn));
+    loop_->runTask(std::bind(&TCPServer::removeConnectionInLoop, this, conn));
 }
 
 void TCPServer::removeConnectionInLoop(const TCPConnectionPtr& conn)
