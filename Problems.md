@@ -17,11 +17,9 @@
     Channel has been destroy by Read Event (read eof, close connnection), cause to use the wild pointer (sendCallback).
     Channel maybe destroy when handleEvent, so need extend the life of the Channel. 
 
+- When use EventLoopThread to start a TCPServer: "read eventfd: Resource temporarily unavailable"
 
-
-
-
-
+    Eventfd do not initialized with the initialization list of EventLoop, so .
 
 - Cannot assign requested address
 
