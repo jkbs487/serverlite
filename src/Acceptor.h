@@ -23,6 +23,7 @@ private:
     EventLoop *loop_;
     bool listening_;
     int acceptFd_;
+    int nullFd_;
     Channel *acceptChannel_;
     NewConnectionCallback newConnectionCallback_;
 };
