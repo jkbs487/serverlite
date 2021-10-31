@@ -16,7 +16,7 @@ typedef std::function<void (const TCPConnectionPtr& conn)> ConnectionCallback;
 typedef std::function<void (const TCPConnectionPtr& conn, std::string&)> MessageCallback;
 typedef std::function<void (const TCPConnectionPtr& conn)> WriteCompleteCallback;
 
-class TCPServer 
+class TCPServer
 {
 public:
     TCPServer(std::string host, uint16_t port, EventLoop *eventLoop, std::string name);
@@ -33,7 +33,7 @@ public:
     }
     void setThreadNum(int numThreads);
 private:
-    void newConnection(int connfd, struct sockaddr_in peerAddr);
+    void newConnection(int connfd);
     void removeConnection(const TCPConnectionPtr& conn);
     void removeConnectionInLoop(const TCPConnectionPtr& conn);
 
