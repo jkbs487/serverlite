@@ -1,12 +1,13 @@
 #include "EventLoop.h"
 #include "Channel.h"
+#include "Timer.h"
+#include "Logger.h"
 
 #include <thread>
 #include <cstring>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <unistd.h>
-#include <iostream>
 #include <assert.h>
 
 __thread EventLoop* t_loopInThisThread = 0;
@@ -35,13 +36,13 @@ EventLoop::EventLoop():
     wakeupChannel_(new Channel(this, wakeupFd_)),
     events_(32)
 {
-    std::cout << "EventLoop created " << this << " in thread " << threadId_ << std::endl;
+    LOG_DEBUG << "EventLoop created " << this << " in thread " << threadId_;
 
     // make shure one loop per thread
     if (t_loopInThisThread)
     {
-        std::cout << "Another EventLoop " << t_loopInThisThread
-                << " exists in this thread " << threadId_ << std::endl;
+        LOG_FATAL << "Another EventLoop " << t_loopInThisThread
+                << " exists in this thread " << threadId_;
     }
     else
     {
@@ -53,7 +54,7 @@ EventLoop::EventLoop():
 
 EventLoop::~EventLoop()
 {
-    std::cout << "~EventLoop" << std::endl;
+    LOG_DEBUG << "~EventLoop";
     ::close(epollFd_);
     wakeupChannel_->disableAll();
     wakeupChannel_->remove();
@@ -194,4 +195,18 @@ void EventLoop::doTask()
     }
     
     doingTask_ = false;
+}
+
+void EventLoop::runAfter(double delay, TimerCallback cb)
+{
+    Timer* timer = new Timer(this);
+    timer->addTimer(delay, 0);
+    timer->setTimerCallback(std::move(cb));
+}
+
+void EventLoop::runEvery(double interval, TimerCallback cb)
+{
+    Timer* timer = new Timer(this);
+    timer->addTimer(interval, interval);
+    timer->setTimerCallback(std::move(cb));
 }

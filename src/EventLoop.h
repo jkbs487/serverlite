@@ -10,11 +10,13 @@
 class Channel;
 struct epoll_event;
 
+typedef std::function<void()> TimerCallback;
+
 class EventLoop
 {
 public:
     typedef std::function<void()> Functor;
-    
+
     EventLoop();
     ~EventLoop();
     EventLoop(const EventLoop&) = delete;
@@ -30,13 +32,16 @@ public:
     void updateChannel(Channel *channel);
     void removeChannel(Channel *channel);
 
+    void runAfter(double delay, TimerCallback cb);
+    void runEvery(double interval, TimerCallback cb);
+
     bool isInLoopThread() const { return threadId_ == std::this_thread::get_id(); }
     void assertInLoopThread();
     static EventLoop *getEventLoopOfCurrentThread();
 
 private:
     void handleRead(); // for wake up
-    void doTask();  
+    void doTask();
 
     int epollFd_;
     bool quit_;
