@@ -36,3 +36,7 @@
 - How to know std::thread can join ?
 
     use thread.joinable method.
+
+- In TCPConnection::handleClose, why use guardThis(shared_from_this()) instead of guardThis(this)?
+
+    Only use "shared_from_this" will add current TCPConnectionPtr use count, use "this" means construct a new shared_ptr
