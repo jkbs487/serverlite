@@ -39,6 +39,7 @@ public:
         return state_ == Connected;
     }
     void shutdown();
+    void forceClose();
     EventLoop* getLoop() { return eventLoop_; }
     std::string name() { return name_; }
     struct sockaddr_in peerAddr() { return peerAddr_; }
@@ -56,6 +57,9 @@ private:
         state_ = state;
     }
     void sendInLoop(std::string data);
+    void shutdownInLoop();
+
+    const char* stateToString() const;
 
     std::string name_;
     EventLoop *eventLoop_;
@@ -71,3 +75,6 @@ private:
     CloseCallback closeCallback_;
     WriteCompleteCallback writeCompleteCallback_;
 };
+
+void defaultConnectionCallback(const TCPConnectionPtr& conn);
+void defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer);

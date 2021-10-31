@@ -1,6 +1,7 @@
 #include "TCPConnection.h"
 
 #include "Channel.h"
+#include "Logger.h"
 #include "EventLoop.h"
 
 #include <sys/socket.h>
@@ -12,7 +13,20 @@
 #include <cstring>
 #include <unistd.h>
 #include <assert.h>
-#include <iostream>
+
+void defaultConnectionCallback(const TCPConnectionPtr& conn)
+{
+    LOG_INFO << inet_ntoa(conn->localAddr().sin_addr) << ":" << conn->localAddr().sin_port 
+    << " -> " << inet_ntoa(conn->peerAddr().sin_addr) << ":" << conn->peerAddr().sin_port
+    << (conn->connected() ? " UP" : " DOWN");
+}
+
+void defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer)
+{
+    std::string data;
+    data.swap(buffer);
+    LOG_INFO << "recv: " << data.c_str() << ", bytes: " << data.size();
+}
 
 TCPConnection::TCPConnection(EventLoop *eventLoop, int fd, struct sockaddr_in localAddr, struct sockaddr_in peerAddr, std::string name):
     name_(name),
@@ -28,14 +42,14 @@ TCPConnection::TCPConnection(EventLoop *eventLoop, int fd, struct sockaddr_in lo
     channel_->setCloseCallback(std::bind(&TCPConnection::handleClose, this));
     channel_->setErrorCallback(std::bind(&TCPConnection::handleError, this));
     
-    std::cout << "TCPConnection::TCPConnection [" << name_ << "] at fd=" 
-    << channel_->fd() << " state=" << state_ << std::endl;
+    LOG_DEBUG << "TCPConnection::TCPConnection [" << name_ << "] at fd=" 
+    << channel_->fd() << " state=" << stateToString();
 }
 
 TCPConnection::~TCPConnection() 
 {
-    std::cout << "TCPConnection::~TCPConnection [" << name_ << "] at fd=" 
-    << channel_->fd() << " state=" << state_ << std::endl;
+    LOG_DEBUG << "TCPConnection::~TCPConnection [" << name_ << "] at fd=" 
+    << channel_->fd() << " state=" << stateToString();
     // 关闭fd
     ::close(sockfd_);
     delete channel_;
@@ -94,7 +108,7 @@ void TCPConnection::sendInLoop(std::string data)
         if (nsend >= 0) {
             remaining = data.size() - nsend; 
             if (remaining == 0 && writeCompleteCallback_) {
-                // 如果rumtask调用，有无限递归风险
+                // 如果runtask调用，有无限递归风险
                 eventLoop_->pushTask(std::bind(writeCompleteCallback_, shared_from_this()));
             }
         }
@@ -137,7 +151,6 @@ void TCPConnection::sendFile(std::string filePath)
             ::sendfile64(channel_->fd(), fileFd, &offset, fileSize - offset);
         }
     }
-    printf("file trans complete\n");
 }
 
 void TCPConnection::handleRecv()
@@ -151,7 +164,7 @@ void TCPConnection::handleRecv()
     ssize_t ret = ::recv(fd, buffer, sizeof buffer, 0);
     recvBuf_.append(std::string(buffer));
     if (ret < 0 && errno != EINTR && errno != EWOULDBLOCK) {
-        perror("recv");
+        LOG_ERROR << "recv error: " << strerror(errno);
         handleError();
     } else if (ret == 0) {
         handleClose();
@@ -165,7 +178,7 @@ void TCPConnection::handleSend()
 {
     eventLoop_->assertInLoopThread();
     if (state_ == Disconnected) {
-        printf("disconnected, give up send\n");
+        LOG_WARN << "disconnected, give up send";
         return;
     }
     if (channel_->isSending()) {
@@ -184,20 +197,35 @@ void TCPConnection::handleSend()
                 shutdown();
             }
         } else {
-            printf("handle send error\n");
+            LOG_ERROR << "handle send error";
         }
     }
     else {
-        printf("fd %d is down, no more writing.\n", channel_->fd());
+        LOG_INFO << "fd " << channel_->fd() << " is down, no more writing.";
     }
+}
+
+void TCPConnection::handleClose()
+{
+    eventLoop_->assertInLoopThread();
+    setState(Disconnected);
+    channel_->disableAll();
+    TCPConnectionPtr guardThis(shared_from_this());
+    LOG_TRACE << "[7]TCPConnection use count: " << guardThis.use_count();
+    connectionCallback_(guardThis);
+    // remove connection
+    closeCallback_(guardThis);
+    LOG_TRACE << "[11]TCPConnection use count: " << guardThis.use_count();
 }
 
 void TCPConnection::connectEstablished()
 {
     setState(Connected);
+    LOG_TRACE << "[3]TCPConnection use count: " << shared_from_this().use_count()-1;
     channel_->enableRecv();
     channel_->tie(shared_from_this());
     connectionCallback_(shared_from_this());
+    LOG_TRACE << "[4]TCPConnection use count: " << shared_from_this().use_count()-1;
 }
 
 void TCPConnection::connectDestroyed()
@@ -207,21 +235,28 @@ void TCPConnection::connectDestroyed()
         connectionCallback_(shared_from_this());
     }
     channel_->remove();
-}
-
-void TCPConnection::handleClose()
-{
-    setState(Disconnected);
-    channel_->disableAll();
-    connectionCallback_(shared_from_this());
-    closeCallback_(shared_from_this());
+    LOG_TRACE << "[13]TCPConnection use count: " << shared_from_this().use_count()-1;
 }
 
 void TCPConnection::shutdown()
 {
     if (state_ == Connected) {
         setState(Disconnecting);
-        ::shutdown(channel_->fd(), SHUT_WR);
+        eventLoop_->runTask(std::bind(&TCPConnection::shutdownInLoop, this));
+    }
+}
+
+void TCPConnection::shutdownInLoop()
+{
+    eventLoop_->assertInLoopThread();
+    ::shutdown(channel_->fd(), SHUT_WR);
+}
+
+void TCPConnection::forceClose()
+{
+    if (state_ == Connected || state_ == Disconnecting) {
+        setState(Disconnecting);
+        eventLoop_->pushTask(std::bind(&TCPConnection::handleClose, this));
     }
 }
 
@@ -235,6 +270,23 @@ void TCPConnection::handleError()
     } else {
         char buffer[512];
         ::bzero(buffer, sizeof buffer);
-        printf("ERROR: %s\n", strerror_r(optval, buffer, sizeof buffer));
+        LOG_ERROR << strerror_r(optval, buffer, sizeof buffer);
     }
+}
+
+const char* TCPConnection::stateToString() const
+{
+  switch (state_)
+  {
+    case Disconnected:
+      return "Disconnected";
+    case Connecting:
+      return "Connecting";
+    case Connected:
+      return "Connected";
+    case Disconnecting:
+      return "Disconnecting";
+    default:
+      return "unknown state";
+  }
 }
