@@ -3,7 +3,6 @@
 
 #include <assert.h>
 #include <unistd.h>
-#include <iostream>
 
 EventLoopThreadPool::EventLoopThreadPool(EventLoop* baseLoop):
     baseLoop_(baseLoop),

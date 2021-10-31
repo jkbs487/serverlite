@@ -1,8 +1,8 @@
 #include "EventLoopThread.h"
 #include "EventLoop.h"
+#include "Logger.h"
 
 #include <functional>
-#include <iostream>
 #include <unistd.h>
 
 EventLoopThread::EventLoopThread(): 
@@ -16,7 +16,7 @@ EventLoopThread::EventLoopThread():
 
 EventLoopThread::~EventLoopThread()
 {
-    std::cout << "~EventLoopThread" << std::endl;
+    LOG_DEBUG << "~EventLoopThread";
     if (loop_) {
         terminate_ = true;
         loop_->quit();
@@ -36,12 +36,12 @@ EventLoop* EventLoopThread::startLoop()
     eventLoop = loop_;
     return eventLoop;
 }
-
+ 
 void EventLoopThread::threadFunc()
 {
     EventLoop loop;
-    //std::cout << "init(): print: pid = " << getpid() << ", tid = " 
-    //    << std::this_thread::get_id() << ", loop = " << &loop << std::endl;
+    LOG_TRACE << "init(): print: pid = " << getpid() << ", tid = " 
+        << std::this_thread::get_id() << ", loop = " << &loop;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         loop_ = &loop;
