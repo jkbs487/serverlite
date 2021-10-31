@@ -8,7 +8,7 @@ class Channel;
 class Acceptor
 {
 public:
-    typedef std::function<void (int connfd, struct sockaddr_in)> NewConnectionCallback;
+    typedef std::function<void (int connfd)> NewConnectionCallback;
 
     Acceptor(std::string host, uint16_t port, EventLoop *loop);
     ~Acceptor();
@@ -23,7 +23,7 @@ private:
     EventLoop *loop_;
     bool listening_;
     int acceptFd_;
-    int nullFd_;
     Channel *acceptChannel_;
+    int nullFd_;
     NewConnectionCallback newConnectionCallback_;
 };

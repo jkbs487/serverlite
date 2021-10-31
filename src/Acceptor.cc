@@ -75,7 +75,7 @@ void Acceptor::handleRecv()
         return;
     }
     if (newConnectionCallback_)
-        newConnectionCallback_(connfd, peerAddr);
+        newConnectionCallback_(connfd);
     else {
         ::close(connfd);
     } 
