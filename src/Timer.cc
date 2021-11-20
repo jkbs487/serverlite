@@ -18,19 +18,22 @@ int createTimerFd()
     return timerFd;
 }
 
+std::atomic_int32_t Timer::s_numCreate(0);
+
 Timer::Timer(EventLoop* loop):
     timerFd_(createTimerFd()),
+    sequence_(++s_numCreate),
     loop_(loop),
-    timerChannel_(new Channel(loop_, timerFd_))
+    timerChannel_(loop_, timerFd_)
 {
-    timerChannel_->setRecvCallback(std::bind(&Timer::handleRead, this));
-    timerChannel_->enableRecv();
+    timerChannel_.setRecvCallback(std::bind(&Timer::handleRead, this));
+    timerChannel_.enableRecv();
 }
 
 Timer::~Timer()
 {
-    timerChannel_->disableAll();
-    timerChannel_->remove();
+    timerChannel_.disableAll();
+    timerChannel_.remove();
     ::close(timerFd_);
 }
 
@@ -42,16 +45,23 @@ void Timer::handleRead()
         std::cout << "read timerfd error" << std::endl;
     }
     if (timerCallback_) timerCallback_();
+    //loop_->cancel(sequence_);
 }
 
-void Timer::addTimer(double time, double interval)
+int Timer::addTimer(double time, double interval, TimerCallback cb)
 {
-    loop_->runTask(std::bind(&Timer::addTimerInLoop, this, time, interval));
+    loop_->runTask(std::bind(&Timer::addTimerInLoop, this, time, interval, cb));
+    return sequence_;
 }
 
-void Timer::addTimerInLoop(double time, double interval)
+void Timer::addTimerInLoop(double time, double interval, TimerCallback cb)
 {
     loop_->assertInLoopThread();
+    if (time - 0 < 0.00001) {
+        if (cb) cb();
+        return;
+    }
+    timerCallback_ = cb;
     int64_t microseconds = static_cast<int64_t>(time * 1000);
     struct itimerspec howlong;
     ::bzero(&howlong, sizeof howlong);
