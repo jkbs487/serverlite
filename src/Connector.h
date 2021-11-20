@@ -12,14 +12,15 @@ typedef struct sockaddr_in SockAddr;
 class Connector : public std::enable_shared_from_this<Connector>
 {
 public:
-    typedef std::function<void (int connfd, SockAddr)> NewConnectionCallback;
+    typedef std::function<void (int connfd)> NewConnectionCallback;
 
     Connector(std::string host, uint16_t port, EventLoop *loop);
     ~Connector();
 
     void start();
     void stop();
-    void setNewConnectionCallback(const NewConnectionCallback& cb) { newConnectionCallback_ = cb; }
+    void setNewConnectionCallback(const NewConnectionCallback& cb) 
+    { newConnectionCallback_ = cb; }
 private:
     void startInLoop();
     void stopInLoop();
@@ -30,9 +31,19 @@ private:
     int removeChannel();
     void handleWrite();
     void handleError();
+    void setState(int state) 
+    { state_ = state; }
 
+    enum States {
+        DISCONNECTED,
+        CONNECTING,
+        CONNECTED
+    };
     EventLoop *loop_;
+    std::string host_;
+    uint16_t port_;
     bool connecting_;
+    int state_;
     int connectFd_;
     int retryMs_;
     int maxRetryMs_;

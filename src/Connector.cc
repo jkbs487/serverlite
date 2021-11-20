@@ -13,7 +13,12 @@
 #include <cerrno>
 
 Connector::Connector(std::string host, uint16_t port, EventLoop *loop):
-    loop_(loop), retryMs_(1000), maxRetryMs_(10000)
+    loop_(loop),
+    host_(host),
+    port_(port),
+    state_(DISCONNECTED),
+    retryMs_(1000), 
+    maxRetryMs_(100000)
 {
     memset(&serverAddr_, 0, sizeof serverAddr_);
     serverAddr_.sin_family = AF_INET;
@@ -40,15 +45,18 @@ void Connector::startInLoop()
 
 void Connector::stop()
 {
-    loop_->runTask(std::bind(&Connector::stopInLoop, this));
+    // after event 
+    loop_->pushTask(std::bind(&Connector::stopInLoop, this));
 }
 
 void Connector::stopInLoop()
 {
-    LOG_INFO << __func__;
     loop_->assertInLoopThread();
-    int connfd = removeChannel();
-    retry(connfd);
+    if (state_ == CONNECTING) {
+        loop_->assertInLoopThread();
+        int connfd = removeChannel();
+        retry(connfd);
+    }
 }
 
 void Connector::connect()
@@ -93,6 +101,8 @@ void Connector::connect()
 
 void Connector::connecting(int connfd)
 {
+    setState(CONNECTING);
+    assert(!connectChannel_);
     connectChannel_.reset(new Channel(loop_, connfd));
     connectChannel_->setSendCallback(std::bind(&Connector::handleWrite, this));
     connectChannel_->setErrorCallback(std::bind(&Connector::handleError, this));
@@ -104,6 +114,7 @@ int Connector::removeChannel()
     connectChannel_->disableAll();
     connectChannel_->remove();
     int connfd = connectChannel_->fd();
+    // reset channel after network event
     loop_->pushTask(std::bind(&Connector::resetChannel, this));
     return connfd; 
 }
@@ -115,36 +126,53 @@ void Connector::resetChannel()
 
 void Connector::retry(int connfd)
 {
+    // client must use another new connfd to retry
     ::close(connfd);
-    // !!!
+    setState(DISCONNECTED);
+    LOG_INFO << "Connector::retry connecting to " << host_ << " : " << port_ << " in " << retryMs_ << " millseconds";
     loop_->runAfter(retryMs_/1000.0, std::bind(&Connector::startInLoop, this));
     retryMs_ = std::min(retryMs_ * 2, maxRetryMs_);
 }
 
 void Connector::handleWrite()
 {
-    int connfd = removeChannel();
-    int optval;
-    socklen_t optlen = static_cast<socklen_t>(sizeof optval);
+    // is new client?
+    if (state_ == CONNECTING) {
+        int connfd = removeChannel();
+        int optval;
+        socklen_t optlen = static_cast<socklen_t>(sizeof optval);
 
-    if (::getsockopt(connfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0)
-    {
-        char errnoBuf[512];
-        LOG_WARN << "Connector::handleWrite - SO_ERROR = " << strerror_r(errno, errnoBuf, sizeof errnoBuf);
-        retry(connfd);
-    }
+        if (::getsockopt(connfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0)
+        {
+            char errnoBuf[512];
+            LOG_WARN << "Connector::handleWrite - SO_ERROR = " << strerror_r(errno, errnoBuf, sizeof errnoBuf);
+            retry(connfd);
+        }
+        //else if () selfconn
+        else {
+            setState(CONNECTED);
+            if (newConnectionCallback_)
+                newConnectionCallback_(connfd);
+        }
+    } 
 }
 
 void Connector::handleError()
 {
-    int optval;
-    socklen_t optlen = static_cast<socklen_t>(sizeof optval);
+    LOG_ERROR << "Connector::handleError";
+    // if new client, retry
+    if (state_ == CONNECTING) {
+        int connfd = removeChannel();
+        int optval;
+        socklen_t optlen = static_cast<socklen_t>(sizeof optval);
 
-    if (::getsockopt(connectChannel_->fd(), SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0) {
-        perror("getsockopt");
-    } else {
-        char buffer[512];
-        ::bzero(buffer, sizeof buffer);
-        LOG_ERROR << strerror_r(optval, buffer, sizeof buffer);
+        if (::getsockopt(connfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0) {
+            LOG_ERROR << "getsockopt error:";
+        } else {
+            char buffer[512];
+            ::bzero(buffer, sizeof buffer);
+            LOG_ERROR << strerror_r(optval, buffer, sizeof buffer);
+        }
+        retry(connfd);
     }
 }
