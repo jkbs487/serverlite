@@ -42,7 +42,7 @@ private:
     EventLoop *loop_;
     std::string host_;
     uint16_t port_;
-    bool connecting_;
+    bool connect_;
     int state_;
     int connectFd_;
     int retryMs_;

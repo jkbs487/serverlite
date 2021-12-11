@@ -16,6 +16,7 @@ Connector::Connector(std::string host, uint16_t port, EventLoop *loop):
     loop_(loop),
     host_(host),
     port_(port),
+    connect_(false),
     state_(DISCONNECTED),
     retryMs_(1000), 
     maxRetryMs_(100000)
@@ -33,6 +34,7 @@ Connector::~Connector()
 
 void Connector::start()
 {
+    connect_ = true;
     loop_->runTask(std::bind(&Connector::startInLoop, this));
 }
 
@@ -40,12 +42,17 @@ void Connector::startInLoop()
 {
     LOG_INFO << "Connector::startInLoop";
     loop_->assertInLoopThread();
-    connect();
+    if (connect_) {
+        connect();
+    } else {
+        LOG_DEBUG << "do not connect";
+    }
 }
 
 void Connector::stop()
 {
     // after event 
+    connect_ = false;
     loop_->pushTask(std::bind(&Connector::stopInLoop, this));
 }
 
@@ -126,12 +133,17 @@ void Connector::resetChannel()
 
 void Connector::retry(int connfd)
 {
-    // client must use another new connfd to retry
-    ::close(connfd);
-    setState(DISCONNECTED);
-    LOG_INFO << "Connector::retry connecting to " << host_ << " : " << port_ << " in " << retryMs_ << " millseconds";
-    loop_->runAfter(retryMs_/1000.0, std::bind(&Connector::startInLoop, this));
-    retryMs_ = std::min(retryMs_ * 2, maxRetryMs_);
+    if (connect_) {
+        // client must use another new connfd to retry
+        ::close(connfd);
+        setState(DISCONNECTED);
+        LOG_INFO << "Connector::retry connecting to " << host_ << " : " << port_ << " in " << retryMs_ << " millseconds";
+        loop_->runAfter(retryMs_/1000.0, std::bind(&Connector::startInLoop, this));
+        retryMs_ = std::min(retryMs_ * 2, maxRetryMs_);
+    }
+    else {
+        LOG_DEBUG << "do not connect";
+    }
 }
 
 void Connector::handleWrite()
