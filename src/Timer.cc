@@ -3,6 +3,7 @@
 #include "EventLoop.h"
 #include "Logger.h"
 
+#include <cmath>
 #include <unistd.h>
 #include <strings.h>
 #include <iostream>
@@ -45,11 +46,12 @@ void Timer::handleRead()
         std::cout << "read timerfd error" << std::endl;
     }
     if (timerCallback_) timerCallback_();
-    //loop_->cancel(sequence_);
+    loop_->cancel(sequence_);
 }
 
 int Timer::addTimer(double time, double interval, TimerCallback cb)
 {
+    timerChannel_.tie(shared_from_this());
     loop_->runTask(std::bind(&Timer::addTimerInLoop, this, time, interval, cb));
     return sequence_;
 }
@@ -57,10 +59,8 @@ int Timer::addTimer(double time, double interval, TimerCallback cb)
 void Timer::addTimerInLoop(double time, double interval, TimerCallback cb)
 {
     loop_->assertInLoopThread();
-    if (time - 0 < 0.00001) {
-        if (cb) cb();
-        return;
-    }
+    if (fabs(time) < 1e-15) 
+        time = 0.001;
     timerCallback_ = cb;
     int64_t microseconds = static_cast<int64_t>(time * 1000);
     struct itimerspec howlong;

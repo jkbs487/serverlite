@@ -8,7 +8,7 @@ void threadFunc(EventLoop* loop)
     TCPClient client("127.0.0.1", 1234, loop, "TcpClient");
     client.connect();
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
     // client destructs when connected.
 }
 

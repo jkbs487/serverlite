@@ -31,6 +31,14 @@ void TCPClient::connect()
     connector_->start();
 }
 
+void TCPClient::disconnect()
+{
+    LOG_INFO << "TcpClient::disconnect[" << name_ << "]";
+    if (connection_) {
+        connection_->shutdown();
+    }
+}
+
 void TCPClient::stop()
 {
     connector_->stop();

@@ -18,6 +18,6 @@ int main(int argc, char* argv[])
   loop.runAfter(0.0, timeout);
   loop.runAfter(1.0, std::bind(&EventLoop::quit, &loop));
   client.connect();
-  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
   loop.loop();
 }

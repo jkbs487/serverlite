@@ -9,7 +9,7 @@ class EventLoop;
 
 typedef std::function<void()> TimerCallback;
 
-class Timer
+class Timer : public std::enable_shared_from_this<Timer>
 {
 public:
     Timer(EventLoop* loop);
