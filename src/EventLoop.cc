@@ -197,16 +197,28 @@ void EventLoop::doTask()
     doingTask_ = false;
 }
 
-void EventLoop::runAfter(double delay, TimerCallback cb)
+int EventLoop::runAfter(double delay, TimerCallback cb)
 {
-    Timer* timer = new Timer(this);
-    timer->addTimer(delay, 0);
-    timer->setTimerCallback(std::move(cb));
+    std::shared_ptr<Timer> timer = std::make_shared<Timer>(this);
+    int sequence = timer->sequence();
+    timer->addTimer(delay, 0, std::move(cb));
+    timers_[sequence] = std::move(timer);
+    return sequence;
 }
 
-void EventLoop::runEvery(double interval, TimerCallback cb)
+int EventLoop::runEvery(double interval, TimerCallback cb)
 {
-    Timer* timer = new Timer(this);
-    timer->addTimer(interval, interval);
-    timer->setTimerCallback(std::move(cb));
+    std::shared_ptr<Timer> timer = std::make_shared<Timer>(this);
+    int sequence = timer->sequence();
+    timer->addTimer(interval, interval, std::move(cb));
+    timers_[sequence] = std::move(timer);   
+    return sequence;
+}
+
+void EventLoop::cancel(int sequence)
+{
+    if (timers_.count(sequence) > 0) {
+        timers_.erase(sequence);
+        LOG_DEBUG << "remove Timer " << sequence;
+    }
 }

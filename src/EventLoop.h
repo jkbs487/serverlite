@@ -8,6 +8,7 @@
 #include <mutex>
 
 class Channel;
+class Timer;
 struct epoll_event;
 
 typedef std::function<void()> TimerCallback;
@@ -32,8 +33,9 @@ public:
     void updateChannel(Channel *channel);
     void removeChannel(Channel *channel);
 
-    void runAfter(double delay, TimerCallback cb);
-    void runEvery(double interval, TimerCallback cb);
+    int runAfter(double delay, TimerCallback cb);
+    int runEvery(double interval, TimerCallback cb);
+    void cancel(int sequence);
 
     bool isInLoopThread() const { return threadId_ == std::this_thread::get_id(); }
     void assertInLoopThread();
@@ -53,4 +55,5 @@ private:
     std::vector<struct epoll_event> events_;
     std::unordered_map<int, Channel*> channels_;
     std::vector<Functor> taskQueue_;
+    std::unordered_map<int, std::shared_ptr<Timer>> timers_;
 };
