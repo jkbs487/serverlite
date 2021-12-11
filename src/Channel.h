@@ -17,7 +17,7 @@ public:
     Channel(EventLoop *eventLoop, int fd);
     ~Channel();
     Channel(const Channel&) = delete;
-    void operator =(const Channel&) = delete;
+    Channel& operator =(const Channel&) = delete;
     void setRecvCallback(const RecvCallback& cb) { recvCallback_ = cb; }
     void setSendCallback(const SendCallback& cb) { sendCallback_ = cb; }
     void setCloseCallback(const CloseCallback& cb) { closeCallback_ = cb; }

@@ -35,7 +35,7 @@ Logger::Logger(std::string file, int line, LogLevel level):
 
     file = file.substr(file.find_last_of('/')+1, file.size()-file.find_last_of('/'));
     stream_ << now << " " << std::this_thread::get_id() << " ";
-    stream_ << logLevelName_[level] << " " << file << ":" << line << " ";
+    stream_ << logLevelName_[level] << " " << file << ":" << line << "  ";
 }
 
 Logger::Logger(std::string file, std::string func, int line, LogLevel level):
@@ -52,7 +52,7 @@ Logger::Logger(std::string file, std::string func, int line, LogLevel level):
     
     file = file.substr(file.find_last_of('/')+1, file.size()-file.find_last_of('/'));
     stream_ << now << " " << std::this_thread::get_id() << " ";
-    stream_ << logLevelName_[level] << " " << file << " " << func << ":" << line << " ";
+    stream_ << logLevelName_[level] << " " << file << " " << func << ":" << line << "  ";
 }
 
 Logger::~Logger()

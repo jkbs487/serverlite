@@ -42,7 +42,7 @@ void EchoServer::onConnection(const TCPConnectionPtr& conn)
         ++numConnected_;
         if (numConnected_ > kMaxConnections_)
         {
-        conn->shutdown();
+            conn->forceClose();
         //conn->forceCloseWithDelay(3.0);  // > round trip of the whole Internet.
         }
     }
@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
     {
         maxConnections = atoi(argv[1]);
     }
+    
     std::cout << "maxConnections = " << maxConnections << std::endl;
     EchoServer server("0.0.0.0", 10001, maxConnections);
     server.start();

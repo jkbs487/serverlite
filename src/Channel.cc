@@ -4,6 +4,7 @@
 
 #include "EventLoop.h"
 #include "Channel.h"
+#include "Logger.h"
 
 const int Channel::SendEvent = EPOLLOUT;
 const int Channel::RecvEvent = EPOLLIN;
@@ -48,13 +49,15 @@ void Channel::handleEvents()
     if (tied_) {
         guard = tie_.lock();
         if (guard) {
+            LOG_TRACE << "[6]TCPConnection use count: " << guard.use_count();
             handleEventsWithGuard();
+            LOG_TRACE << "[12]TCPConnection use count: " << guard.use_count();
         }
     }
     else {
         handleEventsWithGuard();
     }
-}
+} 
 
 void Channel::handleEventsWithGuard()
 {

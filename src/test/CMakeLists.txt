@@ -21,3 +21,6 @@ target_link_libraries(TCPClientTest01 net)
 
 add_executable(TCPClientTest02 TCPClientTest02.cc)
 target_link_libraries(TCPClientTest02 net)
+
+add_executable(TCPClientTest03 TCPClientTest03.cc)
+target_link_libraries(TCPClientTest03 net)
