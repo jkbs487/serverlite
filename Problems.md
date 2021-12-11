@@ -19,7 +19,7 @@
 
 - When use EventLoopThread to start a TCPServer: "read eventfd: Resource temporarily unavailable"
 
-    Eventfd do not initialized with the initialization list of EventLoop, so .
+    Eventfd do not initialized with the initialization list of EventLoop, so.
 
 - Cannot assign requested address
 
@@ -33,10 +33,14 @@
 
     std::thread do not use thread.join method.
 
-- How to know std::thread can join ?
+- How to know std::thread can join?
 
     use thread.joinable method.
 
 - In TCPConnection::handleClose, why use guardThis(shared_from_this()) instead of guardThis(this)?
 
     Only use "shared_from_this" will add current TCPConnectionPtr use count, use "this" means construct a new shared_ptr
+
+- terminate called after throwing an instance of 'std::bad_weak_ptr'
+
+    Must use shared_from_this() after using the shared_ptr<T> construcor.
