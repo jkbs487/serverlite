@@ -1,6 +1,44 @@
-#include <fstream>
+#include <sstream>
 #include <iostream>
+#include <fstream>
 #include <vector>
+#include <cstdio>
+#include <functional>
+
+typedef std::function<void(std::string)> OutputFunc;
+
+class Logging
+{
+public:
+    Logging()
+    : fp_(::fopen("/dev/fd/1", "w"))
+    {
+        if (!fp_) {
+            perror("fopen");
+            abort();
+        }
+    }
+
+    Logging(std::string baseName) 
+    : fp_(::fopen(generateFileName(baseName).c_str(), "w"))
+    {
+        if (!fp_) {
+            perror("fopen");
+            abort();
+        }
+    }
+
+    ~Logging()
+    {
+        if (fp_)
+            ::fclose(fp_);
+    }
+
+    void append(const std::string& logLine);
+private:
+    std::string generateFileName(std::string baseName);
+    FILE* fp_;
+};
 
 class Logger
 {
@@ -21,14 +59,16 @@ public:
     Logger& operator =(const Logger&) = delete;
     ~Logger();
 
-    std::ofstream& stream() { return stream_; }
+    std::stringstream& stream() { return sstream_; }
     static LogLevel logLevel();
-    static void setOutput(std::string output);
+    static void setOutput(OutputFunc output);
     static void setLogLevel(LogLevel level);
 private:
-    std::ofstream stream_;
+    std::string generateFileName(std::string baseName);
+    std::string getFormatTime();
+
     LogLevel level_;
-    std::vector<std::string> logLevelName_;
+    std::stringstream sstream_;
 };
 
 #define LOG_TRACE if (Logger::logLevel() <= Logger::TRACE) \
