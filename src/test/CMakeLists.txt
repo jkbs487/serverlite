@@ -13,6 +13,9 @@ target_link_libraries(EventLoopThreadPoolTest net)
 add_executable(LoggerTest LoggerTest.cc)
 target_link_libraries(LoggerTest net)
 
+add_executable(AsyncLoggerTest AsyncLoggerTest.cc)
+target_link_libraries(AsyncLoggerTest net)
+
 add_executable(ReactorTest05 ReactorTest05.cc)
 target_link_libraries(ReactorTest05 net)
 

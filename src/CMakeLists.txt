@@ -8,6 +8,7 @@ set(net_SRCS
     EventLoop.cc
     TCPClient.cc
     TCPServer.cc
+    AsyncLogger.cc
     TCPConnection.cc
     EventLoopThread.cc
     EventLoopThreadPool.cc
@@ -27,6 +28,7 @@ set(HEADERS
     EventLoop.h
     TCPClient.h
     TCPServer.h
+    AsyncLogger.h
     TCPConnection.h
     EventLoopThread.h
     EventLoopThreadPool.h
