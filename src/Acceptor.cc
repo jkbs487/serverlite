@@ -49,7 +49,7 @@ Acceptor::~Acceptor()
 void Acceptor::listen()
 {
     loop_->assertInLoopThread();
-    ::listen(acceptFd_, 5);
+    ::listen(acceptFd_, SOMAXCONN);
     listening_ = true;
     acceptChannel_->enableRecv();
 }
