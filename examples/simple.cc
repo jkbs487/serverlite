@@ -7,6 +7,7 @@
 #include <sys/time.h>
 #include <cstdio>
 #include <thread>
+#include <string.h>
 
 #define TIME_SUB_MS(tv1, tv2)  ((tv1.tv_sec - tv2.tv_sec) * 1000 + (tv1.tv_usec - tv2.tv_usec) / 1000)
 
@@ -98,10 +99,10 @@ class ChargenServer {
 public:
     ChargenServer(std::string host, uint16_t port, EventLoop *loop)
         : server_(host, port, loop, "ChargenServer"),
-        startTime_(clock()),
         messageCount_(0)
     {
         createMessage();
+        gettimeofday(&tvBegin_, NULL);
         server_.setConnectionCallback(
             std::bind(&ChargenServer::onConnection, this, std::placeholders::_1));
         server_.setWriteCompleteCallback(
@@ -116,7 +117,7 @@ public:
 private:
     TCPServer server_;
     std::string message_;
-    clock_t startTime_;
+    struct timeval tvBegin_;
     long messageCount_;
 
     void createMessage() 
@@ -151,11 +152,14 @@ private:
 
     void printThroughput()
     {
-        clock_t endTime = clock();
-        double interval = static_cast<double>(endTime - startTime_) / CLOCKS_PER_SEC;
-        printf("%4.3f MiB/s\n", static_cast<double>(messageCount_)/interval/1024/1024);
+        struct timeval tvCur;
+        memcpy(&tvCur, &tvBegin_, sizeof(struct timeval));
+        
+        gettimeofday(&tvBegin_, NULL);
+
+        double duration = static_cast<double>(TIME_SUB_MS(tvBegin_, tvCur));
+        printf("%4.3f MiB/s\n", static_cast<double>(messageCount_) / (duration / 1000) / 1024 / 1024);
         messageCount_ = 0;
-        startTime_ = endTime;
     }
 };
 
