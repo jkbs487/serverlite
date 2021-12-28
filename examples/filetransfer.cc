@@ -48,7 +48,7 @@ void onMessage(const TCPConnectionPtr& conn, std::string buffer)
 int main(int argc, char *argv[])
 {
     EventLoop eventLoop;
-    TCPServer tcpserver("0.0.0.0", 12345, &eventLoop);
+    TCPServer tcpserver("0.0.0.0", 12345, &eventLoop, "FileServer");
     tcpserver.setConnectionCallback(onConnection);
     tcpserver.setMessageCallback(onMessage);
     tcpserver.start();
