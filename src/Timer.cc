@@ -46,7 +46,12 @@ void Timer::handleRead()
         std::cout << "read timerfd error" << std::endl;
     }
     if (timerCallback_) timerCallback_();
-    loop_->cancel(sequence_);
+
+    struct itimerspec howlong;
+    ::timerfd_gettime(timerFd_, &howlong);
+    if (howlong.it_interval.tv_sec == 0 && howlong.it_interval.tv_nsec == 0) {
+        loop_->cancel(sequence_);
+    }
 }
 
 int Timer::addTimer(double time, double interval, TimerCallback cb)
