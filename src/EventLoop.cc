@@ -5,6 +5,7 @@
 
 #include <thread>
 #include <cstring>
+#include <signal.h>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <unistd.h>
@@ -37,7 +38,7 @@ EventLoop::EventLoop():
     events_(32)
 {
     LOG_DEBUG << "EventLoop created " << this << " in thread " << threadId_;
-
+    ::signal(SIGPIPE, SIG_IGN);
     // make shure one loop per thread
     if (t_loopInThisThread)
     {
