@@ -1,3 +1,5 @@
 # TcpServer
 
-A High performance & Simple TcpServer, use for Linux
+A High performance & Simple TcpServer, used in Linux
+
+Object-based design, 
