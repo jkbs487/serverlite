@@ -9,3 +9,6 @@ target_link_libraries(file net)
 
 add_executable(oneshot oneshot.cc)
 target_link_libraries(oneshot net)
+
+add_executable(http http.cc)
+target_link_libraries(http net)
