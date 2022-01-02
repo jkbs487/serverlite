@@ -44,3 +44,7 @@
 - terminate called after throwing an instance of 'std::bad_weak_ptr'
 
     Must use shared_from_this() after using the shared_ptr<T> construcor.
+
+- data jitter when large connections 
+
+    backlog is too small.
