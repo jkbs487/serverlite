@@ -46,6 +46,18 @@ public:
     struct sockaddr_in localAddr() { return localAddr_; }
     std::string getTcpInfoString() const;
 
+    void setContext(void* context) {
+        context_ = context;
+    }
+
+    void* getContext() {
+        return context_;
+    }
+
+    void removeContext() {
+        context_ = nullptr;
+    }
+
 private:
     enum ConnState { Disconnected, Connecting, Connected, Disconnecting };
     
@@ -61,6 +73,7 @@ private:
 
     const char* stateToString() const;
 
+    void* context_;
     std::string name_;
     EventLoop *eventLoop_;
     int sockfd_;

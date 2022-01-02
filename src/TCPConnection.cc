@@ -29,6 +29,7 @@ void defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer)
 }
 
 TCPConnection::TCPConnection(EventLoop *eventLoop, int fd, struct sockaddr_in localAddr, struct sockaddr_in peerAddr, std::string name):
+    context_(nullptr),
     name_(name),
     eventLoop_(eventLoop), 
     sockfd_(fd), 
@@ -36,7 +37,8 @@ TCPConnection::TCPConnection(EventLoop *eventLoop, int fd, struct sockaddr_in lo
     peerAddr_(peerAddr),
     state_(Connecting), 
     channel_(new Channel(eventLoop, fd))
-{   
+{
+    // register event callback to eventloop
     channel_->setRecvCallback(std::bind(&TCPConnection::handleRecv, this));
     channel_->setSendCallback(std::bind(&TCPConnection::handleSend, this));
     channel_->setCloseCallback(std::bind(&TCPConnection::handleClose, this));
@@ -50,7 +52,6 @@ TCPConnection::~TCPConnection()
 {
     LOG_DEBUG << "TCPConnection::~TCPConnection [" << name_ << "] at fd=" 
     << channel_->fd() << " state=" << stateToString();
-    // 关闭fd
     ::close(sockfd_);
     delete channel_;
 }
