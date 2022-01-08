@@ -4,6 +4,9 @@
 #include <memory>
 #include <netinet/in.h>
 
+namespace tcpserver
+{
+
 class EventLoop;
 class Channel;
 
@@ -51,3 +54,5 @@ private:
     NewConnectionCallback newConnectionCallback_;
     SockAddr serverAddr_;
 };
+
+}

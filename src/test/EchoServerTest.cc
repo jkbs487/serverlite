@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+using namespace tcpserver;
+
 int numThreads = 0;
 
 class EchoServer

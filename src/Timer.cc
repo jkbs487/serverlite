@@ -9,6 +9,10 @@
 #include <iostream>
 #include <sys/timerfd.h>
 
+using namespace tcpserver;
+
+namespace
+{
 int createTimerFd()
 {
     int timerFd = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
@@ -17,6 +21,7 @@ int createTimerFd()
         abort();
     }
     return timerFd;
+}
 }
 
 std::atomic_int32_t Timer::s_numCreate(0);

@@ -12,6 +12,8 @@
 #include <cassert>
 #include <cerrno>
 
+using namespace tcpserver;
+
 Connector::Connector(std::string host, uint16_t port, EventLoop *loop):
     loop_(loop),
     host_(host),

@@ -2,6 +2,8 @@
 #include "TCPClient.h"
 #include "Logger.h"
 
+using namespace tcpserver;
+
 TCPClient* g_client;
 
 void timeout()

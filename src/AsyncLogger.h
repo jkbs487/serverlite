@@ -5,6 +5,9 @@
 #include <thread>
 #include <condition_variable>
 
+namespace tcpserver
+{
+
 class Logging;
 class AsyncLogger
 {
@@ -35,3 +38,5 @@ private:
     std::unique_ptr<std::string> nextBuffer_;
     std::vector<std::unique_ptr<std::string>> buffers_;
 };
+
+} // namespace tcpserver

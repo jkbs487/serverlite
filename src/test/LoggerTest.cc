@@ -6,6 +6,8 @@
 #include <fstream>
 #include <memory>
 
+using namespace tcpserver;
+
 int g_total;
 FILE* g_file;
 std::unique_ptr<Logging> logging;

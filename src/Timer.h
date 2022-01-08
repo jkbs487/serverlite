@@ -5,6 +5,9 @@
 #include <atomic>
 #include <functional>
 
+namespace tcpserver
+{
+
 class EventLoop;
 
 typedef std::function<void()> TimerCallback;
@@ -31,3 +34,5 @@ private:
 
     static std::atomic_int32_t s_numCreate;
 };
+
+} // namespace tcpserver

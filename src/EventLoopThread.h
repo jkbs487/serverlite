@@ -5,6 +5,9 @@
 #include <string>
 #include <condition_variable>
 
+namespace tcpserver
+{
+
 class EventLoop;
 
 class EventLoopThread
@@ -22,3 +25,5 @@ private:
     std::mutex mutex_;
     std::condition_variable cond_;
 };
+
+} // namespace tcpserver

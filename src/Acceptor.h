@@ -2,6 +2,9 @@
 
 #include <functional>
 
+namespace tcpserver
+{
+
 class EventLoop;
 class Channel;
 
@@ -27,3 +30,5 @@ private:
     int nullFd_;
     NewConnectionCallback newConnectionCallback_;
 };
+
+} // namespace tcpserver

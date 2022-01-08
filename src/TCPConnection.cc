@@ -14,14 +14,16 @@
 #include <unistd.h>
 #include <assert.h>
 
-void defaultConnectionCallback(const TCPConnectionPtr& conn)
+using namespace tcpserver;
+
+void tcpserver::defaultConnectionCallback(const TCPConnectionPtr& conn)
 {
     LOG_INFO << inet_ntoa(conn->localAddr().sin_addr) << ":" << conn->localAddr().sin_port 
     << " -> " << inet_ntoa(conn->peerAddr().sin_addr) << ":" << conn->peerAddr().sin_port
     << (conn->connected() ? " UP" : " DOWN");
 }
 
-void defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer)
+void tcpserver::defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer)
 {
     std::string data;
     data.swap(buffer);

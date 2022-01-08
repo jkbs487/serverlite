@@ -6,6 +6,8 @@
 #include <strings.h>
 #include <unistd.h>
 
+using namespace tcpserver;
+
 EventLoop g_loop;
 
 void timeout()

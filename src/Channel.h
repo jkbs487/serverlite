@@ -3,6 +3,9 @@
 #include <functional>
 #include <memory>
 
+namespace tcpserver
+{
+
 class EventLoop;
 
 enum ChannelState { New, Add, Delete };
@@ -61,3 +64,5 @@ private:
     CloseCallback closeCallback_;
     ErrorCallback errorCallback_;
 };
+
+} // namespace tcpserver

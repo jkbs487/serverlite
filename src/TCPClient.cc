@@ -6,6 +6,8 @@
 
 #include <cassert>
 
+using namespace tcpserver;
+
 TCPClient::TCPClient(std::string host, uint16_t port, EventLoop *loop, std::string name):
     loop_(loop),
     host_(host), 

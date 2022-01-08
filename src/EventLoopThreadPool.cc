@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <unistd.h>
 
+using namespace tcpserver;
+
 EventLoopThreadPool::EventLoopThreadPool(EventLoop* baseLoop):
     baseLoop_(baseLoop),
     numThreads_(0),

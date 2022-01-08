@@ -6,6 +6,8 @@
 #include "Channel.h"
 #include "Logger.h"
 
+using namespace tcpserver;
+
 const int Channel::SendEvent = EPOLLOUT;
 const int Channel::RecvEvent = EPOLLIN;
 const int Channel::NoneEvent = 0;

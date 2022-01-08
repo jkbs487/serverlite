@@ -3,6 +3,8 @@
 #include "TCPClient.h"
 #include "Logger.h"
 
+using namespace tcpserver;
+
 void threadFunc(EventLoop* loop)
 {
     TCPClient client("127.0.0.1", 1234, loop, "TcpClient");

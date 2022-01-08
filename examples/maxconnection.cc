@@ -4,6 +4,8 @@
 #include <iostream>
 #include <unistd.h>
 
+using namespace tcpserver;
+
 class EchoServer
 {
 public:

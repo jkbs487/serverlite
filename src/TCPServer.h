@@ -7,6 +7,9 @@
 #include <vector>
 #include <memory>
 
+namespace tcpserver
+{
+
 class Channel;
 class Acceptor;
 class EventLoop;
@@ -50,3 +53,5 @@ private:
     WriteCompleteCallback writeCompleteCallback_;
     int nextConnId_;
 };
+
+} // namespace tcpserver

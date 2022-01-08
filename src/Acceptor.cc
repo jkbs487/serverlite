@@ -11,6 +11,8 @@
 #include <fcntl.h>
 #include <assert.h>
 
+using namespace tcpserver;
+
 Acceptor::Acceptor(std::string host, uint16_t port, EventLoop *loop):
     loop_(loop), 
     acceptFd_(socket(AF_INET, SOCK_STREAM, 0)), 

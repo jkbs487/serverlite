@@ -5,13 +5,14 @@
 #include <functional>
 #include <unistd.h>
 
+using namespace tcpserver;
+
 EventLoopThread::EventLoopThread(): 
     loop_(nullptr), 
     terminate_(false), 
     mutex_(),
     cond_()
 {
-    
 }
 
 EventLoopThread::~EventLoopThread()
@@ -36,7 +37,7 @@ EventLoop* EventLoopThread::startLoop()
     eventLoop = loop_;
     return eventLoop;
 }
- 
+
 void EventLoopThread::threadFunc()
 {
     EventLoop loop;

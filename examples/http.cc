@@ -5,6 +5,8 @@
 #include <cstdio>
 #include <map>
 
+using namespace tcpserver;
+
 class HTTPRequest
 {
 public:
@@ -243,11 +245,11 @@ HTTPResponse HTTPServer::onRequest(HTTPRequest* req)
 */
         resp.setBody(body);
         resp.setContentLength(body.size());
-    } else if(req->path() == "/123") {
-        body += "<h1>My HTTP Server</h1>";
-        body += "<h1>My HTTP Server</h1>";
-        resp.setBody(body);
-        resp.setContentLength(body.size());
+    } else if(req->path() == "/hello") {
+        resp.setStatus(HTTPResponse::OK);
+        resp.setBody("hello world\n");
+        resp.setContentType("text/plain");
+        resp.setContentLength(12);
     } else if (req->path() == "/favicon.ico") {
         resp.setStatus(HTTPResponse::BAD_REQUEST);
     } else {

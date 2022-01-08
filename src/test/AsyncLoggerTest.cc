@@ -5,6 +5,8 @@
 #include <sys/resource.h>
 #include <unistd.h>
 
+using namespace tcpserver;
+
 off_t kRollSize = 500*1000*1000;
 
 AsyncLogger* g_asyncLog = NULL;
@@ -36,8 +38,8 @@ void bench(bool longLog)
     }
     clock_t end = clock();
     printf("%f\n", double(end - start) / kBatch);
-    //struct timespec ts = { 0, 500*1000*1000 };
-    //nanosleep(&ts, NULL);
+    struct timespec ts = { 0, 500*1000*1000 };
+    nanosleep(&ts, NULL);
   }
 }
 

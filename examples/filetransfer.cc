@@ -3,6 +3,9 @@
 
 #include <ctime>
 #include <cstdio>
+
+using namespace tcpserver;
+
 /*
 std::string readFile(const char *filepath)
 {

@@ -11,12 +11,11 @@
 #include <unistd.h>
 #include <assert.h>
 
-__thread EventLoop* t_loopInThisThread = 0;
+using namespace tcpserver;
 
- EventLoop* EventLoop::getEventLoopOfCurrentThread()
-{
-    return t_loopInThisThread;
-}
+namespace {
+
+__thread EventLoop* t_loopInThisThread = 0;
 
 int createEventFd()
 {
@@ -26,6 +25,13 @@ int createEventFd()
         abort();
     }
     return wakeupFd;
+}
+
+}
+
+EventLoop* EventLoop::getEventLoopOfCurrentThread()
+{
+    return t_loopInThisThread;
 }
 
 EventLoop::EventLoop(): 

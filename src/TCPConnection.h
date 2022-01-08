@@ -4,6 +4,9 @@
 #include <memory>
 #include <netinet/in.h>
 
+namespace tcpserver
+{
+
 class Channel;
 class EventLoop;
 class TCPConnection;
@@ -91,3 +94,5 @@ private:
 
 void defaultConnectionCallback(const TCPConnectionPtr& conn);
 void defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer);
+
+} // namespace tcpserver

@@ -4,6 +4,9 @@
 
 #include <functional>
 
+namespace tcpserver
+{
+
 typedef std::function<void (const TCPConnectionPtr& conn)> ConnectionCallback;
 typedef std::function<void (const TCPConnectionPtr& conn, std::string&)> MessageCallback;
 typedef std::function<void (const TCPConnectionPtr& conn)> WriteCompleteCallback;
@@ -45,3 +48,5 @@ private:
     TCPConnectionPtr connection_;
     int nextConnId_;
 };
+
+} // namespace tcpserver

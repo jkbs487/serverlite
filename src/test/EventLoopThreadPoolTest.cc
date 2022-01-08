@@ -6,6 +6,8 @@
 #include <assert.h>
 #include <iostream>
 
+using namespace tcpserver;
+
 void print(EventLoop* p = NULL)
 {
     std::cout << "main(): print: pid = " << getpid() << ", tid = " << std::this_thread::get_id() << ", loop = " << p << std::endl;
@@ -39,7 +41,7 @@ int main()
     model.setThreadNum(1);
     model.start();
     EventLoop* nextLoop = model.getNextLoop();
-    nextLoop->runTask(std::bind(print, nextLoop));
+    nextLoop->runAfter(2, std::bind(print, nextLoop));
     assert(nextLoop != &loop);
     assert(nextLoop == model.getNextLoop());
     assert(nextLoop == model.getNextLoop());

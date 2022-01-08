@@ -6,6 +6,8 @@
 #include <iostream>
 #include <unistd.h>
 
+using namespace tcpserver;
+
 void print(EventLoop* p = NULL)
 {
     std::cout << "print: pid = " << getpid() << ", tid = " << std::this_thread::get_id() << ", loop = " << p << std::endl;

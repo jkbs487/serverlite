@@ -3,6 +3,9 @@
 #include <memory>
 #include <vector>
 
+namespace tcpserver
+{
+
 class EventLoop;
 class EventLoopThread;
 
@@ -23,3 +26,5 @@ private:
     std::vector<std::unique_ptr<EventLoopThread>> threads_;
     std::vector<EventLoop*> loops_;
 };
+
+} // namespace tcpserver

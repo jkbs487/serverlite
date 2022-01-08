@@ -5,6 +5,9 @@
 #include <cstdio>
 #include <functional>
 
+namespace tcpserver
+{
+
 typedef std::function<void(std::string)> OutputFunc;
 
 class Logging
@@ -81,3 +84,5 @@ private:
 #define LOG_WARN Logger(__FILE__, __LINE__, Logger::WARN).stream()
 #define LOG_ERROR Logger(__FILE__, __LINE__, Logger::ERROR).stream()
 #define LOG_FATAL Logger(__FILE__, __LINE__, Logger::FATAL).stream()
+
+} // namespace tcpserver

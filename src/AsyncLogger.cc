@@ -3,6 +3,8 @@
 
 #include <assert.h>
 
+using namespace tcpserver;
+
 const int kBufferSize = 686000;
 
 AsyncLogger::AsyncLogger(const std::string& baseName, int timeoutMs)

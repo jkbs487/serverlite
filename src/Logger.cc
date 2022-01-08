@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <string.h>
 
+using namespace tcpserver;
+
 const char* logLevelName[6] =
 {
   "TRACE ",

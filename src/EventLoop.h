@@ -7,9 +7,13 @@
 #include <memory>
 #include <mutex>
 
+struct epoll_event;
+
+namespace tcpserver
+{
+
 class Channel;
 class Timer;
-struct epoll_event;
 
 typedef std::function<void()> TimerCallback;
 
@@ -57,3 +61,5 @@ private:
     std::vector<Functor> taskQueue_;
     std::unordered_map<int, std::shared_ptr<Timer>> timers_;
 };
+
+} // namespace tcpserver

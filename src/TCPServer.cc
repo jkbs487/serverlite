@@ -12,10 +12,11 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
-#include <signal.h>
 #include <string.h>
 #include <string>
 #include <algorithm>
+
+using namespace tcpserver;
 
 TCPServer::TCPServer(std::string host, uint16_t port, EventLoop *loop, std::string name): 
     name_(name),

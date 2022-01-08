@@ -4,6 +4,8 @@
 #include "TCPClient.h"
 #include "Logger.h"
 
+using namespace tcpserver;
+
 int main(int argc, char* argv[])
 {
     Logger::setLogLevel(Logger::DEBUG);
