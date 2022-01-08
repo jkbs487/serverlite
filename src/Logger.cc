@@ -64,6 +64,11 @@ std::string Logging::generateFileName(std::string baseName)
     return fileName;
 }
 
+void Logging::flush()
+{
+    ::fflush(fp_);
+}
+
 static Logging g_logging;
 
 void defaultOutput(const std::string& output)

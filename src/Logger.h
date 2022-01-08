@@ -35,6 +35,7 @@ public:
     }
 
     void append(const std::string& logLine);
+    void flush();
 private:
     std::string generateFileName(std::string baseName);
     FILE* fp_;
