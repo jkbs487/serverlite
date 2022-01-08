@@ -1,16 +1,20 @@
 #include "AsyncLogger.h"
 #include "Logger.h"
 
+#include <assert.h>
+
 const int kBufferSize = 686000;
 
 AsyncLogger::AsyncLogger(const std::string& baseName, int timeoutMs)
     : running_(false), 
     timeoutMs_(timeoutMs),
     bufferSize_(kBufferSize),
-    logging_(new Logging(baseName))
+    logging_(new Logging(baseName)),
+    buffer_(new std::string()),
+    nextBuffer_(new std::string())
 {
-    buffer_.reserve(bufferSize_);
-    nextBuffer_.reserve(bufferSize_);
+    buffer_->resize(bufferSize_);
+    nextBuffer_->resize(bufferSize_);
 }
 
 AsyncLogger::~AsyncLogger()
@@ -39,18 +43,16 @@ void AsyncLogger::stop()
 void AsyncLogger::append(const std::string& log)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (bufferSize_ - buffer_.size() > log.size()) {
-        buffer_.append(log);
+    if (bufferSize_ - buffer_->size() > log.size()) {
+        buffer_->append(log);
     } else {
         buffers_.push_back(std::move(buffer_));
-        if (nextBuffer_.empty()) {
-            buffer_.swap(nextBuffer_);
+        if (!nextBuffer_) {
+            buffer_ = std::move(nextBuffer_);
         } else {
-            std::string newBuffer;
-            newBuffer.reserve(bufferSize_);
-            buffer_ = newBuffer;
+            buffer_.reset(new std::string());
         }
-        buffer_.append(log);
+        buffer_->append(log);
         cond_.notify_one();
     }
 }
@@ -58,25 +60,24 @@ void AsyncLogger::append(const std::string& log)
 void AsyncLogger::backend()
 {
     while (running_) {
-        std::vector<std::string> buffersToWrite;
-        std::string buffer1;
-        std::string buffer2;
-        buffer1.reserve(bufferSize_);
-        buffer2.reserve(bufferSize_);
+        std::vector<std::unique_ptr<std::string>> buffersToWrite;
+        std::unique_ptr<std::string> buffer1(new std::string());
+        std::unique_ptr<std::string> buffer2(new std::string());
         buffersToWrite.reserve(16);
         std::unique_lock<std::mutex> lock(mutex_);
         {
             cond_.wait_for(lock, std::chrono::milliseconds(timeoutMs_), [this] {
                 return !buffers_.empty() || !running_;
             });
-            buffers_.push_back(buffer_);
-            buffer_.swap(buffer1);
+            buffers_.push_back(std::move(buffer_));
+            buffer_ = std::move(buffer1);
             buffersToWrite.swap(buffers_);
-            if (!nextBuffer_.empty()) {
-                nextBuffer_.swap(buffer2);
+            if (!nextBuffer_) {
+                nextBuffer_ = std::move(buffer2);
             }
         }
 
+        assert(!buffersToWrite.empty());
         // prevent buffers too large
         if (buffersToWrite.size() > 25) {
             std::string msg = "Dropped log messages, %zd larger buffers "  + 
@@ -85,24 +86,29 @@ void AsyncLogger::backend()
             buffersToWrite.erase(buffersToWrite.begin()+2, buffersToWrite.end());
         }
 
-        printf("buffers size=%ld\n", buffersToWrite.size());
         for (const auto &buffer: buffersToWrite) {
-            //printf("buffer size=%ld\n", buffer.size());
-            logging_->append(buffer);
+            logging_->append(*buffer);
         }
 
-        if (!buffer1.empty()) {
+        if (buffersToWrite.size() > 2) {
+            buffersToWrite.resize(2);
+        }
+
+        if (!buffer1) {
+            assert(!buffersToWrite.empty());
             buffer1 = std::move(buffersToWrite.back());
             buffersToWrite.pop_back();
-            buffer1.clear();
         }
 
-        if (!buffer2.empty()) {
+        if (!buffer2) {
+            assert(!buffersToWrite.empty());
             buffer2 = std::move(buffersToWrite.back());
             buffersToWrite.pop_back();
-            buffer2.clear();
         }
 
+        logging_->flush();
         buffersToWrite.clear();
     }
+
+    logging_->flush();
 }

@@ -31,7 +31,7 @@ private:
     std::condition_variable cond_;
 
     Logging* logging_;
-    std::string buffer_;
-    std::string nextBuffer_;
-    std::vector<std::string> buffers_;
+    std::unique_ptr<std::string> buffer_;
+    std::unique_ptr<std::string> nextBuffer_;
+    std::vector<std::unique_ptr<std::string>> buffers_;
 };
