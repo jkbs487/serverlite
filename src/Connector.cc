@@ -63,6 +63,7 @@ void Connector::stopInLoop()
     loop_->assertInLoopThread();
     if (state_ == CONNECTING) {
         loop_->assertInLoopThread();
+        // cancel current channel for next start
         int connfd = removeChannel();
         retry(connfd);
     }
@@ -72,39 +73,38 @@ void Connector::connect()
 {
     int connfd = socket(AF_INET, SOCK_STREAM, 0);
     int ret = ::connect(connfd, reinterpret_cast<struct sockaddr*>(&serverAddr_), sizeof serverAddr_);
-    if (ret < 0) {
-        switch (errno) {
-            case 0:
-            case EINPROGRESS:
-            case EINTR:
-            case EISCONN:
-                connecting(connfd);
-                break;
-            
-            case EAGAIN:
-            case EADDRINUSE:
-            case EADDRNOTAVAIL:
-            case ECONNREFUSED:
-            case ENETUNREACH:
-                retry(connfd);
-                break;
+    int savedErrno = (ret == 0) ? 0 : errno;
+    switch (savedErrno) {
+        case 0:
+        case EINPROGRESS:
+        case EINTR:
+        case EISCONN:
+            connecting(connfd);
+            break;
+        
+        case EAGAIN:
+        case EADDRINUSE:
+        case EADDRNOTAVAIL:
+        case ECONNREFUSED:
+        case ENETUNREACH:
+            retry(connfd);
+            break;
 
-            case EACCES:
-            case EPERM:
-            case EAFNOSUPPORT:
-            case EALREADY:
-            case EBADF:
-            case EFAULT:
-            case ENOTSOCK:
-                LOG_ERROR << "connect error" << errno;
-                ::close(connfd);
-                break;
-            
-            default:
-                LOG_ERROR << "upexpected error" << errno;
-                ::close(connfd);
-                break;
-        }
+        case EACCES:
+        case EPERM:
+        case EAFNOSUPPORT:
+        case EALREADY:
+        case EBADF:
+        case EFAULT:
+        case ENOTSOCK:
+            LOG_ERROR << "connect error" << errno;
+            ::close(connfd);
+            break;
+        
+        default:
+            LOG_ERROR << "upexpected error" << errno;
+            ::close(connfd);
+            break;
     }
 }
 
@@ -162,7 +162,7 @@ void Connector::handleWrite()
             LOG_WARN << "Connector::handleWrite - SO_ERROR = " << strerror_r(errno, errnoBuf, sizeof errnoBuf);
             retry(connfd);
         }
-        //else if () selfconn
+        //else if () deal selfconn
         else {
             setState(CONNECTED);
             if (newConnectionCallback_)
