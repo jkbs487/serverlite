@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <unordered_map>
+#include <map>
 #include <thread>
 #include <functional>
 #include <memory>
@@ -57,9 +57,9 @@ private:
     std::thread::id threadId_;
     std::unique_ptr<Channel> wakeupChannel_;
     std::vector<struct epoll_event> events_;
-    std::unordered_map<int, Channel*> channels_;
+    std::map<int, Channel*> channels_;
     std::vector<Functor> taskQueue_;
-    std::unordered_map<int, std::shared_ptr<Timer>> timers_;
+    std::map<int, std::shared_ptr<Timer>> timers_;
 };
 
 } // namespace tcpserver

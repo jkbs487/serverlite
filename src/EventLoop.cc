@@ -61,7 +61,8 @@ EventLoop::EventLoop():
 
 EventLoop::~EventLoop()
 {
-    LOG_DEBUG << "~EventLoop";
+    LOG_DEBUG << "EventLoop " << this << " of thread " << threadId_
+            << " destructs in thread " << std::this_thread::get_id();
     ::close(epollFd_);
     wakeupChannel_->disableAll();
     wakeupChannel_->remove();
