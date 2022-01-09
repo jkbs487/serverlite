@@ -19,7 +19,6 @@ public:
         server.setMessageCallback(std::bind(&EchoServer::onMessage, this, std::placeholders::_1, std::placeholders::_2));
     }
     void start() {
-        //server.setThreadNum(4);
         server.start();
     }
 private:
@@ -43,9 +42,8 @@ private:
     TCPServer server;
     void onMessage(const TCPConnectionPtr& conn, std::string& buffer)
     {
-        std::string discard;
-        discard.swap(buffer);
-        LOG_INFO << "discards " << discard.size() << " bytes";
+        LOG_INFO << "discards " << buffer.size() << " bytes";
+        std::string().swap(buffer);
     }
 };
 
@@ -101,6 +99,7 @@ class ChargenServer {
 public:
     ChargenServer(std::string host, uint16_t port, EventLoop *loop)
         : server_(host, port, loop, "ChargenServer"),
+        loop_(loop),
         messageCount_(0)
     {
         createMessage();
@@ -109,15 +108,17 @@ public:
             std::bind(&ChargenServer::onConnection, this, std::placeholders::_1));
         server_.setWriteCompleteCallback(
             std::bind(&ChargenServer::onWriteComplete, this, std::placeholders::_1));
-        loop->runEvery(3.0, std::bind(&ChargenServer::printThroughput, this));
-        Logger::setLogLevel(Logger::DEBUG);
     }
+
     void start() {
+        loop_->runEvery(3.0, std::bind(&ChargenServer::printThroughput, this));
+        Logger::setLogLevel(Logger::DEBUG);
         //server.setThreadNum(4);
         server_.start();
     }
 private:
     TCPServer server_;
+    EventLoop* loop_;
     std::string message_;
     struct timeval tvBegin_;
     long messageCount_;
@@ -167,24 +168,24 @@ private:
 
 int main(int argc, char *argv[])
 {
-    EventLoop eventLoop;
+    EventLoop loop;
 
-    EchoServer echoServer("0.0.0.0", 10001, &eventLoop);
+    EchoServer echoServer("0.0.0.0", 10001, &loop);
     echoServer.start();
 
-    DiscardServer discardServer("0.0.0.0", 10002, &eventLoop);
+    DiscardServer discardServer("0.0.0.0", 10002, &loop);
     discardServer.start();
     
-    DaytimeServer daytimeServer("0.0.0.0", 10003, &eventLoop);
+    DaytimeServer daytimeServer("0.0.0.0", 10003, &loop);
     daytimeServer.start();
 
-    TimeServer timeServer("0.0.0.0", 10004, &eventLoop);
+    TimeServer timeServer("0.0.0.0", 10004, &loop);
     timeServer.start();
 
-    ChargenServer chargenServer("0.0.0.0", 10005, &eventLoop);
+    ChargenServer chargenServer("0.0.0.0", 10005, &loop);
     chargenServer.start();
 
-    eventLoop.loop();
+    loop.loop();
 
     return 0;
 }
