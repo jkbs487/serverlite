@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 namespace tcpserver
 {
@@ -26,7 +27,7 @@ private:
     EventLoop *loop_;
     bool listening_;
     int acceptFd_;
-    Channel *acceptChannel_;
+    std::unique_ptr<Channel> acceptChannel_;
     int nullFd_;
     NewConnectionCallback newConnectionCallback_;
 };

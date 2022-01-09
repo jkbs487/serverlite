@@ -3,6 +3,7 @@
 #include "TCPConnection.h"
 
 #include <functional>
+#include <memory>
 
 namespace tcpserver
 {
@@ -40,7 +41,7 @@ private:
     std::string host_;
     uint16_t port_;
     std::string name_;
-    Connector* connector_;
+    std::unique_ptr<Connector> connector_;
 
     ConnectionCallback connectionCallback_;
     MessageCallback messageCallback_;

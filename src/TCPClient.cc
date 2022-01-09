@@ -23,7 +23,7 @@ TCPClient::TCPClient(std::string host, uint16_t port, EventLoop *loop, std::stri
 
 TCPClient::~TCPClient() 
 {
-    delete connector_;
+
 }
 
 void TCPClient::connect()

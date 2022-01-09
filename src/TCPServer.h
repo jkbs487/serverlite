@@ -44,8 +44,8 @@ private:
     std::string host_;
     uint16_t port_;
     EventLoop* loop_;
-    Acceptor* acceptor_;
-    //std::unordered_map<std::string, TCPConnectionPtr> connections_;
+    std::unique_ptr<Acceptor> acceptor_;
+    //std::map<std::string, TCPConnectionPtr> connections_;
     std::vector<TCPConnectionPtr> connections_;
     std::shared_ptr<EventLoopThreadPool> threadPool_;
     ConnectionCallback connectionCallback_;

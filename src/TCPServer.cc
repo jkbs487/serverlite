@@ -40,13 +40,12 @@ TCPServer::~TCPServer()
         conn.reset();
         conn->getLoop()->runTask(std::bind(&TCPConnection::connectDestroyed, conn));
     }
-    delete acceptor_;
 }
 
 void TCPServer::start()
 {
     threadPool_->start();
-    loop_->runTask(std::bind(&Acceptor::listen, acceptor_));
+    loop_->runTask(std::bind(&Acceptor::listen, acceptor_.get()));
 }
 
 void TCPServer::newConnection(int connfd) 

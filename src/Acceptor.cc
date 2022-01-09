@@ -44,7 +44,6 @@ Acceptor::~Acceptor()
 {
     acceptChannel_->disableAll();
     acceptChannel_->remove();
-    delete acceptChannel_;
     ::close(nullFd_);
 }
 
