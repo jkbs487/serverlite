@@ -30,15 +30,15 @@ void tcpserver::defaultMessageCallback(const TCPConnectionPtr& conn, std::string
     LOG_INFO << "recv: " << data.c_str() << ", bytes: " << data.size();
 }
 
-TCPConnection::TCPConnection(EventLoop *eventLoop, int fd, struct sockaddr_in localAddr, struct sockaddr_in peerAddr, std::string name):
+TCPConnection::TCPConnection(EventLoop *loop, int fd, struct sockaddr_in localAddr, struct sockaddr_in peerAddr, std::string name):
     context_(nullptr),
     name_(name),
-    eventLoop_(eventLoop), 
+    loop_(loop), 
     sockfd_(fd), 
     localAddr_(localAddr),
     peerAddr_(peerAddr),
-    state_(Connecting), 
-    channel_(new Channel(eventLoop, fd))
+    state_(CONNECTING), 
+    channel_(new Channel(loop, fd))
 {
     // register event callback to eventloop
     channel_->setRecvCallback(std::bind(&TCPConnection::handleRecv, this));
@@ -55,7 +55,6 @@ TCPConnection::~TCPConnection()
     LOG_DEBUG << "TCPConnection::~TCPConnection [" << name_ << "] at fd=" 
     << channel_->fd() << " state=" << stateToString();
     ::close(sockfd_);
-    delete channel_;
 }
 
 std::string TCPConnection::getTcpInfoString() const
@@ -88,16 +87,16 @@ std::string TCPConnection::getTcpInfoString() const
 
 void TCPConnection::send(std::string data)
 {
-    if (eventLoop_->isInLoopThread()) {
+    if (loop_->isInLoopThread()) {
         sendInLoop(data);
     } else {
-        eventLoop_->runTask(std::bind(&TCPConnection::sendInLoop, this, data));
+        loop_->runTask(std::bind(&TCPConnection::sendInLoop, this, data));
     }
 }
 
 void TCPConnection::sendInLoop(std::string data)
 {
-    if (state_ == Disconnected) {
+    if (state_ == DISCONNECTED) {
         printf("disconnected, give up send\n");
         return;
     }
@@ -107,17 +106,17 @@ void TCPConnection::sendInLoop(std::string data)
     // 先还要判断是否已经注册写事件，已注册就跳过
     // 还判断写缓存区是否为空，为空才能直接发
     if (!channel_->isSending() && sendBuf_.size() == 0) {
-        nsend = ::send(channel_->fd(), data.c_str(), data.size(), 0);
+        nsend = ::send(channel_->fd(), data.data(), data.size(), 0);
         if (nsend >= 0) {
             remaining = data.size() - nsend; 
             if (remaining == 0 && writeCompleteCallback_) {
-                // 如果runtask调用，有无限递归风险
-                eventLoop_->pushTask(std::bind(writeCompleteCallback_, shared_from_this()));
+                // prevent call writecompleteCallback when data is sending
+                loop_->pushTask(std::bind(writeCompleteCallback_, shared_from_this()));
             }
         }
         else {
             nsend = 0;
-            perror("send");
+            LOG_ERROR << "send error: " << strerror(errno);
             // EWOULDBLOCK 表示写缓冲区满，无需处理
             if (errno != EWOULDBLOCK) {
                 if (errno == EPIPE || errno == ECONNRESET) {
@@ -158,7 +157,7 @@ void TCPConnection::sendFile(std::string filePath)
 
 void TCPConnection::handleRecv()
 {
-    eventLoop_->assertInLoopThread();
+    loop_->assertInLoopThread();
     int fd = channel_->fd();
     char buffer[65535];
     memset(buffer, 0, sizeof buffer);
@@ -179,25 +178,21 @@ void TCPConnection::handleRecv()
 
 void TCPConnection::handleSend()
 {
-    eventLoop_->assertInLoopThread();
-    if (state_ == Disconnected) {
-        LOG_WARN << "disconnected, give up send";
-        return;
-    }
+    loop_->assertInLoopThread();
     if (channel_->isSending()) {
-        ssize_t nsend = ::send(channel_->fd(), sendBuf_.c_str(), sendBuf_.size(), 0);
+        ssize_t nsend = ::send(channel_->fd(), sendBuf_.data(), sendBuf_.size(), 0);
         if (nsend > 0) {
-            sendBuf_ = sendBuf_.substr(nsend, sendBuf_.size()-nsend);
+            sendBuf_ = sendBuf_.substr(nsend, sendBuf_.size() - nsend);
             // 如果写缓存已经全部发送完毕，取消写事件
             if (sendBuf_.size() == 0) {
                 channel_->disableSend();
                 if (writeCompleteCallback_) {
-                    eventLoop_->runTask(std::bind(writeCompleteCallback_, shared_from_this()));
+                    loop_->pushTask(std::bind(writeCompleteCallback_, shared_from_this()));
                 }
             }
-            // 是否半关闭状态 
-            if (state_ == Disconnecting) {
-                shutdown();
+            // do shutdown 
+            if (state_ == DISCONNECTING) {
+                shutdownInLoop();
             }
         } else {
             LOG_ERROR << "handle send error";
@@ -210,8 +205,8 @@ void TCPConnection::handleSend()
 
 void TCPConnection::handleClose()
 {
-    eventLoop_->assertInLoopThread();
-    setState(Disconnected);
+    loop_->assertInLoopThread();
+    setState(DISCONNECTED);
     channel_->disableAll();
     TCPConnectionPtr guardThis(shared_from_this());
     LOG_TRACE << "[7]TCPConnection use count: " << guardThis.use_count();
@@ -223,7 +218,7 @@ void TCPConnection::handleClose()
 
 void TCPConnection::connectEstablished()
 {
-    setState(Connected);
+    setState(CONNECTED);
     LOG_TRACE << "[3]TCPConnection use count: " << shared_from_this().use_count()-1;
     channel_->enableRecv();
     channel_->tie(shared_from_this());
@@ -233,7 +228,8 @@ void TCPConnection::connectEstablished()
 
 void TCPConnection::connectDestroyed()
 {
-    if (state_ == Connected) {
+    if (state_ == CONNECTED) {
+        setState(DISCONNECTED);
         channel_->disableAll();
         connectionCallback_(shared_from_this());
     }
@@ -243,23 +239,26 @@ void TCPConnection::connectDestroyed()
 
 void TCPConnection::shutdown()
 {
-    if (state_ == Connected) {
-        setState(Disconnecting);
-        eventLoop_->runTask(std::bind(&TCPConnection::shutdownInLoop, this));
+    if (state_ == CONNECTED) {
+        setState(DISCONNECTING);
+        loop_->runTask(std::bind(&TCPConnection::shutdownInLoop, this));
     }
 }
 
 void TCPConnection::shutdownInLoop()
 {
-    eventLoop_->assertInLoopThread();
-    ::shutdown(channel_->fd(), SHUT_WR);
+    loop_->assertInLoopThread();
+    // prevent conn shutdown when data is writing 
+    if (!channel_->isSending()) {
+        ::shutdown(channel_->fd(), SHUT_WR);
+    }
 }
 
 void TCPConnection::forceClose()
 {
-    if (state_ == Connected || state_ == Disconnecting) {
-        setState(Disconnecting);
-        eventLoop_->pushTask(std::bind(&TCPConnection::handleClose, this));
+    if (state_ == CONNECTED || state_ == DISCONNECTING) {
+        setState(DISCONNECTED);
+        loop_->pushTask(std::bind(&TCPConnection::handleClose, this));
     }
 }
 
@@ -281,13 +280,13 @@ const char* TCPConnection::stateToString() const
 {
   switch (state_)
   {
-    case Disconnected:
+    case DISCONNECTED:
       return "Disconnected";
-    case Connecting:
+    case CONNECTING:
       return "Connecting";
-    case Connected:
+    case CONNECTED:
       return "Connected";
-    case Disconnecting:
+    case DISCONNECTING:
       return "Disconnecting";
     default:
       return "unknown state";
