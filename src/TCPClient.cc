@@ -23,7 +23,24 @@ TCPClient::TCPClient(std::string host, uint16_t port, EventLoop *loop, std::stri
 
 TCPClient::~TCPClient() 
 {
-
+    LOG_DEBUG << "TCPClient::~TCPClient [" << name_ << "]";
+    bool unique = false;
+    TCPConnectionPtr conn;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        unique = connection_.unique();
+        conn = connection_;
+    }
+    if (conn) {
+        CloseCallback cb = std::bind(&TCPConnection::connectDestroyed, conn);
+        loop_->runTask(std::bind(&TCPConnection::setCloseCallback, conn, cb));
+        if (unique) {
+            conn->forceClose();
+        }
+    } else {
+        connector_->stop();
+        //loop_->runAfter(1, std::bind());
+    }
 }
 
 void TCPClient::connect()
@@ -58,7 +75,7 @@ void TCPClient::newConnection(int connfd)
     ::getpeername(connfd, reinterpret_cast<struct sockaddr*>(&peerAddr), &peerLen);
 
     std::string connName;
-    connName = name_ + " - " + host_ + ":" + std::to_string(port_) + "#" + std::to_string(nextConnId_++);
+    connName = name_ + "-" + host_ + ":" + std::to_string(port_) + "#" + std::to_string(nextConnId_++);
     
     TCPConnectionPtr conn(new TCPConnection(loop_, connfd, localAddr, peerAddr, connName));
     conn->setConnectionCallback(connectionCallback_);
@@ -74,6 +91,10 @@ void TCPClient::removeConnection(const TCPConnectionPtr& conn)
     loop_->assertInLoopThread();
     assert(loop_ == conn->getLoop());
 
-    connection_.reset();
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        connection_.reset();
+    }
+
     loop_->pushTask(std::bind(&TCPConnection::connectDestroyed, conn));
 }

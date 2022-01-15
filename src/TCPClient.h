@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 
 namespace tcpserver
 {
@@ -41,7 +42,8 @@ private:
     std::string host_;
     uint16_t port_;
     std::string name_;
-    std::unique_ptr<Connector> connector_;
+    std::mutex mutex_;
+    std::shared_ptr<Connector> connector_;
 
     ConnectionCallback connectionCallback_;
     MessageCallback messageCallback_;
