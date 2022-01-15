@@ -1,5 +1,6 @@
 #pragma once
 
+#include <any>
 #include <functional>
 #include <memory>
 #include <netinet/in.h>
@@ -55,16 +56,22 @@ public:
     std::string name() 
     { return name_; }
 
-    struct sockaddr_in peerAddr() 
+    std::string peerAddr() 
     { return peerAddr_; }
 
-    struct sockaddr_in localAddr() 
+    uint16_t peerPort()
+    { return peerPort_; }
+
+    std::string localAddr() 
     { return localAddr_; }
 
-    void setContext(void* context) 
+    uint16_t localPort()
+    { return localPort_; }
+
+    void setContext(std::any context) 
     { context_ = context; }
 
-    void* getContext() 
+    std::any getContext() 
     { return context_; }
 
     void removeContext() 
@@ -92,14 +99,16 @@ private:
 
     const char* stateToString() const;
 
-    void* context_;
+    std::any context_;
     std::string name_;
     EventLoop* loop_;
     int sockfd_;
     std::string recvBuf_;
     std::string sendBuf_;
-    struct sockaddr_in localAddr_;
-    struct sockaddr_in peerAddr_;
+    std::string localAddr_;
+    uint16_t localPort_;
+    std::string peerAddr_;
+    uint16_t peerPort_;
     ConnState state_;
     std::unique_ptr<Channel>channel_;
     ConnectionCallback connectionCallback_;

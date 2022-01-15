@@ -18,8 +18,8 @@ using namespace tcpserver;
 
 void tcpserver::defaultConnectionCallback(const TCPConnectionPtr& conn)
 {
-    LOG_INFO << inet_ntoa(conn->localAddr().sin_addr) << ":" << conn->localAddr().sin_port 
-    << " -> " << inet_ntoa(conn->peerAddr().sin_addr) << ":" << conn->peerAddr().sin_port
+    LOG_INFO << conn->localAddr() << ":" << conn->localPort()
+    << " -> " << conn->peerAddr() << ":" << conn->peerPort()
     << (conn->connected() ? " UP" : " DOWN");
 }
 
@@ -35,9 +35,11 @@ TCPConnection::TCPConnection(EventLoop *loop, int fd, struct sockaddr_in localAd
     name_(name),
     loop_(loop), 
     sockfd_(fd), 
-    localAddr_(localAddr),
-    peerAddr_(peerAddr),
-    state_(CONNECTING), 
+    localAddr_(std::string(inet_ntoa(localAddr.sin_addr))),
+    localPort_(localAddr.sin_port),
+    peerAddr_(std::string(inet_ntoa(peerAddr.sin_addr))),
+    peerPort_(peerAddr.sin_port),
+    state_(ConnState::CONNECTING), 
     channel_(new Channel(loop, fd))
 {
     // register event callback to eventloop
@@ -97,7 +99,7 @@ void TCPConnection::send(std::string data)
 void TCPConnection::sendInLoop(std::string data)
 {
     if (state_ == DISCONNECTED) {
-        printf("disconnected, give up send\n");
+        LOG_INFO << "disconnected, give up send";
         return;
     }
     size_t remaining = data.size();
@@ -132,12 +134,13 @@ void TCPConnection::sendInLoop(std::string data)
     }
 }
 
+// block!
 void TCPConnection::sendFile(std::string filePath)
 {
     const int count = 1024 * 1024;
     int fileFd = open(filePath.c_str(), O_RDONLY);
     if (fileFd < 0) {
-        perror("open");
+        LOG_ERROR << "open error: " << strerror(errno);
         return;
     }
 
@@ -228,6 +231,7 @@ void TCPConnection::connectEstablished()
 
 void TCPConnection::connectDestroyed()
 {
+    // for tcpserver exit
     if (state_ == CONNECTED) {
         setState(DISCONNECTED);
         channel_->disableAll();
