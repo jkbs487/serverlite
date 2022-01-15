@@ -48,3 +48,7 @@
 - data jitter when large connections 
 
     backlog is too small.
+
+- core dump when operation EventLoop std::map channels_
+
+    should cancel the retry timer when Connector destroy.
