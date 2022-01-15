@@ -19,7 +19,7 @@ Channel::Channel(EventLoop *eventLoop, int fd)
     revents_(NoneEvent),
     tied_(false),
     eventHandling_(false),
-    state_(New)
+    state_(ChannelState::NEW)
 {
 }
 

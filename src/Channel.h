@@ -8,8 +8,6 @@ namespace tcpserver
 
 class EventLoop;
 
-enum ChannelState { New, Add, Delete };
-
 class Channel
 {
     typedef std::function<void ()> RecvCallback;
@@ -17,28 +15,52 @@ class Channel
     typedef std::function<void ()> CloseCallback;
     typedef std::function<void ()> ErrorCallback;
 public:
+    enum ChannelState {
+        NEW, 
+        ADD, 
+        DELETE 
+    };
+
     Channel(EventLoop *eventLoop, int fd);
     ~Channel();
+    
     Channel(const Channel&) = delete;
     Channel& operator =(const Channel&) = delete;
-    void setRecvCallback(const RecvCallback& cb) { recvCallback_ = cb; }
-    void setSendCallback(const SendCallback& cb) { sendCallback_ = cb; }
-    void setCloseCallback(const CloseCallback& cb) { closeCallback_ = cb; }
-    void setErrorCallback(const ErrorCallback& cb) { errorCallback_ = cb; }
+    
+    void setRecvCallback(const RecvCallback& cb) 
+    { recvCallback_ = cb; }
+    void setSendCallback(const SendCallback& cb) 
+    { sendCallback_ = cb; }
+    void setCloseCallback(const CloseCallback& cb) 
+    { closeCallback_ = cb; }
+    void setErrorCallback(const ErrorCallback& cb) 
+    { errorCallback_ = cb; }
     int fd() { return fd_; }
     void handleEvents();
-    int events() { return events_; }
-    int state() { return state_; }
-    void setRevents(int events) { revents_ = events; }
-    void setState(ChannelState state) { state_ = state; }
-    void disableSend() { events_ &= ~SendEvent; update(); }
-    void enableSend() { events_ |= SendEvent; update(); }
-    void disableRecv() { events_ &= ~RecvEvent; update(); }
-    void enableRecv() { events_ |= RecvEvent; update(); }
-    void disableAll() { events_ = NoneEvent; update(); }
-    bool isNoneEvent() { return events_ == NoneEvent; }
-    bool isSending() { return events_ & SendEvent; }
-    bool isRecving() { return events_ & RecvEvent; }
+    int events() 
+    { return events_; }
+    int state() 
+    { return state_; }
+    void setRevents(int events) 
+    { revents_ = events; }
+    void setState(ChannelState state) 
+    { state_ = state; }
+    void disableSend() 
+    { events_ &= ~SendEvent; update(); }
+    void enableSend() 
+    { events_ |= SendEvent; update(); }
+    void disableRecv() 
+    { events_ &= ~RecvEvent; update(); }
+    void enableRecv() 
+    { events_ |= RecvEvent; update(); }
+    void disableAll() 
+    { events_ = NoneEvent; update(); }
+    bool isNoneEvent() 
+    { return events_ == NoneEvent; }
+    bool isSending() 
+    { return events_ & SendEvent; }
+    bool isRecving() 
+    { return events_ & RecvEvent; }
     void remove();
 
     // extend self life, prevent destroy self in handleEvent.
