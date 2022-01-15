@@ -50,6 +50,7 @@ private:
     int connectFd_;
     int retryMs_;
     int maxRetryMs_;
+
     std::unique_ptr<Channel> connectChannel_;
     NewConnectionCallback newConnectionCallback_;
     SockAddr serverAddr_;

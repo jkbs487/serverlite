@@ -31,6 +31,8 @@ Connector::Connector(std::string host, uint16_t port, EventLoop *loop):
 
 Connector::~Connector()
 {
+    LOG_DEBUG << "dtor [" << this << "]";
+    // prevent Connector unexpected exit when connecting
     assert(!connectChannel_);
 }
 
@@ -42,7 +44,6 @@ void Connector::start()
 
 void Connector::startInLoop()
 {
-    LOG_INFO << "Connector::startInLoop";
     loop_->assertInLoopThread();
     if (connect_) {
         connect();
@@ -71,7 +72,10 @@ void Connector::stopInLoop()
 
 void Connector::connect()
 {
-    int connfd = socket(AF_INET, SOCK_STREAM, 0);
+    int connfd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
+    if (connfd < 0) {
+        LOG_FATAL << "socket error: " << strerror(errno);
+    }
     int ret = ::connect(connfd, reinterpret_cast<struct sockaddr*>(&serverAddr_), sizeof serverAddr_);
     int savedErrno = (ret == 0) ? 0 : errno;
     switch (savedErrno) {
@@ -139,8 +143,10 @@ void Connector::retry(int connfd)
         // client must use another new connfd to retry
         ::close(connfd);
         setState(DISCONNECTED);
-        LOG_INFO << "Connector::retry connecting to " << host_ << " : " << port_ << " in " << retryMs_ << " millseconds";
-        loop_->runAfter(retryMs_/1000.0, std::bind(&Connector::startInLoop, this));
+        LOG_INFO << "Connector::retry connecting to " 
+                << host_ << ":" << port_ << " in " << retryMs_ << " millseconds";
+        loop_->runAfter(retryMs_/1000.0, 
+                        std::bind(&Connector::startInLoop, shared_from_this()));
         retryMs_ = std::min(retryMs_ * 2, maxRetryMs_);
     }
     else {
@@ -181,7 +187,7 @@ void Connector::handleError()
         socklen_t optlen = static_cast<socklen_t>(sizeof optval);
 
         if (::getsockopt(connfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0) {
-            LOG_ERROR << "getsockopt error:";
+            LOG_ERROR << "getsockopt error: ";
         } else {
             char buffer[512];
             ::bzero(buffer, sizeof buffer);
