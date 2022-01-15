@@ -3,6 +3,7 @@
 #include "Channel.h"
 
 #include <atomic>
+#include <memory>
 #include <functional>
 
 namespace tcpserver
@@ -29,7 +30,7 @@ private:
     int timerFd_;
     int sequence_;
     EventLoop* loop_;
-    Channel timerChannel_;
+    std::unique_ptr<Channel> timerChannel_;
     TimerCallback timerCallback_;
 
     static std::atomic_int32_t s_numCreate;

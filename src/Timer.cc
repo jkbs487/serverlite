@@ -30,16 +30,15 @@ Timer::Timer(EventLoop* loop):
     timerFd_(createTimerFd()),
     sequence_(++s_numCreate),
     loop_(loop),
-    timerChannel_(loop_, timerFd_)
+    timerChannel_(new Channel(loop_, timerFd_))
 {
-    timerChannel_.setRecvCallback(std::bind(&Timer::handleRead, this));
-    timerChannel_.enableRecv();
+    timerChannel_->setRecvCallback(std::bind(&Timer::handleRead, this));
 }
 
 Timer::~Timer()
 {
-    timerChannel_.disableAll();
-    timerChannel_.remove();
+    timerChannel_->disableAll();
+    timerChannel_->remove();
     ::close(timerFd_);
 }
 
@@ -61,7 +60,8 @@ void Timer::handleRead()
 
 int Timer::addTimer(double time, double interval, TimerCallback cb)
 {
-    timerChannel_.tie(shared_from_this());
+    timerChannel_->enableRecv();
+    timerChannel_->tie(shared_from_this());
     loop_->runTask(std::bind(&Timer::addTimerInLoop, this, time, interval, cb));
     return sequence_;
 }
