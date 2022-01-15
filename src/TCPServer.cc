@@ -62,13 +62,13 @@ void TCPServer::newConnection(int connfd)
     ::getpeername(connfd, reinterpret_cast<struct sockaddr*>(&peerAddr), &peerLen);
 
     std::string connName;
-    connName = name_ + " - " + host_ + ":" + std::to_string(port_) + "#" + std::to_string(nextConnId_++);
+    connName = name_ + "-" + host_ + ":" + std::to_string(port_) + "#" + std::to_string(nextConnId_++);
 
     LOG_DEBUG << "TCPServer::handleAccept [" << name_ << "] - new connection [" << connName 
     << "] from " << inet_ntoa(peerAddr.sin_addr) << ":" << peerAddr.sin_port;
 
     EventLoop* loop = threadPool_->getNextLoop();
-    TCPConnectionPtr conn = std::make_shared<TCPConnection>(loop, connfd, peerAddr, localAddr, connName);
+    TCPConnectionPtr conn = std::make_shared<TCPConnection>(loop, connfd, localAddr, peerAddr, connName);
 
     LOG_TRACE << "[1]TCPConnection use count: " << conn.use_count();
     connections_.push_back(conn);
