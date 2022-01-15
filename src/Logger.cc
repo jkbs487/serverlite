@@ -102,7 +102,7 @@ Logger::Logger(std::string file, int line, LogLevel level):
     size_t pos = file.find_last_of('/');
     file = file.substr(pos+1, file.size() - pos);
     sstream_ << getFormatTime() << std::this_thread::get_id() << " ";
-    sstream_ << logLevelName[level] << file << ":" << line << "  ";
+    sstream_ << logLevelName[level] << file << ":" << line << " -- ";
 }
 
 Logger::Logger(std::string file, std::string func, int line, LogLevel level):
@@ -111,7 +111,7 @@ Logger::Logger(std::string file, std::string func, int line, LogLevel level):
     size_t pos = file.find_last_of('/');
     file = file.substr(pos+1, file.size() - pos);
     sstream_ << getFormatTime() << std::this_thread::get_id() << " ";
-    sstream_ << logLevelName[level] << file << " " << func << ":" << line << "  ";
+    sstream_ << logLevelName[level] << file << " " << func << ":" << line << " -- ";
 }
 
 Logger::~Logger()
