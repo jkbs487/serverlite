@@ -1,5 +1,6 @@
 #include "TCPServer.h"
 #include "EventLoop.h"
+#include "Logger.h"
 
 #include <ctime>
 #include <cstdio>
@@ -39,11 +40,11 @@ void onConnection(const TCPConnectionPtr& conn)
 
 void onMessage(const TCPConnectionPtr& conn, std::string buffer)
 {
-    if (buffer == "recv") {
-        conn->send("start transfer...");
-        conn->sendFile("/home/jiangkun/test/client.c");
+    if (buffer == "recv\n") {
+        LOG_INFO << "start transfer...";
+        conn->sendFile("/home/jiangkun/workspace/test/client.c");
     }
-    if (buffer == "exit") {
+    if (buffer == "exit\n") {
         conn->shutdown();
     }
 }
