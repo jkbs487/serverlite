@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 using namespace tcpserver;
+using namespace std::placeholders;
 
 class EchoServer
 {
@@ -14,7 +15,7 @@ public:
 
 private:
     void onConnection(const TCPConnectionPtr& conn);
-    void onMessage(const TCPConnectionPtr& conn, std::string& buffer);
+    void onMessage(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime);
 
     TCPServer server_;
     EventLoop loop_;
@@ -28,7 +29,7 @@ EchoServer::EchoServer(std::string host, uint16_t port, int maxConn):
     server_.setConnectionCallback(
         std::bind(&EchoServer::onConnection, this, std::placeholders::_1));
     server_.setMessageCallback(
-        std::bind(&EchoServer::onMessage, this, std::placeholders::_1, std::placeholders::_2));
+        std::bind(&EchoServer::onMessage, this, _1, _2, _3));
 }
 
 void EchoServer::start()
@@ -55,7 +56,7 @@ void EchoServer::onConnection(const TCPConnectionPtr& conn)
     std::cout << "numConnected = " << numConnected_ << std::endl;
 }
 
-void EchoServer::onMessage(const TCPConnectionPtr& conn, std::string& buffer)
+void EchoServer::onMessage(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime)
 {
     std::string msg;
     msg.swap(buffer);

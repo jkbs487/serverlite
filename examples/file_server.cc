@@ -38,7 +38,7 @@ void onConnection(const TCPConnectionPtr& conn)
     }
 }
 
-void onMessage(const TCPConnectionPtr& conn, std::string buffer)
+void onMessage(const TCPConnectionPtr& conn, std::string buffer, int64_t receiveTime)
 {
     if (buffer == "recv\n") {
         LOG_INFO << "start transfer...";

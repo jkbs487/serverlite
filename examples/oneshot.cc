@@ -10,7 +10,7 @@ using namespace tcpserver;
 
 EventLoop g_loop;
 
-void timeout()
+void timeout(int64_t receiveTime)
 {
     std::cout << "Timeout!" << std::endl;
     g_loop.quit();

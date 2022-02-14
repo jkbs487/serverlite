@@ -10,21 +10,23 @@
 #include <string.h>
 
 using namespace tcpserver;
+using namespace std::placeholders;
 
 #define TIME_SUB_MS(tv1, tv2)  ((tv1.tv_sec - tv2.tv_sec) * 1000 + (tv1.tv_usec - tv2.tv_usec) / 1000)
 
 class EchoServer {
 public:
     EchoServer(std::string host, uint16_t port, EventLoop *eventLoop): server(host, port, eventLoop, "EchoServer") {
-        server.setMessageCallback(std::bind(&EchoServer::onMessage, this, std::placeholders::_1, std::placeholders::_2));
+        server.setMessageCallback(std::bind(&EchoServer::onMessage, this, _1, _2, _3));
     }
     void start() {
         server.start();
     }
 private:
     TCPServer server;
-    void onMessage(const TCPConnectionPtr& conn, std::string& buffer) {
-        LOG_INFO << "echo " << buffer.size() << " bytes";
+    void onMessage(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime) {
+        LOG_INFO << conn->name() << " echo " << buffer.size()
+            << " bytes, received at " << receiveTime;
         conn->send(std::move(buffer));
     }
 };
@@ -32,7 +34,7 @@ private:
 class DiscardServer {
 public:
     DiscardServer(std::string host, uint16_t port, EventLoop *eventLoop): server(host, port, eventLoop, "DiscardServer") {
-        server.setMessageCallback(std::bind(&DiscardServer::onMessage, this, std::placeholders::_1, std::placeholders::_2));
+        server.setMessageCallback(std::bind(&DiscardServer::onMessage, this, _1, _2, _3));
     }
     void start() {
         //server.setThreadNum(4);
@@ -40,9 +42,10 @@ public:
     }
 private:
     TCPServer server;
-    void onMessage(const TCPConnectionPtr& conn, std::string& buffer)
+    void onMessage(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime)
     {
-        LOG_INFO << "discards " << buffer.size() << " bytes";
+        LOG_INFO << conn->name() << " discards " << buffer.size() 
+            << " bytes, received at " << receiveTime;
         std::string().swap(buffer);
     }
 };
