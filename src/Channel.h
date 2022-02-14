@@ -10,7 +10,7 @@ class EventLoop;
 
 class Channel
 {
-    typedef std::function<void ()> RecvCallback;
+    typedef std::function<void (int64_t)> RecvCallback;
     typedef std::function<void ()> SendCallback;
     typedef std::function<void ()> CloseCallback;
     typedef std::function<void ()> ErrorCallback;
@@ -27,6 +27,8 @@ public:
     Channel(const Channel&) = delete;
     Channel& operator =(const Channel&) = delete;
     
+    void handleEvents(int64_t receiveTime);
+
     void setRecvCallback(const RecvCallback& cb) 
     { recvCallback_ = cb; }
     void setSendCallback(const SendCallback& cb) 
@@ -36,7 +38,6 @@ public:
     void setErrorCallback(const ErrorCallback& cb) 
     { errorCallback_ = cb; }
     int fd() { return fd_; }
-    void handleEvents();
     int events() 
     { return events_; }
     int state() 
@@ -67,7 +68,7 @@ public:
     void tie(const std::shared_ptr<void>& owner);
 private:
     void update();
-    void handleEventsWithGuard();
+    void handleEventsWithGuard(int64_t receiveTime);
 
     static const int SendEvent, RecvEvent, NoneEvent;
 

@@ -14,7 +14,7 @@ class TCPConnection;
 
 typedef std::shared_ptr<TCPConnection> TCPConnectionPtr;
 typedef std::function<void (const TCPConnectionPtr& conn)> ConnectionCallback;
-typedef std::function<void (const TCPConnectionPtr& conn, std::string&)> MessageCallback;
+typedef std::function<void (const TCPConnectionPtr& conn, std::string&, int64_t)> MessageCallback;
 typedef std::function<void (const TCPConnectionPtr& conn)> CloseCallback;
 typedef std::function<void (const TCPConnectionPtr& conn)> WriteCompleteCallback;
 
@@ -87,7 +87,7 @@ private:
         DISCONNECTING 
     };
     
-    void handleRecv();
+    void handleRecv(int64_t receiveTime);
     void handleSend();
     void handleClose();
     void handleError();
@@ -118,6 +118,6 @@ private:
 };
 
 void defaultConnectionCallback(const TCPConnectionPtr& conn);
-void defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer);
+void defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime);
 
 } // namespace tcpserver

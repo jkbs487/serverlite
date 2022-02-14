@@ -23,7 +23,7 @@ void tcpserver::defaultConnectionCallback(const TCPConnectionPtr& conn)
     << (conn->connected() ? " UP" : " DOWN");
 }
 
-void tcpserver::defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer)
+void tcpserver::defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime)
 {
     std::string data;
     data.swap(buffer);
@@ -43,18 +43,18 @@ TCPConnection::TCPConnection(EventLoop *loop, int fd, struct sockaddr_in localAd
     channel_(new Channel(loop, fd))
 {
     // register event callback to eventloop
-    channel_->setRecvCallback(std::bind(&TCPConnection::handleRecv, this));
+    channel_->setRecvCallback(std::bind(&TCPConnection::handleRecv, this, std::placeholders::_1));
     channel_->setSendCallback(std::bind(&TCPConnection::handleSend, this));
     channel_->setCloseCallback(std::bind(&TCPConnection::handleClose, this));
     channel_->setErrorCallback(std::bind(&TCPConnection::handleError, this));
     
-    LOG_DEBUG << "TCPConnection::TCPConnection [" << name_ << "] at fd=" 
+    LOG_DEBUG << "ctor [" << name_ << "] at fd=" 
     << channel_->fd() << " state=" << stateToString();
 }
 
 TCPConnection::~TCPConnection() 
 {
-    LOG_DEBUG << "TCPConnection::~TCPConnection [" << name_ << "] at fd=" 
+    LOG_DEBUG << "dtor [" << name_ << "] at fd=" 
     << channel_->fd() << " state=" << stateToString();
     ::close(sockfd_);
 }
@@ -110,7 +110,7 @@ void TCPConnection::sendInLoop(std::string data)
     if (!channel_->isSending() && sendBuf_.size() == 0) {
         nsend = ::send(channel_->fd(), data.data(), data.size(), 0);
         if (nsend >= 0) {
-            remaining = data.size() - nsend; 
+            remaining = data.size() - nsend;
             if (remaining == 0 && writeCompleteCallback_) {
                 // prevent call writecompleteCallback when data is sending
                 loop_->pushTask(std::bind(writeCompleteCallback_, shared_from_this()));
@@ -158,7 +158,7 @@ void TCPConnection::sendFile(std::string filePath)
     }
 }
 
-void TCPConnection::handleRecv()
+void TCPConnection::handleRecv(int64_t receiveTime)
 {
     loop_->assertInLoopThread();
     int fd = channel_->fd();
@@ -167,14 +167,14 @@ void TCPConnection::handleRecv()
     assert(channel_->isRecving());
     
     ssize_t ret = ::recv(fd, buffer, sizeof buffer, 0);
-    recvBuf_.append(std::string(buffer));
+    recvBuf_.append(buffer, ret);
     if (ret < 0 && errno != EINTR && errno != EWOULDBLOCK) {
         LOG_ERROR << "recv error: " << strerror(errno);
         handleError();
     } else if (ret == 0) {
         handleClose();
     } else {
-        messageCallback_(shared_from_this(), recvBuf_);
+        messageCallback_(shared_from_this(), recvBuf_, receiveTime);
     }
     return;
 }

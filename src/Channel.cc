@@ -45,23 +45,23 @@ void Channel::remove()
     eventLoop_->removeChannel(this);
 }
 
-void Channel::handleEvents()
+void Channel::handleEvents(int64_t receiveTime)
 {
     std::shared_ptr<void> guard;
     if (tied_) {
         guard = tie_.lock();
         if (guard) {
             LOG_TRACE << "[6]TCPConnection use count: " << guard.use_count();
-            handleEventsWithGuard();
+            handleEventsWithGuard(receiveTime);
             LOG_TRACE << "[12]TCPConnection use count: " << guard.use_count();
         }
     }
     else {
-        handleEventsWithGuard();
+        handleEventsWithGuard(receiveTime);
     }
 } 
 
-void Channel::handleEventsWithGuard()
+void Channel::handleEventsWithGuard(int64_t receiveTime)
 {
     eventHandling_ = true;
     if ((revents_ & EPOLLHUP) && !(revents_ & EPOLLIN)) {
@@ -71,7 +71,7 @@ void Channel::handleEventsWithGuard()
         if (errorCallback_) errorCallback_();
     }
     if (revents_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)) {
-        if (recvCallback_) recvCallback_();
+        if (recvCallback_) recvCallback_(receiveTime);
     }
     if (revents_ & EPOLLOUT) {
         if (sendCallback_) sendCallback_();

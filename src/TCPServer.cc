@@ -35,7 +35,7 @@ TCPServer::TCPServer(std::string host, uint16_t port, EventLoop *loop, std::stri
 
 TCPServer::~TCPServer()
 {
-    LOG_DEBUG << "TCPServer::~TCPServer [" << name_ << "]";
+    LOG_DEBUG << "dtor [" << name_ << "]";
     for (TCPConnectionPtr& conn : connections_) {
         conn.reset();
         conn->getLoop()->runTask(std::bind(&TCPConnection::connectDestroyed, conn));
@@ -64,7 +64,7 @@ void TCPServer::newConnection(int connfd)
     std::string connName;
     connName = name_ + "-" + host_ + ":" + std::to_string(port_) + "#" + std::to_string(nextConnId_++);
 
-    LOG_DEBUG << "TCPServer::handleAccept [" << name_ << "] - new connection [" << connName 
+    LOG_DEBUG << "new connection [" << connName 
     << "] from " << inet_ntoa(peerAddr.sin_addr) << ":" << peerAddr.sin_port;
 
     EventLoop* loop = threadPool_->getNextLoop();
@@ -90,7 +90,7 @@ void TCPServer::removeConnection(const TCPConnectionPtr& conn)
 
 void TCPServer::removeConnectionInLoop(const TCPConnectionPtr& conn)
 {
-    LOG_DEBUG << "TCPServer::removeConnectionInLoop [" << name_ << "] - connection " << conn->name();
+    LOG_DEBUG << "[" << name_ << "] - connection " << conn->name();
     auto it = std::find(connections_.begin(), connections_.end(), conn);
     if (it != connections_.end()) {
         LOG_TRACE << "[8]TCPConnection use count: " << conn.use_count();

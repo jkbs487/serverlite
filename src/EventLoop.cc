@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <assert.h>
 
+#include <sys/time.h>
+
 using namespace tcpserver;
 
 namespace {
@@ -85,8 +87,11 @@ void EventLoop::quit()
 void EventLoop::loop()
 {
     assertInLoopThread();
+    quit_ = false;
+    LOG_TRACE << "EventLoop " << this << " start looping";
     while (!quit_)
     {
+        for (auto c: channels_) LOG_TRACE << "channel: " << c.first << " " << c.second;
         int numEvents = epoll_wait(epollFd_, &*events_.begin(), static_cast<int>(events_.size()), -1);
         if (numEvents < 0) {
             perror("epoll_wait");
@@ -95,9 +100,13 @@ void EventLoop::loop()
         if (numEvents == 0) continue;
 
         for (int i = 0; i < numEvents; i++) {
+            struct timeval tval;
+            ::gettimeofday(&tval, NULL);
+            int64_t receiveTime = tval.tv_sec * 1000L + tval.tv_usec / 1000L;
+
             Channel *channel = static_cast<Channel*>(events_[i].data.ptr);
             channel->setRevents(events_[i].events); 
-            channel->handleEvents();
+            channel->handleEvents(receiveTime);
         }
 
         if (static_cast<size_t>(numEvents) == events_.size()) {
@@ -138,37 +147,43 @@ void EventLoop::updateChannel(Channel *channel)
     event.data.ptr = channel;
     event.events = channel->events();
 
-    if (channel->state() == New || channel->state() == Delete) {
-        if (channel->state() == New) {
+    if (channel->state() == Channel::NEW || channel->state() == Channel::DELETE) {
+        if (channel->state() == Channel::NEW) {
+            LOG_TRACE << "new channel: " << channel->fd() << " " << channel;
+            assert(channels_.find(channel->fd()) == channels_.end());
             channels_[channel->fd()] = channel;
         }
         else {
-            channels_.erase(channel->fd());
+            LOG_TRACE << "delete channel: " << channel->fd() << " " << channel;
+            assert(channels_.find(channel->fd()) != channels_.end());
         }
-        channel->setState(Add);
-        epoll_ctl(epollFd_, EPOLL_CTL_ADD, channel->fd(), &event);
+        channel->setState(Channel::ADD);
+        ::epoll_ctl(epollFd_, EPOLL_CTL_ADD, channel->fd(), &event);
     } else {
         // 调用 channel->disableAll() 会到这里
         if (channel->isNoneEvent()) {
-            epoll_ctl(epollFd_, EPOLL_CTL_DEL, channel->fd(), &event);
-            channel->setState(Delete);
+            ::epoll_ctl(epollFd_, EPOLL_CTL_DEL, channel->fd(), &event);
+            channel->setState(Channel::DELETE);
         }
         else {
-            epoll_ctl(epollFd_, EPOLL_CTL_MOD, channel->fd(), &event);
+            ::epoll_ctl(epollFd_, EPOLL_CTL_MOD, channel->fd(), &event);
         }
     }
 }
 
 void EventLoop::removeChannel(Channel *channel)
 {
+    LOG_TRACE << "remove channel: " << channel->fd() << " " << channel;
+    assert(channels_.find(channel->fd()) != channels_.end());
     channels_.erase(channel->fd());
-    if (channel->state() == Add) {
+    if (channel->state() == Channel::ADD) {
         struct epoll_event event;
         ::bzero(&event, sizeof event);
         event.data.ptr = channel;
         event.events = channel->events();
         epoll_ctl(epollFd_, EPOLL_CTL_DEL, channel->fd(), &event);
     }
+    channel->setState(Channel::NEW);
 }
 
 void EventLoop::handleRead()
@@ -211,6 +226,7 @@ int EventLoop::runAfter(double delay, TimerCallback cb)
     int sequence = timer->sequence();
     timer->addTimer(delay, 0, std::move(cb));
     timers_[sequence] = std::move(timer);
+    LOG_TRACE << "create Timer " << sequence;
     return sequence;
 }
 
@@ -219,7 +235,7 @@ int EventLoop::runEvery(double interval, TimerCallback cb)
     std::shared_ptr<Timer> timer = std::make_shared<Timer>(this);
     int sequence = timer->sequence();
     timer->addTimer(interval, interval, std::move(cb));
-    timers_[sequence] = std::move(timer);   
+    timers_[sequence] = std::move(timer);
     return sequence;
 }
 
@@ -227,6 +243,6 @@ void EventLoop::cancel(int sequence)
 {
     if (timers_.count(sequence) > 0) {
         timers_.erase(sequence);
-        LOG_DEBUG << "remove Timer " << sequence;
+        LOG_TRACE << "remove Timer " << sequence;
     }
 }

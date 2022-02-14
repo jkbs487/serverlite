@@ -16,7 +16,7 @@ class EventLoop;
 class EventLoopThreadPool;
 
 typedef std::function<void (const TCPConnectionPtr& conn)> ConnectionCallback;
-typedef std::function<void (const TCPConnectionPtr& conn, std::string&)> MessageCallback;
+typedef std::function<void (const TCPConnectionPtr& conn, std::string&, int64_t)> MessageCallback;
 typedef std::function<void (const TCPConnectionPtr& conn)> WriteCompleteCallback;
 
 class TCPServer
