@@ -104,6 +104,7 @@ void TCPConnection::sendInLoop(std::string data)
     }
     size_t remaining = data.size();
     ssize_t nsend = 0;
+    bool sendError = false;
 
     // 先还要判断是否已经注册写事件，已注册就跳过
     // 还判断写缓存区是否为空，为空才能直接发
@@ -122,15 +123,16 @@ void TCPConnection::sendInLoop(std::string data)
             // EWOULDBLOCK 表示写缓冲区满，无需处理
             if (errno != EWOULDBLOCK) {
                 if (errno == EPIPE || errno == ECONNRESET) {
-                    return;
+                    sendError = true;
                 }
             }
         }
     }
     // 还有剩余未发完，注册写事件
-    if (remaining > 0) {
-        sendBuf_ = data.substr(nsend, remaining);
-        channel_->enableSend();
+    if (!sendError && remaining > 0) {
+        sendBuf_.append(data.data() + nsend, remaining);
+        if (!channel_->isSending())
+            channel_->enableSend();
     }
 }
 
