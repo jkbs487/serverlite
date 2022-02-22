@@ -97,4 +97,5 @@ void TCPClient::removeConnection(const TCPConnectionPtr& conn)
     }
 
     loop_->pushTask(std::bind(&TCPConnection::connectDestroyed, conn));
+    connector_->restart();
 }
