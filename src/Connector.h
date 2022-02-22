@@ -22,6 +22,7 @@ public:
 
     void start();
     void stop();
+    void restart();
     void setNewConnectionCallback(const NewConnectionCallback& cb) 
     { newConnectionCallback_ = cb; }
 private:

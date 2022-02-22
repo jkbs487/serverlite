@@ -52,6 +52,15 @@ void Connector::startInLoop()
     }
 }
 
+void Connector::restart()
+{
+    loop_->assertInLoopThread();
+    setState(DISCONNECTED);
+    retryMs_ = 1000;
+    connect_ = true;
+    startInLoop();
+}
+
 void Connector::stop()
 {
     // after event 
