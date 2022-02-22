@@ -15,8 +15,8 @@ AsyncLogger::AsyncLogger(const std::string& baseName, int timeoutMs)
     buffer_(new std::string()),
     nextBuffer_(new std::string())
 {
-    buffer_->resize(bufferSize_);
-    nextBuffer_->resize(bufferSize_);
+    buffer_->reserve(bufferSize_);
+    nextBuffer_->reserve(bufferSize_);
 }
 
 AsyncLogger::~AsyncLogger()
@@ -65,6 +65,8 @@ void AsyncLogger::backend()
         std::vector<std::unique_ptr<std::string>> buffersToWrite;
         std::unique_ptr<std::string> buffer1(new std::string());
         std::unique_ptr<std::string> buffer2(new std::string());
+        buffer1->reserve(bufferSize_);
+        buffer2->reserve(bufferSize_);
         buffersToWrite.reserve(16);
         std::unique_lock<std::mutex> lock(mutex_);
         {
@@ -99,12 +101,14 @@ void AsyncLogger::backend()
         if (!buffer1) {
             assert(!buffersToWrite.empty());
             buffer1 = std::move(buffersToWrite.back());
+            buffer1.reset();
             buffersToWrite.pop_back();
         }
 
         if (!buffer2) {
             assert(!buffersToWrite.empty());
             buffer2 = std::move(buffersToWrite.back());
+            buffer2.reset();
             buffersToWrite.pop_back();
         }
 

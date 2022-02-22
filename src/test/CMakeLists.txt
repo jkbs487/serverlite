@@ -27,3 +27,6 @@ target_link_libraries(tcpclient_test02 net)
 
 add_executable(tcpclient_test03 TCPClientTest03.cc)
 target_link_libraries(tcpclient_test03 net)
+
+add_executable(threadpool_test ThreadPoolTest.cc)
+target_link_libraries(threadpool_test net)

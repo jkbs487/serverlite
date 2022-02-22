@@ -13,6 +13,7 @@ set(net_SRCS
     EventLoopThread.cc
     EventLoopThreadPool.cc
     Logger.cc
+    ThreadPool.cc
 )
 
 add_library(net ${net_SRCS})
@@ -32,7 +33,12 @@ set(HEADERS
     TCPConnection.h
     EventLoopThread.h
     EventLoopThreadPool.h
+    Logger.h
+    ThreadPool.h
 )
 install(FILES ${HEADERS} DESTINATION include)
 
 add_subdirectory(test)
+
+if(PROTOBUF_FOUND)
+endif()
