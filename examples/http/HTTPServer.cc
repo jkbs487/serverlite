@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <map>
 
-using namespace tcpserver;
+using namespace slite;
 using namespace std::placeholders;
 
 class HTTPServer

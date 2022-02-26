@@ -6,7 +6,7 @@
 #include <assert.h>
 #include <iostream>
 
-using namespace tcpserver;
+using namespace slite;
 
 void print(EventLoop* p = NULL)
 {

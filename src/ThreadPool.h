@@ -13,7 +13,7 @@
 #include <condition_variable>
 #include <functional>
 
-namespace tcpserver
+namespace slite
 {
 
 class ThreadPool

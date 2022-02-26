@@ -4,7 +4,7 @@
 
 #include <functional>
 
-using namespace tcpserver;
+using namespace slite;
 
 class HTTPCodec
 {

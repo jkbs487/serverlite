@@ -4,7 +4,7 @@
 #include "TCPClient.h"
 #include "Logger.h"
 
-using namespace tcpserver;
+using namespace slite;
 
 int main(int argc, char* argv[])
 {

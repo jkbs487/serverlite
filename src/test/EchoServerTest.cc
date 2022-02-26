@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 int numThreads = 0;
 
@@ -35,8 +35,8 @@ class EchoServer
     private:
     void onConnection(const TCPConnectionPtr& conn)
     {
-        std::cout << inet_ntoa(conn->peerAddr().sin_addr) << " -> "
-            << inet_ntoa(conn->localAddr().sin_addr) << " is "
+        std::cout << conn->peerAddr() << " -> "
+            << conn->localAddr() << " is "
             << (conn->connected() ? "UP" : "DOWN")  << std::endl;
         std::cout << conn->getTcpInfoString() << std::endl;
 

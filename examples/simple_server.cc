@@ -9,7 +9,7 @@
 #include <thread>
 #include <string.h>
 
-using namespace tcpserver;
+using namespace slite;
 using namespace std::placeholders;
 
 #define TIME_SUB_MS(tv1, tv2)  ((tv1.tv_sec - tv2.tv_sec) * 1000 + (tv1.tv_usec - tv2.tv_usec) / 1000)

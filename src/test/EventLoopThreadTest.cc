@@ -6,7 +6,7 @@
 #include <iostream>
 #include <unistd.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 void print(EventLoop* p = NULL)
 {

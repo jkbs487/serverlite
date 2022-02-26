@@ -1,17 +1,19 @@
 #include "Logger.h"
 #include "AsyncLogger.h"
+#include "ThreadPool.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <fstream>
 #include <memory>
+#include <sys/time.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 int g_total;
 FILE* g_file;
 std::unique_ptr<Logging> logging;
-AsyncLogger* g_asyncLog = NULL;
+AsyncLogger* g_asyncLog = nullptr;
 
 void dummyOutput(const std::string& msg)
 {
@@ -21,16 +23,18 @@ void dummyOutput(const std::string& msg)
         ::fwrite(msg.c_str(), 1, msg.size(), g_file);
     } else if (g_asyncLog) {
         g_asyncLog->append(msg);
-    } 
-    else {
+    } else if (logging) {
         logging->append(msg);
-    }
+    }   
 }
 
 void bench(const char* type)
 {
     Logger::setOutput(dummyOutput);
-    clock_t start = clock();
+    
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    int64_t start = static_cast<int64_t>(tv.tv_sec) * 1000000 + tv.tv_usec;
     g_total = 0;
 
     int n = 1000*1000;
@@ -44,8 +48,10 @@ void bench(const char* type)
                 << (kLongLog ? longStr : empty)
                 << i;
     }
-    clock_t end = clock();
-    double seconds = double(end - start) / CLOCKS_PER_SEC;
+    gettimeofday(&tv, NULL);
+    int64_t end = static_cast<int64_t>(tv.tv_sec) * 1000000 + tv.tv_usec;
+
+    double seconds = static_cast<double>(end - start) / 1000000;
     printf("%12s: %f seconds, %d bytes, %10.2f msg/s, %.2f MiB/s\n",
           type, seconds, g_total, n / seconds, g_total / seconds / (1024 * 1024));
 }
@@ -60,13 +66,19 @@ int main()
 {
     getppid(); // for ltrace and strace
 
+    ThreadPool pool("log pool");
+    pool.start(4);
+    pool.run(logInThread);
+    pool.run(logInThread);
+    pool.run(logInThread);
+    pool.run(logInThread);
+
     LOG_TRACE << "Trace";
     LOG_DEBUG << "Debug";
     LOG_INFO << "Info";
     LOG_WARN << "Warn";
     LOG_ERROR << "Error";
-
-    logging.reset(new Logging("test"));
+    LOG_INFO << sizeof(Logger);
 
     sleep(1);
     bench("nop");
@@ -82,10 +94,18 @@ int main()
     setbuffer(g_file, buffer, sizeof buffer);
     bench("/tmp/log");
     fclose(g_file);
+    g_file = nullptr;
 
-    AsyncLogger log("test");
+    logging.reset(new Logging("test_log_st", 1024*1024, false));
+    bench("test_log_st");
+
+    logging.reset(new Logging("test_log_mt", 1024*1024, true));
+    bench("test_log_mt");
+    logging.reset();
+
+    AsyncLogger log("asynclog", 1024*1024);
     log.start();
     g_asyncLog = &log;
-    bench("async");
+    bench("test_async_log");
     log.stop();
 }

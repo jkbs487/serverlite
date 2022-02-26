@@ -38,7 +38,6 @@ inline T* get_pointer(const std::unique_ptr<T>& ptr)
 }
 
 // Adapted from google-protobuf stubs/common.h
-// see License in muduo/base/Types.h
 template<typename To, typename From>
 inline ::std::shared_ptr<To> down_pointer_cast(const ::std::shared_ptr<From>& f) {
   if (false)
@@ -56,7 +55,7 @@ class Callback
 {
  public:
   virtual ~Callback() = default;
-  virtual void onMessage(const tcpserver::TCPConnectionPtr&,
+  virtual void onMessage(const slite::TCPConnectionPtr&,
                          const MessagePtr& message,
                          int64_t) const = 0;
 };
@@ -67,7 +66,7 @@ class CallbackT : public Callback
   static_assert(std::is_base_of<google::protobuf::Message, T>::value,
                 "T must be derived from gpb::Message.");
  public:
-  typedef std::function<void (const tcpserver::TCPConnectionPtr&,
+  typedef std::function<void (const slite::TCPConnectionPtr&,
                                 const std::shared_ptr<T>& message,
                                 int64_t)> ProtobufMessageTCallback;
 
@@ -76,7 +75,7 @@ class CallbackT : public Callback
   {
   }
 
-  void onMessage(const tcpserver::TCPConnectionPtr& conn,
+  void onMessage(const slite::TCPConnectionPtr& conn,
                  const MessagePtr& message,
                  int64_t receiveTime) const override
   {
@@ -92,7 +91,7 @@ class CallbackT : public Callback
 class ProtobufDispatcher
 {
  public:
-  typedef std::function<void (const tcpserver::TCPConnectionPtr&,
+  typedef std::function<void (const slite::TCPConnectionPtr&,
                                 const MessagePtr& message,
                                 int64_t receiveTime)> ProtobufMessageCallback;
 
@@ -101,7 +100,7 @@ class ProtobufDispatcher
   {
   }
 
-  void onProtobufMessage(const tcpserver::TCPConnectionPtr& conn,
+  void onProtobufMessage(const slite::TCPConnectionPtr& conn,
                          const MessagePtr& message,
                          int64_t receiveTime) const
   {

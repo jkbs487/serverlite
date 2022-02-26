@@ -21,21 +21,21 @@ void test_down_pointer_cast()
   }
 }
 
-void onQuery(const tcpserver::TCPConnectionPtr&,
+void onQuery(const slite::TCPConnectionPtr&,
              const QueryPtr& message,
              int64_t)
 {
   cout << "onQuery: " << message->GetTypeName() << endl;
 }
 
-void onAnswer(const tcpserver::TCPConnectionPtr&,
+void onAnswer(const slite::TCPConnectionPtr&,
               const AnswerPtr& message,
               int64_t)
 {
   cout << "onAnswer: " << message->GetTypeName() << endl;
 }
 
-void onUnknownMessageType(const tcpserver::TCPConnectionPtr&,
+void onUnknownMessageType(const slite::TCPConnectionPtr&,
                           const MessagePtr& message,
                           int64_t)
 {
@@ -51,7 +51,7 @@ int main()
   dispatcher.registerMessageCallback<muduo::Query>(onQuery);
   dispatcher.registerMessageCallback<muduo::Answer>(onAnswer);
 
-  tcpserver::TCPConnectionPtr conn;
+  slite::TCPConnectionPtr conn;
   int64_t t = 0;
 
   std::shared_ptr<muduo::Query> query(new muduo::Query);

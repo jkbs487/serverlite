@@ -16,7 +16,7 @@
 #include <string>
 #include <algorithm>
 
-using namespace tcpserver;
+using namespace slite;
 
 TCPServer::TCPServer(std::string host, uint16_t port, EventLoop *loop, std::string name): 
     name_(name),

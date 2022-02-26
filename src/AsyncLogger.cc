@@ -1,28 +1,25 @@
 #include "AsyncLogger.h"
-#include "Logger.h"
 
-#include <assert.h>
+#include <cassert>
+#include <functional>
 
-using namespace tcpserver;
+using namespace slite;
 
-const int kBufferSize = 686000;
-
-AsyncLogger::AsyncLogger(const std::string& baseName, int timeoutMs)
+AsyncLogger::AsyncLogger(const std::string& baseName, size_t roolSize, int flushInterval)
     : running_(false), 
-    timeoutMs_(timeoutMs),
-    bufferSize_(kBufferSize),
-    logging_(new Logging(baseName)),
+    roolSize_(roolSize),
+    flushInterval_(flushInterval),
+    baseName_(baseName),
     buffer_(new std::string()),
     nextBuffer_(new std::string())
 {
-    buffer_->reserve(bufferSize_);
-    nextBuffer_->reserve(bufferSize_);
+    buffer_->reserve(kBufferSize);
+    nextBuffer_->reserve(kBufferSize);
 }
 
 AsyncLogger::~AsyncLogger()
 {
     stop();
-    delete logging_;
 }
 
 
@@ -41,11 +38,11 @@ void AsyncLogger::stop()
     if (thread_.joinable())
         thread_.join();
 }
-
+#include <iostream>
 void AsyncLogger::append(const std::string& log)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (bufferSize_ - buffer_->size() > log.size()) {
+    if (kBufferSize - buffer_->size() > log.size()) {
         buffer_->append(log);
     } else {
         buffers_.push_back(std::move(buffer_));
@@ -61,16 +58,17 @@ void AsyncLogger::append(const std::string& log)
 
 void AsyncLogger::backend()
 {
+    std::vector<std::unique_ptr<std::string>> buffersToWrite;
+    std::unique_ptr<std::string> buffer1(new std::string());
+    std::unique_ptr<std::string> buffer2(new std::string());
+    buffer1->reserve(kBufferSize);
+    buffer2->reserve(kBufferSize);
+    buffersToWrite.reserve(16);
+    Logging logging(baseName_, roolSize_, false);
     while (running_) {
-        std::vector<std::unique_ptr<std::string>> buffersToWrite;
-        std::unique_ptr<std::string> buffer1(new std::string());
-        std::unique_ptr<std::string> buffer2(new std::string());
-        buffer1->reserve(bufferSize_);
-        buffer2->reserve(bufferSize_);
-        buffersToWrite.reserve(16);
         std::unique_lock<std::mutex> lock(mutex_);
         {
-            cond_.wait_for(lock, std::chrono::milliseconds(timeoutMs_), [this] {
+            cond_.wait_for(lock, std::chrono::seconds(flushInterval_), [this] {
                 return !buffers_.empty() || !running_;
             });
             buffers_.push_back(std::move(buffer_));
@@ -86,12 +84,12 @@ void AsyncLogger::backend()
         if (buffersToWrite.size() > 25) {
             std::string msg = "Dropped log messages, %zd larger buffers "  + 
                 std::to_string(buffersToWrite.size()-2);
-            logging_->append(msg);
+            logging.append(msg);
             buffersToWrite.erase(buffersToWrite.begin()+2, buffersToWrite.end());
         }
 
         for (const auto &buffer: buffersToWrite) {
-            logging_->append(*buffer);
+            logging.append(*buffer);
         }
 
         if (buffersToWrite.size() > 2) {
@@ -101,20 +99,20 @@ void AsyncLogger::backend()
         if (!buffer1) {
             assert(!buffersToWrite.empty());
             buffer1 = std::move(buffersToWrite.back());
-            buffer1.reset();
+            buffer1->clear();
             buffersToWrite.pop_back();
         }
 
         if (!buffer2) {
             assert(!buffersToWrite.empty());
             buffer2 = std::move(buffersToWrite.back());
-            buffer2.reset();
+            buffer2->clear();
             buffersToWrite.pop_back();
         }
 
-        logging_->flush();
+        logging.flush();
         buffersToWrite.clear();
     }
 
-    logging_->flush();
+    logging.flush();
 }

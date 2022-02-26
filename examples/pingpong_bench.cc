@@ -11,7 +11,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 #define TIME_SUB_MS(tv1, tv2)  ((tv1.tv_sec - tv2.tv_sec) * 1000000 + (tv1.tv_usec - tv2.tv_usec))
 

@@ -5,7 +5,7 @@
 #include <sys/resource.h>
 #include <unistd.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 off_t kRollSize = 500*1000*1000;
 
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
   printf("pid = %d\n", getpid());
 
-  AsyncLogger log("test");
+  AsyncLogger log("test", 1024*1024);
   log.start();
   g_asyncLog = &log;
 

@@ -6,7 +6,7 @@
 #include <memory>
 #include <mutex>
 
-namespace tcpserver
+namespace slite
 {
 
 typedef std::function<void (const TCPConnectionPtr& conn)> ConnectionCallback;

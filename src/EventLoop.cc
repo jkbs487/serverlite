@@ -13,7 +13,7 @@
 
 #include <sys/time.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 namespace {
 

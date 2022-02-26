@@ -13,12 +13,13 @@ set(net_SRCS
     EventLoopThread.cc
     EventLoopThreadPool.cc
     Logger.cc
+    Logging.cc
     ThreadPool.cc
 )
 
-add_library(net ${net_SRCS})
-target_link_libraries(net pthread)
-install(TARGETS net DESTINATION lib)
+add_library(slite_net ${net_SRCS})
+target_link_libraries(slite_net pthread)
+install(TARGETS slite_net DESTINATION lib)
 
 set(HEADERS 
     Timer.h
@@ -34,6 +35,7 @@ set(HEADERS
     EventLoopThread.h
     EventLoopThreadPool.h
     Logger.h
+    Logging.h
     ThreadPool.h
 )
 install(FILES ${HEADERS} DESTINATION include)

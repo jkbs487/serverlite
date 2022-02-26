@@ -4,7 +4,7 @@
 #include <memory>
 #include <netinet/in.h>
 
-namespace tcpserver
+namespace slite
 {
 
 class EventLoop;

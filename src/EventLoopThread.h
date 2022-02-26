@@ -5,7 +5,7 @@
 #include <string>
 #include <condition_variable>
 
-namespace tcpserver
+namespace slite
 {
 
 class EventLoop;

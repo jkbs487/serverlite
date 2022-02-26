@@ -6,7 +6,7 @@
 #include "Channel.h"
 #include "Logger.h"
 
-using namespace tcpserver;
+using namespace slite;
 
 const int Channel::SendEvent = EPOLLOUT;
 const int Channel::RecvEvent = EPOLLIN;

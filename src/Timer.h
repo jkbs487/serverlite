@@ -6,7 +6,7 @@
 #include <memory>
 #include <functional>
 
-namespace tcpserver
+namespace slite
 {
 
 class EventLoop;
@@ -36,4 +36,4 @@ private:
     static std::atomic_int32_t s_numCreate;
 };
 
-} // namespace tcpserver
+} // namespace slite

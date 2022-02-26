@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 ThreadPool::ThreadPool(const std::string& nameArg)
     : name_(nameArg),

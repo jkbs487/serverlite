@@ -4,7 +4,7 @@
 #include <iostream>
 #include <unistd.h>
 
-using namespace tcpserver;
+using namespace slite;
 using namespace std::placeholders;
 
 class EchoServer

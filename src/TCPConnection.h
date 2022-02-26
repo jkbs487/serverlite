@@ -5,7 +5,7 @@
 #include <memory>
 #include <netinet/in.h>
 
-namespace tcpserver
+namespace slite
 {
 
 class Channel;
@@ -25,6 +25,7 @@ public:
     ~TCPConnection();
     
     void send(std::string data);
+    //void send(const char* data, size_t len);
     void sendFile(std::string filePath);
 
     void setConnectionCallback(const ConnectionCallback& cb) 

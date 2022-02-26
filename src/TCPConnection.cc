@@ -14,16 +14,16 @@
 #include <unistd.h>
 #include <assert.h>
 
-using namespace tcpserver;
+using namespace slite;
 
-void tcpserver::defaultConnectionCallback(const TCPConnectionPtr& conn)
+void slite::defaultConnectionCallback(const TCPConnectionPtr& conn)
 {
     LOG_INFO << conn->localAddr() << ":" << conn->localPort()
     << " -> " << conn->peerAddr() << ":" << conn->peerPort()
     << (conn->connected() ? " UP" : " DOWN");
 }
 
-void tcpserver::defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime)
+void slite::defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime)
 {
     std::string data;
     data.swap(buffer);

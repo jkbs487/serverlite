@@ -6,7 +6,7 @@
 #include <thread>
 #include <iostream>
 
-using namespace tcpserver;
+using namespace slite;
 
 EventLoop* g_loop;
 clock_t begin;

@@ -3,7 +3,7 @@
 #include <functional>
 #include <memory>
 
-namespace tcpserver
+namespace slite
 {
 
 class EventLoop;

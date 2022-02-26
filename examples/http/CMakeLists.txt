@@ -5,7 +5,7 @@ set(http_SRCS
 )
 
 add_library(http ${http_SRCS})
-target_link_libraries(http net)
+target_link_libraries(http slite_net)
 
 install(TARGETS http DESTINATION lib)
 set(HEADERS

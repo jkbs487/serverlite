@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <unistd.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 EventLoopThreadPool::EventLoopThreadPool(EventLoop* baseLoop):
     baseLoop_(baseLoop),

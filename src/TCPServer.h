@@ -7,7 +7,7 @@
 #include <vector>
 #include <memory>
 
-namespace tcpserver
+namespace slite
 {
 
 class Channel;

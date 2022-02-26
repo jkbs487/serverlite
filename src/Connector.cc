@@ -12,7 +12,7 @@
 #include <cassert>
 #include <cerrno>
 
-using namespace tcpserver;
+using namespace slite;
 
 Connector::Connector(std::string host, uint16_t port, EventLoop *loop):
     loop_(loop),

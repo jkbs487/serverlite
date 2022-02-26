@@ -6,7 +6,7 @@
 #include <strings.h>
 #include <unistd.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 EventLoop g_loop;
 

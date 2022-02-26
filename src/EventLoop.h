@@ -9,7 +9,7 @@
 
 struct epoll_event;
 
-namespace tcpserver
+namespace slite
 {
 
 class Channel;

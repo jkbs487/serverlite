@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <unistd.h>  // usleep
 
-using namespace tcpserver;
+using namespace slite;
 
 void print()
 {

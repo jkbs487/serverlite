@@ -5,7 +5,7 @@
 #include <ctime>
 #include <cstdio>
 
-using namespace tcpserver;
+using namespace slite;
 
 /*
 std::string readFile(const char *filepath)

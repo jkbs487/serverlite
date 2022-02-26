@@ -9,7 +9,7 @@
 #include <iostream>
 #include <sys/timerfd.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 namespace
 {

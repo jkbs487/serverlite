@@ -5,7 +5,7 @@
 #include <functional>
 #include <unistd.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 EventLoopThread::EventLoopThread(): 
     loop_(nullptr), 
@@ -31,7 +31,6 @@ EventLoop* EventLoopThread::startLoop()
 {
     thread_ = std::thread(std::bind(&EventLoopThread::threadFunc, this));
     EventLoop* eventLoop = nullptr;
-    //std::cout << "tid = " << std::this_thread::get_id() << std::endl;
     std::unique_lock<std::mutex> lock(mutex_);
     cond_.wait(lock, [&]{ return loop_ != nullptr; });
     eventLoop = loop_;

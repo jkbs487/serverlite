@@ -6,7 +6,7 @@
 
 #include <cassert>
 
-using namespace tcpserver;
+using namespace slite;
 
 TCPClient::TCPClient(std::string host, uint16_t port, EventLoop *loop, std::string name):
     loop_(loop),

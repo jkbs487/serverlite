@@ -1,7 +1,7 @@
 #include "EventLoop.h"
 #include "Logger.h"
 
-using namespace tcpserver;
+using namespace slite;
 
 #include <unistd.h>
 

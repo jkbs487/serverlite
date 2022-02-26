@@ -231,7 +231,7 @@ void testBadBuffer()
 
 int g_count = 0;
 
-void onMessage(const tcpserver::TCPConnectionPtr& conn,
+void onMessage(const slite::TCPConnectionPtr& conn,
                const MessagePtr& message,
                int64_t receiveTime)
 {
@@ -261,7 +261,7 @@ void testOnMessage()
   all.append(buf1.data(), buf1.size());
   all.append(buf2.data(), buf2.size());
   assert(all.size() == totalLen);
-  tcpserver::TCPConnectionPtr conn;
+  slite::TCPConnectionPtr conn;
   int64_t t = 0;
   ProtobufCodec codec(onMessage);
   for (size_t len = 0; len <= totalLen; ++len)

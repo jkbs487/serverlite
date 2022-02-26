@@ -15,17 +15,19 @@ struct PayloadMessage {
     char data[0];
 };
 
-class TTCP
+class TTCPServer
 {
-    TTCP(std::string host, uint16_t port, EventLoop *eventLoop): server(host, port, eventLoop, "TTCP") {
-        server.setMessageCallback(std::bind(&TTCP::onMessage, this, std::placeholders::_1, std::placeholders::_2));
+    TTCPServer(std::string host, uint16_t port, EventLoop *eventLoop): server(host, port, eventLoop, "TTCP") {
+        server.setMessageCallback(std::bind(&TTCPServer::onMessage, this, std::placeholders::_1, std::placeholders::_2));
     }
+
     void start() {
         server.setThreadNum(4);
         server.start();
     }
 private:
     TCPServer server;
+    
     void onConnection(const TCPConnectionPtr& conn) {
         if (conn->connected()) {
             
@@ -33,6 +35,7 @@ private:
         SessionMessage session = {0, 0};
 
     }
+
     void onMessage(const TCPConnectionPtr& conn, std::string& buffer)
     {
         

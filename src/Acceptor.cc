@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #include <assert.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 Acceptor::Acceptor(std::string host, uint16_t port, EventLoop *loop):
     loop_(loop), 
