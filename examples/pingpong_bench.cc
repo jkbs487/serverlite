@@ -1,9 +1,9 @@
 // Benchmark inspired by libevent/test/bench.c
 // See also: http://libev.schmorp.de/bench.html
 
-#include "Logger.h"
-#include "EventLoop.h"
-#include "Channel.h"
+#include "slite/Logger.h"
+#include "slite/EventLoop.h"
+#include "slite/Channel.h"
 
 #include <stdio.h>
 #include <sys/resource.h>

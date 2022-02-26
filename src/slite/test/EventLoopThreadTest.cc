@@ -1,5 +1,5 @@
-#include "EventLoopThread.h"
-#include "EventLoop.h"
+#include "slite/EventLoopThread.h"
+#include "slite/EventLoop.h"
 
 #include <thread>
 #include <chrono>

@@ -13,7 +13,7 @@ set(HEADERS
     HTTPResponse.h
     HTTPCodec.h
 )
-install(FILES ${HEADERS} DESTINATION include/http)
+install(FILES ${HEADERS} DESTINATION include/slite/http)
 
 add_executable(httpserver HTTPServer.cc)
 target_link_libraries(httpserver http)

@@ -9,7 +9,7 @@
 #ifndef MUDUO_EXAMPLES_PROTOBUF_CODEC_CODEC_H
 #define MUDUO_EXAMPLES_PROTOBUF_CODEC_CODEC_H
 
-#include "TCPConnection.h"
+#include "slite/TCPConnection.h"
 
 #include <google/protobuf/message.h>
 

@@ -28,3 +28,10 @@ add_custom_target(protobuf_codec_all
                         protobuf_dispatcher_test
                         protobuf_server
                         protobuf_client)
+
+install(TARGETS protobuf_codec DESTINATION lib)
+set(HEADERS
+  dispatcher.h
+  codec.h
+)
+install(FILES ${HEADERS} DESTINATION include/slite/protobuf)

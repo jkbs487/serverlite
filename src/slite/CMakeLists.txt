@@ -38,7 +38,7 @@ set(HEADERS
     Logging.h
     ThreadPool.h
 )
-install(FILES ${HEADERS} DESTINATION include)
+install(FILES ${HEADERS} DESTINATION include/slite)
 
 add_subdirectory(test)
 

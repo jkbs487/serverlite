@@ -23,5 +23,4 @@ add_subdirectory(http)
 
 if(PROTOBUF_FOUND)
     add_subdirectory(protobuf)
-    add_subdirectory(loginserver)
 endif()

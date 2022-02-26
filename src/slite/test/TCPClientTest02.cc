@@ -1,7 +1,7 @@
 // TcpClient destructs when TcpConnection is connected but unique.
-#include "EventLoop.h"
-#include "TCPClient.h"
-#include "Logger.h"
+#include "slite/EventLoop.h"
+#include "slite/TCPClient.h"
+#include "slite/Logger.h"
 
 using namespace slite;
 

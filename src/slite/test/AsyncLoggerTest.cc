@@ -1,5 +1,5 @@
-#include "Logger.h"
-#include "AsyncLogger.h"
+#include "slite/Logger.h"
+#include "slite/AsyncLogger.h"
 
 #include <stdio.h>
 #include <sys/resource.h>

@@ -1,8 +1,8 @@
 // TcpClient destructs in a different thread.
-#include "EventLoop.h"
-#include "EventLoopThread.h"
-#include "TCPClient.h"
-#include "Logger.h"
+#include "slite/EventLoop.h"
+#include "slite/EventLoopThread.h"
+#include "slite/TCPClient.h"
+#include "slite/Logger.h"
 
 using namespace slite;
 

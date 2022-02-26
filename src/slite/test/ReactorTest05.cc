@@ -1,5 +1,5 @@
-#include "EventLoop.h"
-#include "Logger.h"
+#include "slite/EventLoop.h"
+#include "slite/Logger.h"
 
 using namespace slite;
 

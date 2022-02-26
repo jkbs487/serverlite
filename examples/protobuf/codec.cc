@@ -8,7 +8,7 @@
 
 #include "codec.h"
 
-#include "Logger.h"
+#include "slite/Logger.h"
 
 #include "google-inl.h"
 

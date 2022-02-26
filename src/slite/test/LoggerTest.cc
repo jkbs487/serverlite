@@ -1,6 +1,6 @@
-#include "Logger.h"
-#include "AsyncLogger.h"
-#include "ThreadPool.h"
+#include "slite/Logger.h"
+#include "slite/AsyncLogger.h"
+#include "slite/ThreadPool.h"
 
 #include <cstdio>
 #include <unistd.h>

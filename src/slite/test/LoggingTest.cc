@@ -1,5 +1,5 @@
-#include "Logger.h"
-#include "Logging.h"
+#include "slite/Logger.h"
+#include "slite/Logging.h"
 
 #include <unistd.h>
 #include <memory>

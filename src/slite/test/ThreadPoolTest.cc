@@ -1,5 +1,5 @@
-#include "ThreadPool.h"
-#include "Logger.h"
+#include "slite/ThreadPool.h"
+#include "slite/Logger.h"
 
 #include <thread>
 #include <stdio.h>
