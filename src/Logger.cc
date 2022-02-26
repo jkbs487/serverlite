@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 
-using namespace tcpserver;
+using namespace slite;
 
 const char* logLevelName[6] =
 {
@@ -20,71 +20,30 @@ const char* logLevelName[6] =
   "FATAL ",
 };
 
-void Logging::append(const std::string& logLine) 
-{   
-    size_t written = 0;
-
-    while (written != logLine.size())
-    {
-        size_t remain = logLine.size() - written;
-        size_t n = ::fwrite_unlocked(logLine.c_str(), 1, logLine.size(), fp_);
-        if (n != remain)
-        {
-        int err = ferror(fp_);
-        if (err)
-        {
-            fprintf(stderr, "Logging::append() failed %s\n", strerror(err));
-            break;
-        }
-        }
-        written += n;
-    }
-
-    //writtenBytes_ += written;
-
-}
-
-std::string Logging::generateFileName(std::string baseName)
-{
-    std::string fileName;
-    fileName.reserve(baseName.size() + 64);
-    fileName = baseName;
-
-    char timebuf[32];
-    struct tm tm;
-    time_t now = time(NULL);
-    gmtime_r(&now, &tm);
-    strftime(timebuf, sizeof timebuf, ".%Y%m%d-%H%M%S.", &tm);
-    fileName += timebuf;
-
-    char pidbuf[32];
-    snprintf(pidbuf, sizeof pidbuf, "%d", ::getpid());
-    fileName += pidbuf;
-
-    fileName += ".log";
-
-    return fileName;
-}
-
-void Logging::flush()
-{
-    ::fflush(fp_);
-}
-
-static Logging g_logging;
-
 void defaultOutput(const std::string& output)
 {
-    g_logging.append(output);
+    size_t n = ::fwrite(output.c_str(), 1, output.size(), stdout);
+    (void)n;
+}
+
+void defaultFlush()
+{
+    ::fflush(stdout);
 }
 
 static Logger::LogLevel g_level;
 static OutputFunc g_output = defaultOutput;
+static FlushFunc g_flush = defaultFlush;
 
 Logger::LogLevel Logger::logLevel()
 {
     return g_level;
 }   
+
+void Logger::setFlush(FlushFunc flush)
+{
+    g_flush = flush;
+}
 
 void Logger::setOutput(OutputFunc output)
 {
@@ -116,9 +75,10 @@ Logger::Logger(std::string file, std::string func, int line, LogLevel level):
 
 Logger::~Logger()
 {
-    sstream_ << std::endl;
+    sstream_ << "\n";
     g_output(sstream_.str());
     if (level_ == FATAL) {
+        g_flush();
         abort();
     }
 }

@@ -1,48 +1,13 @@
 #include <sstream>
 #include <iostream>
-#include <fstream>
 #include <vector>
-#include <cstdio>
 #include <functional>
 
-namespace tcpserver
+namespace slite
 {
 
 typedef std::function<void(std::string)> OutputFunc;
-
-class Logging
-{
-public:
-    Logging()
-    : fp_(::fopen("/dev/fd/1", "w"))
-    {
-        if (!fp_) {
-            perror("fopen");
-            abort();
-        }
-    }
-
-    Logging(std::string baseName) 
-    : fp_(::fopen(generateFileName(baseName).c_str(), "w"))
-    {
-        if (!fp_) {
-            perror("fopen");
-            abort();
-        }
-    }
-
-    ~Logging()
-    {
-        if (fp_)
-            ::fclose(fp_);
-    }
-
-    void append(const std::string& logLine);
-    void flush();
-private:
-    std::string generateFileName(std::string baseName);
-    FILE* fp_;
-};
+typedef std::function<void()> FlushFunc;
 
 class Logger
 {
@@ -67,6 +32,7 @@ public:
     static LogLevel logLevel();
     static void setOutput(OutputFunc output);
     static void setLogLevel(LogLevel level);
+    static void setFlush(FlushFunc flush);
 private:
     std::string generateFileName(std::string baseName);
     std::string getFormatTime();
