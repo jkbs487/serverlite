@@ -1,5 +1,5 @@
 #include "DepartmentModel.h"
-#include "Logger.h"
+#include "slite/Logger.h"
 
 using namespace std;
 using namespace slite;

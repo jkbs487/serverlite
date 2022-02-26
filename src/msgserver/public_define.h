@@ -6,13 +6,13 @@
 //  Copyright (c) 2014年 luoning. All rights reserved.
 //
 
-#ifndef _public_define_h
-#define _public_define_h
+#pragma once
 
 #include <iostream>
 #include <set>
 #include <map>
-#include "IM.BaseDefine.pb.h"
+#include "pbs/IM.BaseDefine.pb.h"
+
 using namespace std;
 
 typedef unsigned  uchar_t;
@@ -220,5 +220,3 @@ typedef struct {
     bool isOpen;
     std::vector<std::string> sendMsg;
 } Context;
-
-#endif

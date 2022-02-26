@@ -1,4 +1,4 @@
-#include "Logger.h"
+#include "slite/Logger.h"
 #include "UserModel.h"
 
 using namespace slite;

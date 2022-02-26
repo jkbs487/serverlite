@@ -1,7 +1,7 @@
 #include <list>
 
-#include "../DBPool.h"
-#include "../IM.BaseDefine.pb.h"
+#include "DBPool.h"
+#include "pbs/IM.BaseDefine.pb.h"
 
 class DepartmentModel
 {

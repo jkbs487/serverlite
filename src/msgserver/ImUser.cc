@@ -6,10 +6,11 @@
  *  Brief:
  *  	a map from user_id to userInfo and connection list
  */
-#include "Logger.h"
 #include "ImUser.h"
-#include "IM.Server.pb.h"
-#include "IM.Login.pb.h"
+
+#include "slite/Logger.h"
+#include "pbs/IM.Server.pb.h"
+#include "pbs/IM.Login.pb.h"
 
 using namespace ::IM::BaseDefine;
 

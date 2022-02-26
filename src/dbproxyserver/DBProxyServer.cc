@@ -1,22 +1,22 @@
-#include "TCPServer.h"
-#include "TCPClient.h"
-#include "EventLoop.h"
-#include "ThreadPool.h"
-#include "Logger.h"
+#include "slite/TCPServer.h"
+#include "slite/TCPClient.h"
+#include "slite/EventLoop.h"
+#include "slite/ThreadPool.h"
+#include "slite/Logger.h"
 
-#include "IM.Login.pb.h"
-#include "IM.Server.pb.h"
-#include "IM.Buddy.pb.h"
-#include "IM.Group.pb.h"
-#include "IM.Other.pb.h"
+#include "pbs/IM.Login.pb.h"
+#include "pbs/IM.Server.pb.h"
+#include "pbs/IM.Buddy.pb.h"
+#include "pbs/IM.Group.pb.h"
+#include "pbs/IM.Other.pb.h"
 
-#include "DBPool.h"
 #include "EncDec.h"
+#include "models/DBPool.h"
 #include "models/DepartmentModel.h"
 #include "models/UserModel.h"
 
-#include "../protobuf/codec.h"
-#include "../protobuf/dispatcher.h"
+#include "slite/protobuf/codec.h"
+#include "slite/protobuf/dispatcher.h"
 
 #include <set>
 #include <memory>

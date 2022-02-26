@@ -1,5 +1,4 @@
-#ifndef DBPOOL_H_
-#define DBPOOL_H_
+#pragma once
 
 #include <iostream>
 #include <list>
@@ -134,5 +133,3 @@ private:
 };
 
 typedef std::shared_ptr<DBPool> DBPoolPtr;
-
-#endif /* DBPOOL_H_ */

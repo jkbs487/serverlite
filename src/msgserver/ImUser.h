@@ -8,12 +8,12 @@
 #ifndef IMUSER_H_
 #define IMUSER_H_
 
-#include "TCPConnection.h"
+#include "slite/TCPConnection.h"
 #include "public_define.h"
 
 #define MAX_ONLINE_FRIEND_CNT		100	//通知好友状态通知的最多个数
 
-#include "../protobuf/codec.h"
+#include "slite/protobuf/codec.h"
 
 #include <map>
 #include <set>

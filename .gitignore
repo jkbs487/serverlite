@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+*.swp
+bazel-*
+compile_commands.json
+build/*
+.vscode/*
