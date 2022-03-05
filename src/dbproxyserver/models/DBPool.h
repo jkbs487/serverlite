@@ -74,7 +74,7 @@ public:
     *
     *  @return 成功返回true 失败返回false
     */
-	bool executeUpdate(const char* sqlQuery, bool careAffectedRows = true);
+	bool executeUpdate(std::string sqlQuery, bool careAffectedRows = true);
 	uint32_t getInsertId();
 
 	// 开启事务

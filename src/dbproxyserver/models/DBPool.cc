@@ -100,28 +100,23 @@ bool PrepareStatement::init(MYSQL *mysql, string &sql)
 
 	//g_master_conn_fail_num ++;
 	stmt_ = mysql_stmt_init(mysql);
-	if (!stmt_)
-	{
+	if (!stmt_) {
 		log_error("mysql_stmt_init failed\n");
 		return false;
 	}
 
-	if (mysql_stmt_prepare(stmt_, sql.c_str(), sql.size()))
-	{
+	if (mysql_stmt_prepare(stmt_, sql.c_str(), sql.size())) {
 		log_error("mysql_stmt_prepare failed: %s\n", mysql_stmt_error(stmt_));
 		return false;
 	}
 
 	paramCnt_ = static_cast<uint32_t>(mysql_stmt_param_count(stmt_));
-	if (paramCnt_ > 0)
-	{
+	if (paramCnt_ > 0) {
 		paramBind_ = new MYSQL_BIND[paramCnt_];
-		if (!paramBind_)
-		{
+		if (!paramBind_) {
 			log_error("new failed\n");
 			return false;
 		}
-
 		memset(paramBind_, 0, sizeof(MYSQL_BIND) * paramCnt_);
 	}
 
@@ -176,26 +171,22 @@ void PrepareStatement::setParam(uint32_t index, const string &value)
 
 bool PrepareStatement::executeUpdate()
 {
-	if (!stmt_)
-	{
+	if (!stmt_) {
 		log_error("no m_stmt\n");
 		return false;
 	}
 
-	if (mysql_stmt_bind_param(stmt_, paramBind_))
-	{
+	if (mysql_stmt_bind_param(stmt_, paramBind_)) {
 		log_error("mysql_stmt_bind_param failed: %s\n", mysql_stmt_error(stmt_));
 		return false;
 	}
 
-	if (mysql_stmt_execute(stmt_))
-	{
+	if (mysql_stmt_execute(stmt_)) {
 		log_error("mysql_stmt_execute failed: %s\n", mysql_stmt_error(stmt_));
 		return false;
 	}
 
-	if (mysql_stmt_affected_rows(stmt_) == 0)
-	{
+	if (mysql_stmt_affected_rows(stmt_) == 0) {
 		log_error("ExecuteUpdate have no effect\n");
 		return false;
 	}
@@ -304,12 +295,12 @@ id=1该条记录原值就是10的话,则返回0。
 
 mysql_affected_rows返回的是实际更新的行数,而不是匹配到的行数。
 */
-bool DBConn::executeUpdate(const char *sql_query, bool care_affected_rows)
+bool DBConn::executeUpdate(std::string sqlQuery, bool care_affected_rows)
 {
 	mysql_ping(mysql_);
 
-	if (mysql_real_query(mysql_, sql_query, strlen(sql_query))) {
-		log_error("mysql_real_query failed: %s, sql: %s\n", mysql_error(mysql_), sql_query);
+	if (mysql_real_query(mysql_, sqlQuery.c_str(), strlen(sqlQuery.c_str()))) {
+		log_error("mysql_real_query failed: %s, sql: %s\n", mysql_error(mysql_), sqlQuery.c_str());
 		//g_master_conn_fail_num ++;
 		return false;
 	}
@@ -318,10 +309,10 @@ bool DBConn::executeUpdate(const char *sql_query, bool care_affected_rows)
 		return true;
 	} else { // 影响的行数为0时
 		if (care_affected_rows) { // 如果在意影响的行数时, 返回false, 否则返回true
-			log_error("mysql_real_query failed: %s, sql: %s\n\n", mysql_error(mysql_), sql_query);
+			log_error("mysql_real_query failed: %s, sql: %s\n\n", mysql_error(mysql_), sqlQuery.c_str());
 			return false;
 		} else {
-			log_warn("affected_rows=0, sql: %s\n\n", sql_query);
+			log_warn("affected_rows=0, sql: %s\n\n", sqlQuery.c_str());
 			return true;
 		}
 	}
