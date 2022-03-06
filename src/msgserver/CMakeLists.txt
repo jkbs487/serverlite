@@ -1,6 +1,7 @@
 set(msgserver_SRCS
     MsgServer.cc
     ImUser.cc
+    ../base/protobuf_codec.cc
 )
 
 add_executable(msgserver ${msgserver_SRCS})

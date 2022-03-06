@@ -7,6 +7,7 @@ set(PROTOS
   IM.Group.pb.cc IM.Group.pb.h
   IM.Message.pb.cc IM.Message.pb.h
   IM.File.pb.cc IM.File.pb.h
+  IM.SwitchService.pb.cc IM.SwitchService.pb.h
 )
 
 add_custom_command(OUTPUT ${PROTOS}
@@ -26,6 +27,8 @@ add_custom_command(OUTPUT ${PROTOS}
   ARGS --cpp_out . ${CMAKE_CURRENT_SOURCE_DIR}/IM.Message.proto -I${CMAKE_CURRENT_SOURCE_DIR}
   COMMAND protoc
   ARGS --cpp_out . ${CMAKE_CURRENT_SOURCE_DIR}/IM.File.proto -I${CMAKE_CURRENT_SOURCE_DIR}
+  COMMAND protoc
+  ARGS --cpp_out . ${CMAKE_CURRENT_SOURCE_DIR}/IM.SwitchService.proto -I${CMAKE_CURRENT_SOURCE_DIR}
   DEPENDS IM.BaseDefine.proto 
           IM.Other.proto 
           IM.Server.proto 
@@ -34,6 +37,7 @@ add_custom_command(OUTPUT ${PROTOS}
           IM.Group.proto 
           IM.Message.proto
           IM.File.proto
+          IM.SwitchService.proto
   VERBATIM )
 
 set_source_files_properties(IM.BaseDefine.pb.cc PROPERTIES COMPILE_FLAGS "-Wno-conversion -Wno-shadow")
@@ -44,6 +48,7 @@ set_source_files_properties(IM.Buddy.pb.cc PROPERTIES COMPILE_FLAGS "-Wno-conver
 set_source_files_properties(IM.Group.pb.cc PROPERTIES COMPILE_FLAGS "-Wno-conversion -Wno-shadow")
 set_source_files_properties(IM.Message.pb.cc PROPERTIES COMPILE_FLAGS "-Wno-conversion -Wno-shadow")
 set_source_files_properties(IM.File.pb.cc PROPERTIES COMPILE_FLAGS "-Wno-conversion -Wno-shadow")
+set_source_files_properties(IM.SwitchService.pb.cc PROPERTIES COMPILE_FLAGS "-Wno-conversion -Wno-shadow")
 include_directories(${PROJECT_BINARY_DIR})
 
 set(proto_SRCS
@@ -55,6 +60,7 @@ set(proto_SRCS
   IM.Group.pb.cc
   IM.Message.pb.cc
   IM.File.pb.cc
+  IM.SwitchService.pb.cc
 )
 
 add_library(im_proto ${proto_SRCS})
