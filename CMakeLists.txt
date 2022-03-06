@@ -15,7 +15,7 @@ set(CXX_FLAGS
   -Werror
   -Wconversion
   -Wno-unused-parameter
-  -Wold-style-cast
+  #-Wold-style-cast
   -Woverloaded-virtual
   -Wpointer-arith
   -Wshadow
@@ -52,7 +52,6 @@ endif()
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 link_directories(${PROJECT_SOURCE_DIR}/lib)
-link_directories(${PROJECT_SOURCE_DIR}/slite/lib)
 
 string(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
 message(STATUS "CXX_FLAGS = " ${CMAKE_CXX_FLAGS} " " ${CMAKE_CXX_FLAGS_${BUILD_TYPE}})
