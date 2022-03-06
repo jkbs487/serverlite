@@ -1,87 +1,18 @@
-#include "slite/TCPServer.h"
-#include "slite/TCPClient.h"
-#include "slite/EventLoop.h"
-#include "slite/ThreadPool.h"
+#include "DBProxyServer.h"
 #include "slite/Logger.h"
 
-#include "pbs/IM.Login.pb.h"
-#include "pbs/IM.Server.pb.h"
-#include "pbs/IM.Buddy.pb.h"
-#include "pbs/IM.Group.pb.h"
-#include "pbs/IM.Other.pb.h"
+#include "models/SessionModel.h"
+#include "models/GroupModel.h"
+#include "models/MessageModel.h"
+#include "models/GroupMessageModel.h"
 
 #include "EncDec.h"
-#include "models/DBPool.h"
-#include "models/DepartmentModel.h"
-#include "models/UserModel.h"
 
-#include "slite/protobuf/codec.h"
-#include "slite/protobuf/dispatcher.h"
-
-#include <set>
-#include <memory>
-#include <functional>
 #include <sys/time.h>
 
 using namespace slite;
+using namespace IM;
 using namespace std::placeholders;
-
-typedef std::shared_ptr<IM::Server::IMValidateReq> IMValiReqPtr;
-typedef std::shared_ptr<IM::Login::IMLogoutReq> LogoutReqPtr;
-typedef std::shared_ptr<IM::Buddy::IMDepartmentReq> DepartmentReqPtr;
-typedef std::shared_ptr<IM::Buddy::IMAllUserReq> AllUserReqPtr;
-typedef std::shared_ptr<IM::Buddy::IMRecentContactSessionReq> RecentContactSessionReqPtr;
-typedef std::shared_ptr<IM::Buddy::IMUsersStatReq> UsersStatReqPtr;
-
-typedef std::shared_ptr<IM::Group::IMNormalGroupListReq> NormalGroupListReqPtr;
-typedef std::shared_ptr<IM::Group::IMGroupChangeMemberRsp> GroupChangeMemberRspPtr;
-
-class DBProxyServer
-{
-public:
-    DBProxyServer(std::string host, uint16_t port, EventLoop* loop);
-    ~DBProxyServer();
-
-    void start() {
-        threadPool_.start(4);
-        server_.start();
-    }
-    void onTimer();
-
-private:
-    DBProxyServer(const DBProxyServer& server) = delete;
-
-    struct Context {
-        int64_t lastRecvTick;
-        int64_t lastSendTick;
-    };
-
-    void onConnection(const TCPConnectionPtr& conn);
-    void onMessage(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime);
-    void onWriteComplete(const TCPConnectionPtr& conn);
-    void onUnknownMessage(const TCPConnectionPtr& conn, const MessagePtr& message, int64_t receiveTime);
-    void onHeartBeat(const TCPConnectionPtr& conn, const MessagePtr& message, int64_t receiveTime);
-    void onValidateRequest(const TCPConnectionPtr& conn, const IMValiReqPtr& message, int64_t receiveTime);
-
-    void onClientDepartmentRequest(const TCPConnectionPtr& conn, const DepartmentReqPtr& message, int64_t receiveTime);
-    void onClientAllUserRequest(const TCPConnectionPtr& conn, const AllUserReqPtr& message, int64_t receiveTime);
-
-    bool doLogin(const std::string &strName, const std::string &strPass, IM::BaseDefine::UserInfo& user);
-
-    static const int kHeartBeatInterVal = 5000;
-    static const int kTimeout = 30000;
-
-    TCPServer server_;
-    EventLoop *loop_;
-    ProtobufDispatcher dispatcher_;
-    ProtobufCodec codec_;
-    ThreadPool threadPool_;
-    DBPoolPtr dbPool_;
-    std::unique_ptr<DepartmentModel> departModel_;
-    std::unique_ptr<UserModel> userModel_;
-    std::set<TCPConnectionPtr> clientConns_;
-    std::map<string, std::list<uint32_t> > hmLimits_;
-};
 
 DBProxyServer::DBProxyServer(std::string host, uint16_t port, EventLoop* loop):
     server_(host, port, loop, "MsgServer"),
@@ -90,8 +21,10 @@ DBProxyServer::DBProxyServer(std::string host, uint16_t port, EventLoop* loop):
     codec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3)),
     threadPool_("DBThreadPool"),
     dbPool_(new DBPool("IMDBPool", "127.0.0.1", 3306, "root", "jk111111", "teamtalk", 5)),
+    cachePool_(new CachePool("IMCachePool", "127.0.0.1", 6379, 0, "", 4)),
     departModel_(new DepartmentModel(dbPool_)),
-    userModel_(new UserModel(dbPool_))
+    userModel_(new UserModel(dbPool_)),
+    syncCenter(new SyncCenter(cachePool_, dbPool_))
 {
     server_.setConnectionCallback(
         std::bind(&DBProxyServer::onConnection, this, _1));
@@ -107,14 +40,27 @@ DBProxyServer::DBProxyServer(std::string host, uint16_t port, EventLoop* loop):
         std::bind(&DBProxyServer::onClientDepartmentRequest, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Buddy::IMAllUserReq>(
         std::bind(&DBProxyServer::onClientAllUserRequest, this, _1, _2, _3));
+    dispatcher_.registerMessageCallback<IM::Buddy::IMRecentContactSessionReq>(
+        std::bind(&DBProxyServer::onRecentContactSessionRequest, this, _1, _2, _3));
+
+    dispatcher_.registerMessageCallback<IM::Group::IMNormalGroupListReq>(
+        std::bind(&DBProxyServer::onNormalGroupListRequest, this, _1, _2, _3));
+
+    dispatcher_.registerMessageCallback<IM::Message::IMUnreadMsgCntReq>(
+        std::bind(&DBProxyServer::onUnreadMsgCntRequest, this, _1, _2, _3));
+    dispatcher_.registerMessageCallback<IM::Message::IMGetMsgListReq>(
+        std::bind(&DBProxyServer::onGetMsgListRequest, this, _1, _2, _3));
 
     loop_->runEvery(1.0, std::bind(&DBProxyServer::onTimer, this));
     threadPool_.setMaxQueueSize(10);
+    syncCenter->startSync();
+    syncCenter->init();
 }
 
 DBProxyServer::~DBProxyServer()
 {
     threadPool_.stop();
+    syncCenter->stopSync();
 }
 
 void DBProxyServer::onTimer()
@@ -185,7 +131,7 @@ void DBProxyServer::onHeartBeat(const TCPConnectionPtr& conn,
                             const MessagePtr& message,
                             int64_t receiveTime)
 {
-    LOG_INFO << "onHeartBeat: " << message->GetTypeName();
+    //LOG_INFO << "onHeartBeat: " << message->GetTypeName();
     Context* context = std::any_cast<Context*>(conn->getContext());
     context->lastRecvTick = receiveTime;
 }
@@ -355,19 +301,18 @@ void DBProxyServer::onClientAllUserRequest(const TCPConnectionPtr& conn,
                                         int64_t receiveTime)
 {
     IM::Buddy::IMAllUserRsp resp;
-    uint32_t nReqId = message->user_id();
-    uint32_t nLastTime = message->latest_update_time();
-    uint32_t nLastUpdate = static_cast<uint32_t>(time(NULL)); //CSyncCenter::getInstance()->getLastUpdate();
+    uint32_t reqId = message->user_id();
+    uint32_t lastTime = message->latest_update_time();
+    uint32_t lastUpdate = syncCenter->getLastUpdate();
     
     list<IM::BaseDefine::UserInfo> lsUsers;
-    if( nLastUpdate > nLastTime)
-    {
+    if ( lastUpdate > lastTime) {
         list<uint32_t> lsIds;
-        userModel_->getChangedId(nLastTime, lsIds);
+        userModel_->getChangedId(lastTime, lsIds);
         userModel_->getUsers(lsIds, lsUsers);
     }
-    resp.set_user_id(nReqId);
-    resp.set_latest_update_time(nLastTime);
+    resp.set_user_id(reqId);
+    resp.set_latest_update_time(lastTime);
     for (auto lsUser : lsUsers) {
         IM::BaseDefine::UserInfo* pUser = resp.add_user_list();
         pUser->set_user_id(lsUser.user_id());
@@ -383,10 +328,147 @@ void DBProxyServer::onClientAllUserRequest(const TCPConnectionPtr& conn,
         pUser->set_status(lsUser.status());
     }
 
-    LOG_INFO << "userId=" << nReqId << ", nLastUpdate=" << nLastUpdate 
-        << ", last_time=" << nLastTime << ", userCnt=" << resp.user_list_size();
+    LOG_INFO << "userId=" << reqId << ", lastUpdate=" << lastUpdate 
+        << ", last_time=" << lastTime << ", userCnt=" << resp.user_list_size();
     resp.set_attach_data(message->attach_data());
     codec_.send(conn, resp);
+}
+
+void DBProxyServer::onRecentContactSessionRequest(const slite::TCPConnectionPtr& conn, 
+                                                const RecentContactSessionReqPtr& message, 
+                                                int64_t receiveTime)
+{
+    IM::Buddy::IMRecentContactSessionRsp resp;
+
+    uint32_t userId = message->user_id();
+    uint32_t lastTime = message->latest_update_time();
+    
+    //获取最近联系人列表
+    list<IM::BaseDefine::ContactSessionInfo> contactList;
+    SessionModel sessionModel(dbPool_, cachePool_);
+    sessionModel.getRecentSession(userId, lastTime, contactList);
+    resp.set_user_id(userId);
+    for (const auto& contact : contactList) {
+        IM::BaseDefine::ContactSessionInfo* pContact = resp.add_contact_session_list();
+        //*pContact = contact;
+        pContact->set_session_id(contact.session_id());
+        pContact->set_session_type(contact.session_type());
+        pContact->set_session_status(contact.session_status());
+        pContact->set_updated_time(contact.updated_time());
+        pContact->set_latest_msg_id(contact.latest_msg_id());
+        pContact->set_latest_msg_data(contact.latest_msg_data());
+        pContact->set_latest_msg_type(contact.latest_msg_type());
+        pContact->set_latest_msg_from_user_id(contact.latest_msg_from_user_id());
+    }
+    
+    LOG_INFO << "userId=" << userId << ", last_time=" 
+        << lastTime << ", count=" << resp.contact_session_list_size();
+    
+    resp.set_attach_data(message->attach_data());
+    codec_.send(conn, resp);
+}
+
+void DBProxyServer::onNormalGroupListRequest(const slite::TCPConnectionPtr& conn, 
+                            const NormalGroupListReqPtr& message, 
+                            int64_t receiveTime)
+{
+    IM::Group::IMNormalGroupListRsp resp;
+    GroupModel groupModel(dbPool_, cachePool_);
+
+    uint32_t userId = message->user_id();
+    list<IM::BaseDefine::GroupVersionInfo> groups;
+    groupModel.getUserGroup(userId, groups, IM::BaseDefine::GROUP_TYPE_NORMAL);
+    resp.set_user_id(userId);
+    for(const auto& group : groups) {
+        IM::BaseDefine::GroupVersionInfo* pGroupVersion = resp.add_group_version_list();
+        pGroupVersion->set_group_id(group.group_id());
+        pGroupVersion->set_version(group.version());
+    }
+    
+    LOG_INFO << "getNormalGroupList. userId=" << userId << ", count=" << resp.group_version_list_size();
+    
+    resp.set_attach_data(message->attach_data());
+    codec_.send(conn, resp);
+}
+
+void DBProxyServer::onUnreadMsgCntRequest(const TCPConnectionPtr& conn, 
+                        const UnreadMsgCntReqPtr& message, 
+                        int64_t receiveTime)
+{
+    IM::Message::IMUnreadMsgCntRsp resp;
+    MessageModel messageModel(dbPool_, cachePool_);
+    GroupMessageModel groupMessageModel(dbPool_, cachePool_);
+    uint32_t userId = message->user_id();
+
+    list<IM::BaseDefine::UnreadInfo> unreadCounts;
+    uint32_t totalCnt = 0;
+    
+    messageModel.getUnreadMsgCount(userId, totalCnt, unreadCounts);
+    groupMessageModel.getUnreadMsgCount(userId, totalCnt, unreadCounts);
+    resp.set_user_id(userId);
+    resp.set_total_cnt(totalCnt);
+
+    for (const auto& unreadCount : unreadCounts) {
+        IM::BaseDefine::UnreadInfo* pInfo = resp.add_unreadinfo_list();
+        pInfo->set_session_id(unreadCount.session_id());
+        pInfo->set_session_type(unreadCount.session_type());
+        pInfo->set_unread_cnt(unreadCount.unread_cnt());
+        pInfo->set_latest_msg_id(unreadCount.latest_msg_id());
+        pInfo->set_latest_msg_data(unreadCount.latest_msg_data());
+        pInfo->set_latest_msg_type(unreadCount.latest_msg_type());
+        pInfo->set_latest_msg_from_user_id(unreadCount.latest_msg_from_user_id());
+    }
+    
+    LOG_INFO << "userId=" << userId << ", unreadCnt=" 
+        << resp.unreadinfo_list_size() << ", totalCount=" << totalCnt;
+    resp.set_attach_data(message->attach_data());
+    codec_.send(conn, resp);
+}
+
+void DBProxyServer::onGetMsgListRequest(const slite::TCPConnectionPtr& conn, 
+                                        const GetMsgListReqPtr& message, 
+                                        int64_t receiveTime)
+{
+    MessageModel messageModel(dbPool_, cachePool_);
+    GroupModel groupModel(dbPool_, cachePool_);
+    GroupMessageModel groupMessageModel(dbPool_, cachePool_);
+    uint32_t userId = message->user_id();
+    uint32_t peerId = message->session_id();
+    uint32_t msgId = message->msg_id_begin();
+    uint32_t msgCnt = message->msg_cnt();
+    IM::BaseDefine::SessionType sessionType = message->session_type();
+    if (IM::BaseDefine::SessionType_IsValid(sessionType)) {
+        IM::Message::IMGetMsgListRsp resp;
+        list<IM::BaseDefine::MsgInfo> msgs;
+        //获取个人消息
+        if (sessionType == IM::BaseDefine::SESSION_TYPE_SINGLE) {
+            messageModel.getMessage(userId, peerId, msgId, msgCnt, msgs);
+        //获取群消息
+        } else if (sessionType == IM::BaseDefine::SESSION_TYPE_GROUP) {
+            if (groupModel.isInGroup(userId, peerId)) {
+                groupMessageModel.getMessage(userId, peerId, msgId, msgCnt, msgs);
+            }
+        }
+        resp.set_user_id(userId);
+        resp.set_session_id(peerId);
+        resp.set_msg_id_begin(msgId);
+        resp.set_session_type(sessionType);
+        for (const auto& msg: msgs) {
+            IM::BaseDefine::MsgInfo* pMsg = resp.add_msg_list();
+            pMsg->set_msg_id(msg.msg_id());
+            pMsg->set_from_session_id(msg.from_session_id());
+            pMsg->set_create_time(msg.create_time());
+            pMsg->set_msg_type(msg.msg_type());
+            pMsg->set_msg_data(msg.msg_data());
+        }
+        LOG_INFO << "userId=" << userId << ", peerId=" << peerId << ", msgId=" << msgId 
+            << ", msgCnt=" << msgCnt << ", count=" << resp.msg_list_size();
+        resp.set_attach_data(message->attach_data());
+        codec_.send(conn, resp);
+    } else {
+        LOG_ERROR << "invalid sessionType. userId=" << userId << ", peerId=" << peerId 
+            << ", msgId="<< msgId << ", msgCnt=" << msgCnt << ", sessionType=" << sessionType;
+    }
 }
 
 int main()
