@@ -62,22 +62,7 @@ public:
     {
     }
 
-    void print2(const std::string buf)
-    {
-      printf("encoded to %zd bytes\n", buf.size());
-      for (size_t i = 0; i < buf.size(); ++i)
-      {
-        unsigned char ch = static_cast<unsigned char>(buf.data()[i]);
-
-        printf("%2zd:  0x%02x  %c\n", i, ch, isgraph(ch) ? ch : ' ');
-      }
-    }
-
     void onMessage(const slite::TCPConnectionPtr& conn,
-                    std::string& buf,
-                    int64_t receiveTime);
-
-    void onMessage2(const slite::TCPConnectionPtr& conn,
                     std::string& buf,
                     int64_t receiveTime);
 
@@ -90,22 +75,10 @@ public:
         conn->send(buf);
     }
 
-    void send2(const slite::TCPConnectionPtr& conn,
-              const google::protobuf::Message& message)
-    {
-        // FIXME: serialize to TcpConnection::outputBuffer()
-        std::string buf;
-        fillEmptyBuffer2(buf, message);
-        //print2(buf);
-        conn->send(buf);
-    }
-
     static const std::string& errorCodeToString(ErrorCode errorCode);
     static void fillEmptyBuffer(std::string& buf, const google::protobuf::Message& message);
-    static void fillEmptyBuffer2(std::string& buf, const google::protobuf::Message& message);
     static google::protobuf::Message* createMessage(const std::string& type_name);
     static MessagePtr parse(const char* buf, int len, ErrorCode* errorCode);
-    static MessagePtr parse2(const char* buf, int len, ErrorCode* errorCode);
 
 private:
     static void defaultErrorCallback(const slite::TCPConnectionPtr&,
@@ -121,10 +94,6 @@ private:
     const static int kHeaderLen = sizeof(int32_t);
     const static int kMinMessageLen = 2*kHeaderLen + 2; // nameLen + typeName + checkSum
     const static int kMaxMessageLen = 64*1024*1024; // same as codec_stream.h kDefaultTotalBytesLimit
-
-    const static int kHeaderLen2 = 16;  // length + version + appid + service_id + command_id + seq_num + reserve
-    const static int kMinMessageLen2 = kHeaderLen;
-    const static int kMaxMessageLen2 = 64*1024*1024; // same as codec_stream.h kDefaultTotalBytesLimit  
 };
 
 #endif  // MUDUO_EXAMPLES_PROTOBUF_CODEC_CODEC_H

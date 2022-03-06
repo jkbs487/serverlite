@@ -24,7 +24,7 @@ public:
     TCPConnection(EventLoop *eventLoop, int fd, struct sockaddr_in localAddr, struct sockaddr_in peerAddr, std::string name);
     ~TCPConnection();
     
-    void send(std::string data);
+    void send(const std::string& data);
     //void send(const char* data, size_t len);
     void sendFile(std::string filePath);
 
@@ -80,6 +80,9 @@ public:
 
     std::string getTcpInfoString() const;
 
+    void openTCPNoDelay();
+    void closeTCPNoDelay();
+
 private:
     enum ConnState { 
         DISCONNECTED, 
@@ -95,7 +98,7 @@ private:
     void setState(ConnState state) {
         state_ = state;
     }
-    void sendInLoop(std::string data);
+    void sendInLoop(const std::string& data);
     void shutdownInLoop();
 
     const char* stateToString() const;
