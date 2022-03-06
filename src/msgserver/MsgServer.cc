@@ -2,11 +2,14 @@
 #include "ImUser.h"
 
 #include <sys/time.h>
+#include <random>
 
 #include "MsgServer.h"
 
 using namespace slite;
 using namespace std::placeholders;
+
+MsgServer* g_msgServer;
 
 std::set<TCPConnectionPtr> g_clientConns;
 std::set<TCPConnectionPtr> g_loginConns;
@@ -14,11 +17,42 @@ std::set<TCPConnectionPtr> g_dbProxyConns;
 std::set<TCPConnectionPtr> g_routeConns;
 std::set<TCPConnectionPtr> g_fileConns;
 
+//static uint32_t g_dbServerLoginCount;
+
+static TCPConnectionPtr getRandomConn(std::set<TCPConnectionPtr> conns, size_t start, size_t end)
+{
+    std::default_random_engine e;
+    std::uniform_int_distribution<unsigned long> u(start, end);
+    while (true) {
+        auto it = conns.begin();
+        if (it == conns.end()) return nullptr;
+        std::advance(it, u(e));
+        if (it != conns.end() && (*it)->connected())
+            return *it;
+    }
+}
+
+static TCPConnectionPtr getRandomDBProxyConnForLogin()
+{
+    return getRandomConn(g_dbProxyConns, 0, g_dbProxyConns.size()-1);
+}
+
+static TCPConnectionPtr getRandomDBProxyConn()
+{
+    return getRandomConn(g_dbProxyConns, g_dbProxyConns.size()/2, g_dbProxyConns.size()-1);
+}
+
+static TCPConnectionPtr getRandomRouteConn()
+{
+    return getRandomConn(g_routeConns, 0, g_routeConns.size()-1);
+}
+
 MsgServer::MsgServer(std::string host, uint16_t port, EventLoop* loop):
     server_(host, port, loop, "MsgServer"),
     loop_(loop),
     dispatcher_(std::bind(&MsgServer::onUnknownMessage, this, _1, _2, _3)),
-    codec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3))
+    codec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3)),
+    clientCodec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3))
 {
     server_.setConnectionCallback(
         std::bind(&MsgServer::onConnection, this, _1));
@@ -45,6 +79,17 @@ MsgServer::MsgServer(std::string host, uint16_t port, EventLoop* loop):
         std::bind(&MsgServer::onGroupChangeMemberResponse, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Group::IMNormalGroupListReq>(
         std::bind(&MsgServer::onNormalGroupListRequest, this, _1, _2, _3));
+
+    dispatcher_.registerMessageCallback<IM::Message::IMUnreadMsgCntReq>(
+        std::bind(&MsgServer::onUnreadMsgCntRequest, this, _1, _2, _3));
+    dispatcher_.registerMessageCallback<IM::Message::IMGetMsgListReq>(
+        std::bind(&MsgServer::onGetMsgListRequest, this, _1, _2, _3));
+
+    dispatcher_.registerMessageCallback<IM::File::IMFileHasOfflineReq>(
+        std::bind(&MsgServer::onFileHasOfflineRequest, this, _1, _2, _3));
+
+    dispatcher_.registerMessageCallback<IM::SwitchService::IMP2PCmdMsg>(
+        std::bind(&MsgServer::onP2PCmdMsg, this, _1, _2, _3));
 
     loop_->runEvery(1.0, std::bind(&MsgServer::onTimer, this));
 }
@@ -111,7 +156,7 @@ void MsgServer::onMessage(const TCPConnectionPtr& conn,
                             std::string& buffer, 
                             int64_t receiveTime)
 {
-    codec_.onMessage2(conn, buffer, receiveTime);
+    clientCodec_.onMessage(conn, buffer, receiveTime);
     Context* context = std::any_cast<Context*>(conn->getContext());
     context->lastRecvTick = receiveTime;
 }
@@ -136,10 +181,10 @@ void MsgServer::onHeartBeat(const TCPConnectionPtr& conn,
                             const MessagePtr& message,
                             int64_t receiveTime)
 {
-    LOG_INFO << "onHeartBeat: " << message->GetTypeName();
+    //LOG_INFO << "onHeartBeat: " << message->GetTypeName();
     Context* context = std::any_cast<Context*>(conn->getContext());
     context->lastRecvTick = receiveTime;
-    codec_.send2(conn, *message.get());
+    clientCodec_.send(conn, *message.get());
 }
 
 void MsgServer::onLoginRequest(const TCPConnectionPtr& conn, 
@@ -172,7 +217,7 @@ void MsgServer::onLoginRequest(const TCPConnectionPtr& conn,
         msg.set_result_code(static_cast<IM::BaseDefine::ResultType>(result));
         msg.set_result_string(resultStr);
         LOG_DEBUG << " " << msg.server_time() << " " << msg.result_code() << " " << msg.result_string();
-        codec_.send2(conn, msg);
+        clientCodec_.send(conn, msg);
         conn->shutdown();
         return;
     }
@@ -211,16 +256,18 @@ void MsgServer::onLoginOutRequest(const TCPConnectionPtr& conn,
     Context* context = std::any_cast<Context*>(conn->getContext());
     LOG_INFO << "HandleLoginOutRequest, user_id=" 
         << context->userId << ", client_type= " << context->clientType;
-    if (g_dbProxyConns.empty()) {
+
+    TCPConnectionPtr dbProxyConn = getRandomDBProxyConnForLogin();
+    if (!dbProxyConn) {
         IM::Login::IMLogoutRsp msg;
         msg.set_result_code(0);
-        codec_.send2(conn, msg);
+        clientCodec_.send(conn, msg);
+    } else {
+        IM::Login::IMDeviceTokenReq msg2;
+        msg2.set_user_id(context->userId);
+        msg2.set_device_token("");
+        codec_.send(conn, msg2);
     }
-    TCPConnectionPtr dbProxyConn = *g_dbProxyConns.begin();
-    IM::Login::IMDeviceTokenReq msg2;
-    msg2.set_user_id(context->userId);
-    msg2.set_device_token("");
-    codec_.send(conn, msg2);
 }
 
 void MsgServer::onClientDepartmentRequest(const TCPConnectionPtr& conn, 
@@ -228,8 +275,8 @@ void MsgServer::onClientDepartmentRequest(const TCPConnectionPtr& conn,
                                         int64_t receiveTime)
 {
     Context* context = std::any_cast<Context*>(conn->getContext());
-    if (!g_dbProxyConns.empty()) {
-        TCPConnectionPtr dbProxyConn = *g_dbProxyConns.begin();
+    TCPConnectionPtr dbProxyConn = getRandomDBProxyConn();
+    if (dbProxyConn) {
         message->set_user_id(context->userId);
         message->set_attach_data(conn->name().data(), conn->name().size());
         codec_.send(dbProxyConn, *message.get());
@@ -240,17 +287,16 @@ void MsgServer::onRecentContactSessionRequest(const TCPConnectionPtr& conn,
                                             const RecentContactSessionReqPtr& message, 
                                             int64_t receiveTime)
 {
-    if (g_dbProxyConns.empty()) return;
-    TCPConnectionPtr dbConn = *g_dbProxyConns.begin();
     Context* context = std::any_cast<Context*>(conn->getContext());
-
     LOG_INFO << "onRecentContactSessionRequest, user_id=" << context->userId 
         << ", latest_update_time=" << message->latest_update_time();
-
-    message->set_user_id(context->userId);
-    // 请求最近联系会话列表
-    message->set_attach_data(conn->name().data(), conn->name().size());
-    codec_.send(dbConn, *message.get());
+    TCPConnectionPtr dbProxyConn = getRandomDBProxyConn();
+    if (dbProxyConn) {
+        message->set_user_id(context->userId);
+        // 请求最近联系会话列表
+        message->set_attach_data(conn->name().data(), conn->name().size());
+        codec_.send(dbProxyConn, *message.get());
+    }
 }
 
 void MsgServer::onAllUserRequest(const TCPConnectionPtr& conn, 
@@ -262,10 +308,10 @@ void MsgServer::onAllUserRequest(const TCPConnectionPtr& conn,
     LOG_INFO << "onClientAllUserRequest, user_id=" << context->userId 
         << ", latest_update_time=" << latestUpdateTime;
     
-    if (!g_dbProxyConns.empty()) {
-        TCPConnectionPtr dbConn = *g_dbProxyConns.begin();
+    TCPConnectionPtr dbProxyConn = getRandomDBProxyConn();
+    if (dbProxyConn) {
         message->set_attach_data(conn->name().data(), conn->name().size());
-        codec_.send(dbConn, *message.get());
+        codec_.send(dbProxyConn, *message.get());
     }
 }
 
@@ -277,27 +323,124 @@ void MsgServer::onGroupChangeMemberResponse(const TCPConnectionPtr& conn,
     return;
 }
 
+void MsgServer::onFileHasOfflineRequest(const TCPConnectionPtr& conn, 
+                                        const FileHasOfflineReqPtr& message, 
+                                        int64_t receiveTime)
+{
+LOG_INFO << "onFileHasOfflineRequest";
+return;
+}
+
 void MsgServer::onNormalGroupListRequest(const TCPConnectionPtr& conn, 
                                         const NormalGroupListReqPtr& message, 
                                         int64_t receiveTime)
 {
-    LOG_INFO << "onNormalGroupListRequest";
-    return;
+    Context* context = std::any_cast<Context*>(conn->getContext());
+    uint32_t userId = context->userId;
+    LOG_INFO << "onClientGroupNormalRequest, user_id=" << userId;
+    
+    TCPConnectionPtr dbProxyConn = getRandomDBProxyConn();
+    if (dbProxyConn) {
+        message->set_user_id(userId);
+        message->set_attach_data(conn->name());
+        codec_.send(dbProxyConn, *message.get());
+    } else {
+        LOG_ERROR << "no db connection. ";
+        IM::Group::IMNormalGroupListRsp msg2;
+        message->set_user_id(userId);
+        clientCodec_.send(conn, msg2);
+    }
 }
 
 void MsgServer::onUsersStatusRequest(const TCPConnectionPtr& conn, 
                                     const UsersStatReqPtr& message, 
                                     int64_t receiveTime)
 {
-    LOG_INFO << "onUsersStatusRequest";
-    return;
+    Context* context = std::any_cast<Context*>(conn->getContext());
+    uint32_t userId = context->userId;
+    LOG_INFO << "onUnreadMsgCntRequest, user_id=" << userId;
+    
+    TCPConnectionPtr routeConn = getRandomRouteConn();
+    if (routeConn) {
+        message->set_user_id(userId);
+        message->set_attach_data(conn->name());
+        codec_.send(routeConn, *message.get());
+    }
 }
+
+void MsgServer::onUnreadMsgCntRequest(const TCPConnectionPtr& conn, 
+                            const UnreadMsgCntReqPtr& message, 
+                            int64_t receiveTime)
+{
+    Context* context = std::any_cast<Context*>(conn->getContext());
+    uint32_t userId = context->userId;
+    LOG_INFO << "onUsersStatusRequest, user_id=" << userId;
+    
+    TCPConnectionPtr dbProxyConn = getRandomDBProxyConn();
+    if (dbProxyConn) {
+        message->set_user_id(userId);
+
+        message->set_attach_data(conn->name());
+        codec_.send(dbProxyConn, *message.get());
+    }
+}
+
+void MsgServer::onGetMsgListRequest(const TCPConnectionPtr& conn, 
+                                    const GetMsgListReqPtr& message, 
+                                    int64_t receiveTime)
+{
+    Context* context = std::any_cast<Context*>(conn->getContext());
+    uint32_t userId = context->userId;
+    uint32_t sessionId = message->session_id();
+    uint32_t msgIdBegin = message->msg_id_begin();
+    uint32_t msgCnt = message->msg_cnt();
+    uint32_t sessionType = message->session_type();
+    LOG_INFO << "onGetMsgListRequest, userId=" << userId << ", sessionType=" << sessionType
+        << ", sessionId=" << sessionId << ", msgIdBegin=" << msgIdBegin << ", msgCnt=" << msgCnt;
+    
+    TCPConnectionPtr dbProxyConn = getRandomDBProxyConn();
+    if (dbProxyConn) {
+        message->set_user_id(userId);
+        message->set_attach_data(conn->name());
+        codec_.send(dbProxyConn, *message.get());
+    }
+}
+
+void MsgServer::onP2PCmdMsg(const TCPConnectionPtr& conn, 
+                            const IMP2PCmdMsgPtr& message, 
+                            int64_t receiveTime)
+{
+    Context* context = std::any_cast<Context*>(conn->getContext());
+	string cmdMsg = message->cmd_msg_data();
+	uint32_t fromUserId = message->from_user_id();
+	uint32_t toUserId = message->to_user_id();
+
+	LOG_ERROR << "HandleClientP2PCmdMsg, " << fromUserId << "->" << toUserId << ", cmd_msg: " << cmdMsg;
+
+    ImUser* fromImUser = ImUserManager::getInstance()->getImUserById(context->userId);
+	ImUser* toImUser = ImUserManager::getInstance()->getImUserById(toUserId);
+    
+	if (fromImUser) {
+		fromImUser->broadcastMsg(message, conn);
+	}
+    
+	if (toImUser) {
+		toImUser->broadcastMsg(message);
+	}
+    
+	TCPConnectionPtr routeConn = getRandomRouteConn();
+	if (routeConn) {
+		codec_.send(routeConn, *message.get());
+	}
+}
+
 
 LoginClient::LoginClient(std::string host, uint16_t port, EventLoop* loop)
     : client_(host, port, loop, "LoginClient"),
     loop_(loop),
     dispatcher_(std::bind(&LoginClient::onUnknownMessage, this, _1, _2, _3)),
-    codec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3))
+    codec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3)),
+    clientCodec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3))
 {
     client_.setConnectionCallback(
         std::bind(&LoginClient::onConnection, this, _1));
@@ -325,7 +468,7 @@ void LoginClient::onConnection(const TCPConnectionPtr& conn)
         msg.set_ip1("192.168.142.128");
         msg.set_ip2("192.168.142.128");
         msg.set_host_name("msgserver");
-        msg.set_port(10002);
+        msg.set_port(g_msgServer->port());
         msg.set_cur_conn_cnt(0);
         msg.set_max_conn_cnt(10);
         codec_.send(conn, msg);
@@ -384,7 +527,8 @@ DBProxyClient::DBProxyClient(std::string host, uint16_t port, EventLoop* loop)
     : client_(host, port, loop, "DBProxyClient"),
     loop_(loop),
     dispatcher_(std::bind(&DBProxyClient::onUnknownMessage, this, _1, _2, _3)),
-    codec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3))
+    codec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3)),
+    clientCodec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3))
 {
     client_.setConnectionCallback(
         std::bind(&DBProxyClient::onConnection, this, _1));
@@ -395,12 +539,21 @@ DBProxyClient::DBProxyClient(std::string host, uint16_t port, EventLoop* loop)
     dispatcher_.registerMessageCallback<IM::Other::IMHeartBeat>(
         std::bind(&DBProxyClient::onHeartBeat, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Server::IMValidateRsp>(
-        std::bind(&DBProxyClient::onValidateResponseRequest, this, _1, _2, _3));
+        std::bind(&DBProxyClient::onValidateResponse, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Buddy::IMDepartmentRsp>(
         std::bind(&DBProxyClient::onClientDepartmentResponse, this, _1, _2, _3));
-
+    dispatcher_.registerMessageCallback<IM::Buddy::IMRecentContactSessionRsp>(
+        std::bind(&DBProxyClient::onRecentContactSessionResponse, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Buddy::IMAllUserRsp>(
         std::bind(&DBProxyClient::onClientAllUserResponse, this, _1, _2, _3));
+
+    dispatcher_.registerMessageCallback<IM::Message::IMUnreadMsgCntRsp>(
+        std::bind(&DBProxyClient::onUnreadMsgCntResponse, this, _1, _2, _3));
+    dispatcher_.registerMessageCallback<IM::Message::IMGetMsgListRsp>(
+        std::bind(&DBProxyClient::onGetMsgListResponse, this, _1, _2, _3));
+
+    dispatcher_.registerMessageCallback<IM::Group::IMNormalGroupListRsp>(
+        std::bind(&DBProxyClient::onNormalGroupListResponse, this, _1, _2, _3));
 
     loop_->runEvery(1.0, std::bind(&DBProxyClient::onTimer, this));
 }
@@ -470,10 +623,11 @@ void DBProxyClient::onHeartBeat(const TCPConnectionPtr& conn,
                             const MessagePtr& message,
                             int64_t receiveTime)
 {
+    // do nothing
     return ;
 }
 
-void DBProxyClient::onValidateResponseRequest(const TCPConnectionPtr& conn, 
+void DBProxyClient::onValidateResponse(const TCPConnectionPtr& conn, 
                                         const ValidateRspPtr& message, 
                                         int64_t receiveTime)
 {
@@ -574,14 +728,14 @@ void DBProxyClient::onValidateResponseRequest(const TCPConnectionPtr& conn,
         userInfoTmp->set_user_domain(userInfo.user_domain());
         userInfoTmp->set_status(userInfo.status());
 
-        codec_.send2(msgConn, msg3);
+        clientCodec_.send(msgConn, msg3);
     } else {
         // 发送登录失败消息
         IM::Login::IMLoginRes msg4;
         msg4.set_server_time(static_cast<uint32_t>(time(NULL)));
         msg4.set_result_code(static_cast<IM::BaseDefine::ResultType>(result));
         msg4.set_result_string(resultString);
-        codec_.send2(msgConn, msg4);
+        clientCodec_.send(msgConn, msg4);
         msgConn->shutdown();
     }
 }
@@ -598,9 +752,9 @@ void DBProxyClient::onClientDepartmentResponse(const TCPConnectionPtr& conn,
     
     std::string connName = message->attach_data();
     TCPConnectionPtr msgConn = ImUserManager::getInstance()->getMsgConnByHandle(userId, connName);
-    if (msgConn) { //  && msgConn->IsOpen()
+    if (msgConn && msgConn->connected()) {
         message->clear_attach_data();
-        codec_.send2(msgConn, *message.get());
+        clientCodec_.send(msgConn, *message.get());
     }
 }
 
@@ -617,21 +771,99 @@ void DBProxyClient::onClientAllUserResponse(const TCPConnectionPtr& conn,
         << latestUpdateTime << ", user_cnt=" << userCnt;
     
     TCPConnectionPtr msgConn = ImUserManager::getInstance()->getMsgConnByHandle(userId, connName);
-    if (msgConn) { //&& pMsgConn->IsOpen()
+    if (msgConn && msgConn->connected()) {
         message->clear_attach_data();
-        codec_.send2(msgConn, *message.get());
+        clientCodec_.send(msgConn, *message.get());
     }
 }
 
-int main()
+void DBProxyClient::onRecentContactSessionResponse(const TCPConnectionPtr& conn, 
+                                    const RecentContactSessionRspPtr& message, 
+                                    int64_t receiveTime)
 {
-    Logger::setLogLevel(Logger::DEBUG);
-    EventLoop loop;
-    MsgServer msgServer("0.0.0.0", 10002, &loop);
-    LoginClient loginClient("127.0.0.1", 10001, &loop);
-    DBProxyClient dbProxyClient("127.0.0.1", 10003, &loop);
-    msgServer.start();
-    loginClient.connect();
-    dbProxyClient.connect();
-    loop.loop();
+    uint32_t userId = message->user_id();
+    uint32_t sessionCnt = message->contact_session_list_size();
+    std::string connName = message->attach_data();
+    
+    LOG_INFO << "onRecentContactSessionResponse, userId=" << userId << ", session_cnt=" << sessionCnt;
+    
+    TCPConnectionPtr msgConn = ImUserManager::getInstance()->getMsgConnByHandle(userId, connName);
+    if (msgConn && msgConn->connected()) {
+        message->clear_attach_data();
+        clientCodec_.send(msgConn, *message.get());
+    }
+}
+
+void DBProxyClient::onNormalGroupListResponse(const TCPConnectionPtr& conn, 
+                                            const NormalGroupListRspPtr& message, 
+                                            int64_t receiveTime)
+{
+    uint32_t userId = message->user_id();
+    uint32_t groupCnt = message->group_version_list_size();
+    std::string connName = message->attach_data();
+
+    LOG_INFO << "onNormalGroupListResponse, user_id=" 
+        << userId << ", groupCnt=" << groupCnt;
+
+    TCPConnectionPtr msgConn = ImUserManager::getInstance()->getMsgConnByHandle(userId, connName);
+    if (msgConn && msgConn->connected()) {
+        message->clear_attach_data();
+        clientCodec_.send(msgConn, *message.get());
+    }
+}
+
+void DBProxyClient::onUnreadMsgCntResponse(const TCPConnectionPtr& conn, 
+                                            const UnreadMsgCntRspPtr& message, 
+                                            int64_t receiveTime)
+{
+	uint32_t userId = message->user_id();
+    uint32_t totalCnt = message->total_cnt();
+	uint32_t userUnreadCnt = message->unreadinfo_list_size();
+	std::string connName = message->attach_data();
+	
+	LOG_INFO << "onUnreadMsgCntResponse, userId=" << userId
+         << ", totalCnt=" << totalCnt << ", userUnreadCnt=" << userUnreadCnt;
+
+    TCPConnectionPtr msgConn = ImUserManager::getInstance()->getMsgConnByHandle(userId, connName);
+	if (msgConn && msgConn->connected()) {
+        message->clear_attach_data();
+        clientCodec_.send(msgConn, *message.get());
+	}
+}
+
+void DBProxyClient::onGetMsgListResponse(const TCPConnectionPtr& conn, 
+                                        const GetMsgListRspPtr& message, 
+                                        int64_t receiveTime)
+{
+    uint32_t userId = message->user_id();
+    uint32_t sessionType = message->session_type();
+    uint32_t sessionId = message->session_id();
+    uint32_t msgCnt = message->msg_list_size();
+    uint32_t msgIdBegin = message->msg_id_begin();
+    std::string connName = message->attach_data();
+    
+    LOG_ERROR << "onGetMsgListResponse, userId= " << userId << ", sessionType=" 
+        << sessionType << ", oppositeUserId=" << sessionId << ", msgIdBegin="
+        << msgIdBegin << ", cnt=" << msgCnt;
+    
+    TCPConnectionPtr msgConn = ImUserManager::getInstance()->getMsgConnByHandle(userId, connName);
+    if (msgConn && msgConn->connected()) {
+        clientCodec_.send(msgConn, *message.get());
+    }
+}
+
+int main(int argc, char* argv[])
+{
+    if (argc == 2) {
+        Logger::setLogLevel(Logger::DEBUG);
+        EventLoop loop;
+        MsgServer msgServer("0.0.0.0", static_cast<uint16_t>(atoi(argv[1])), &loop);
+        g_msgServer = &msgServer;
+        LoginClient loginClient("127.0.0.1", 10001, &loop);
+        DBProxyClient dbProxyClient("127.0.0.1", 10003, &loop);
+        msgServer.start();
+        loginClient.connect();
+        dbProxyClient.connect();
+        loop.loop();
+    }
 }
