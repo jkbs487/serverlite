@@ -11,6 +11,8 @@ public:
     void getUserGroup(uint32_t userId, list<IM::BaseDefine::GroupVersionInfo>& groups, uint32_t groupType);
     void getUserGroupIds(uint32_t nUserId, list<uint32_t>& lsGroupId, uint32_t nLimited = 100);
     void getGroupUser(uint32_t groupId, list<uint32_t>& userIds);
+    bool isInGroup(uint32_t userId, uint32_t groupId);
+    uint32_t getUserJoinTime(uint32_t groupId, uint32_t userId);
 
 private:
     void getGroupVersion(list<uint32_t>&lsGroupId, list<IM::BaseDefine::GroupVersionInfo>& lsGroup, uint32_t nGroupType);

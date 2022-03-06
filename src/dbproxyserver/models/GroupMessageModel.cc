@@ -118,3 +118,64 @@ void GroupMessageModel::getLastMsg(uint32_t groupId, uint32_t &msgId, string &ms
         LOG_ERROR << "no db connection for teamtalk";
     }
 }
+
+/**
+ *  获取群组消息列表
+ *
+ *  @param nUserId  用户Id
+ *  @param nGroupId 群组Id
+ *  @param nMsgId   开始的msgId(最新的msgId)
+ *  @param nMsgCnt  获取的长度
+ *  @param lsMsg    消息列表
+ */
+void GroupMessageModel::getMessage(uint32_t userId, uint32_t groupId, uint32_t msgId, uint32_t msgCnt, list<IM::BaseDefine::MsgInfo>& msgs)
+{
+    GroupModel groupModel(dbPool_, cachePool_);
+    //根据 count 和 lastId 获取信息
+    string tableName = "IMGroupMessage_" + std::to_string(groupId % 8);
+    
+    DBConn* dbConn = dbPool_->getDBConn();
+    if (dbConn) {
+        uint32_t updated = groupModel.getUserJoinTime(groupId, userId);
+        //如果nMsgId 为0 表示客户端想拉取最新的nMsgCnt条消息
+        string strSql;
+        if (msgId == 0) {
+            strSql = "SELECT * FROM " + tableName + " WHERE groupId = " + std::to_string(groupId) + 
+            " AND status = 0 AND created >= "+ std::to_string(updated) + 
+            " ORDER BY created desc, id desc LIMIT " + std::to_string(msgCnt);
+        } else {
+            strSql = "SELECT * FROM " + tableName + " WHERE groupId = " + std::to_string(groupId) + 
+            " AND msgId <= " + std::to_string(msgId) + " AND status = 0 AND created >= " + 
+            std::to_string(updated) + " ORDER BY created desc, id desc LIMIT " + std::to_string(msgCnt);
+        }
+        
+        ResultSet* resultSet = dbConn->executeQuery(strSql);
+        if (resultSet) {
+            map<uint32_t, IM::BaseDefine::MsgInfo> mapAudioMsg;
+            while (resultSet->next()) {
+                IM::BaseDefine::MsgInfo msg;
+                msg.set_msg_id(resultSet->getInt("msgId"));
+                msg.set_from_session_id(resultSet->getInt("userId"));
+                msg.set_create_time(resultSet->getInt("created"));
+                IM::BaseDefine::MsgType msgType = IM::BaseDefine::MsgType(resultSet->getInt("type"));
+                if (IM::BaseDefine::MsgType_IsValid(msgType)) {
+                    msg.set_msg_type(msgType);
+                    msg.set_msg_data(resultSet->getString("content"));
+                    msgs.push_back(msg);
+                } else {
+                    LOG_ERROR << "invalid msgType. userId=" << userId << ", groupId=" 
+                        << groupId << ", msgType=" << msgType;
+                }
+            }
+            delete resultSet;
+        } else {
+            LOG_ERROR << "no result set for sql: " << strSql;
+        }
+        dbPool_->relDBConn(dbConn);
+        if (!msgs.empty()) {
+            //CAudioModel::getInstance()->readAudios(lsMsg);
+        }
+    } else {
+        LOG_ERROR << "no db connection for teamtalk";
+    }
+}

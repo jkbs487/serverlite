@@ -108,3 +108,53 @@ void MessageModel::getUnreadMsgCount(uint32_t userId, uint32_t &totalCnt, list<I
         LOG_ERROR << "no cache connection for unread";
     }
 }
+
+void MessageModel::getMessage(uint32_t userId, uint32_t peerId, uint32_t msgId, uint32_t msgCnt, list<IM::BaseDefine::MsgInfo>& msgs)
+{
+    RelationModel relateModel(dbPool_, cachePool_);
+    uint32_t relateId = relateModel.getRelationId(userId, peerId, false);
+	if (relateId != 0) {
+        DBConn* dbConn = dbPool_->getDBConn();
+        if (dbConn) {
+            string tableName = "IMMessage_" + std::to_string(relateId % 8);
+            string strSql;
+            if (msgId == 0) {
+                strSql = "SELECT * FROM " + tableName + " force index (idx_relateId_status_created) WHERE relateId = " + 
+                    std::to_string(relateId) + " AND status = 0 order by created desc, id desc limit " + std::to_string(msgCnt);
+            } else {
+                strSql = "SELECT * FROM " + tableName + " force index (idx_relateId_status_created) WHERE relateId = " + 
+                    std::to_string(relateId) + " AND status = 0 AND msgId <=" + std::to_string(msgId)+ 
+                    " order by created desc, id desc limit " + std::to_string(msgCnt);
+            }
+            ResultSet* resultSet = dbConn->executeQuery(strSql);
+            if (resultSet) {
+                while (resultSet->next()) {
+                    IM::BaseDefine::MsgInfo msg;
+                    msg.set_msg_id(resultSet->getInt("msgId"));
+                    msg.set_from_session_id(resultSet->getInt("fromId"));
+                    msg.set_create_time(resultSet->getInt("created"));
+                    IM::BaseDefine::MsgType msgType = IM::BaseDefine::MsgType(resultSet->getInt("type"));
+                    if (IM::BaseDefine::MsgType_IsValid(msgType)) {
+                        msg.set_msg_type(msgType);
+                        msg.set_msg_data(resultSet->getString("content"));
+                        msgs.push_back(msg);
+                    } else {
+                        LOG_ERROR << "invalid msgType. userId=" << userId << ", peerId=" << peerId 
+                            << ", msgId=" << msgId << ", msgCnt=" << msgId << ", msgType=" << msgType;
+                    }
+                }
+                delete resultSet;
+            } else {
+                LOG_ERROR << "no result set: " << strSql;
+            }
+            dbPool_->relDBConn(dbConn);
+            if (!msgs.empty()) {
+                //CAudioModel::getInstance()->readAudios(lsMsg);
+            }
+        } else {
+            LOG_ERROR << "no db connection for teamtalk";
+        }
+	} else {
+        LOG_ERROR << "no relation between " << userId << " and " << peerId;
+    }
+}

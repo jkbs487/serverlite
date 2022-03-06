@@ -117,3 +117,39 @@ void GroupModel::getGroupVersion(list<uint32_t>& groupIds, list<IM::BaseDefine::
         LOG_ERROR << "no db connection for teamtalk";
     }
 }
+
+bool GroupModel::isInGroup(uint32_t userId, uint32_t groupId)
+{
+    bool ret = false;
+    CacheConn* cacheConn = cachePool_->getCacheConn();
+    if (cacheConn) {
+        string key = "group_member_" + std::to_string(groupId);
+        string field = std::to_string(userId);
+        string value = cacheConn->hget(key, field);
+        cachePool_->relCacheConn(cacheConn);
+        if (!value.empty()) {
+            ret = true;
+        }
+    } else {
+        LOG_ERROR << "no cache connection for group_member";
+    }
+    return ret;
+}
+
+uint32_t GroupModel::getUserJoinTime(uint32_t groupId, uint32_t userId)
+{
+    uint32_t time = 0;
+    CacheConn* cacheConn = cachePool_->getCacheConn();
+    if (cacheConn) {
+        string key = "group_member_" + std::to_string(groupId);
+        string field = std::to_string(userId);
+        string value = cacheConn->hget(key, field);
+        cachePool_->relCacheConn(cacheConn);
+        if (!value.empty()) {
+            time = std::stoi(value);
+        }
+    } else {
+        LOG_ERROR << "no cache connection for group_member";
+    }
+    return time;
+}
