@@ -35,6 +35,10 @@ public:
         writeCompleteCallback_ = cb;
     }
     void setThreadNum(int numThreads);
+    
+    std::string name() { return name_; }
+    std::string host() { return host_; }
+    uint16_t port() { return port_; }
 private:
     void newConnection(int connfd);
     void removeConnection(const TCPConnectionPtr& conn);
