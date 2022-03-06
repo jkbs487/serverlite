@@ -1,82 +1,12 @@
-#include "slite/TCPServer.h"
-#include "slite/EventLoop.h"
-#include "slite/Logger.h"
-#include "pbs/IM.Login.pb.h"
-#include "pbs/IM.Server.pb.h"
-#include "pbs/IM.Other.pb.h"
+#include "LoginServer.h"
 
-#include "slite/http/HTTPCodec.h"
-#include "slite/protobuf/codec.h"
-#include "slite/protobuf/dispatcher.h"
+#include "slite/Logger.h"
 #include "nlohmann/json.hpp"
 
-#include <set>
-#include <memory>
-#include <functional>
 #include <sys/time.h>
 
 using namespace slite;
 using namespace std::placeholders;
-
-typedef std::shared_ptr<IM::Server::IMMsgServInfo> MsgServInfoPtr;
-typedef std::shared_ptr<IM::Server::IMUserCntUpdate> UserCntUpdatePtr;
-typedef std::shared_ptr<IM::Login::IMMsgServReq> MsgServReqPtr;
-typedef std::shared_ptr<IM::Other::IMHeartBeat> HeartBeatPtr;
-
-class LoginServer
-{
-public:
-    LoginServer(std::string host, uint16_t port, EventLoop* loop);
-    ~LoginServer();
-
-    void start() { 
-        server_.start(); 
-        httpServer_.start(); 
-    }
-    void onTimer();
-
-private:
-    void onConnection(const TCPConnectionPtr& conn);
-    void onMessage(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime);
-    void onWriteComplete(const TCPConnectionPtr& conn);
-    void onUnknownMessage(const TCPConnectionPtr& conn, const MessagePtr& message, int64_t receiveTime);
-    void onHeartBeat(const TCPConnectionPtr& conn, const HeartBeatPtr& message, int64_t receiveTime);
-    void onMsgServInfo(const TCPConnectionPtr& conn, const MsgServInfoPtr& message, int64_t receiveTime);
-    void onUserCntUpdate(const TCPConnectionPtr& conn, const UserCntUpdatePtr& message, int64_t receiveTime);
-    void onMsgServRequest(const TCPConnectionPtr& conn, const MsgServReqPtr& message, int64_t receiveTime);
-    
-    HTTPResponse onHttpRequest(HTTPRequest* req);
-    HTTPResponse onHttpMsgServRequest();
-
-
-    struct MsgServInfo {
-        std::string	ipAddr1;	// 电信IP
-        std::string	ipAddr2;	// 网通IP
-        uint16_t port;
-        uint32_t maxConnCnt;
-        uint32_t curConnCnt;
-        std::string hostname;	// 消息服务器的主机名
-    };
-
-    struct Context {
-        int64_t lastRecvTick;
-        int64_t lastSendTick;
-        MsgServInfo* msgServInfo;
-    };
-
-    TCPServer server_;
-    TCPServer httpServer_;
-    EventLoop *loop_;
-    ProtobufDispatcher dispatcher_;
-    ProtobufCodec codec_;
-    HTTPCodec httpCodec_;
-    std::set<TCPConnectionPtr> clientConns_;
-    std::set<TCPConnectionPtr> msgConns_;
-    int totalOnlineUserCnt_;
-
-    static const int kHeartBeatInterVal = 5000;
-    static const int kTimeout = 30000;
-};
 
 LoginServer::LoginServer(std::string host, uint16_t port, EventLoop* loop):
     server_(host, port, loop, "LoginServer"),
@@ -243,7 +173,7 @@ void LoginServer::onHeartBeat(const TCPConnectionPtr& conn,
                                 const HeartBeatPtr& message,
                                 int64_t receiveTime)
 {
-    LOG_INFO << "onHeartBeat[" << conn->name() << "]: " << message->GetTypeName();
+    //LOG_INFO << "onHeartBeat[" << conn->name() << "]: " << message->GetTypeName();
     Context* context = std::any_cast<Context*>(conn->getContext());
     context->lastRecvTick = receiveTime;
 }
@@ -262,6 +192,9 @@ void LoginServer::onMsgServInfo(const TCPConnectionPtr& conn,
     msgServInfo->curConnCnt = message->cur_conn_cnt();
     Context* context = std::any_cast<Context*>(conn->getContext());
     context->msgServInfo = msgServInfo;
+	LOG_INFO << "MsgServInfo, ip_addr1=" << message->ip1() << ", ip_addr2=" << message->ip2() 
+        << ", port=" << message->port() << ", max_conn_cnt=" << message->max_conn_cnt() 
+        << ", cur_conn_cnt= " << message->cur_conn_cnt() << ", hostname: " << message->host_name();
 }
 
 void LoginServer::onUserCntUpdate(const TCPConnectionPtr& conn, 
