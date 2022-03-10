@@ -5,6 +5,8 @@
 #include <zlib.h>  // adler32
 #include <arpa/inet.h>
 
+using namespace slite;
+
 template<typename To, typename From>
 inline To implicit_cast(From const &f)
 {
