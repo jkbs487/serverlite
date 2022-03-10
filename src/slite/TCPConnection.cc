@@ -87,7 +87,21 @@ std::string TCPConnection::getTcpInfoString() const
     return std::string(buf);
 }
 
-void TCPConnection::send(std::string data)
+void TCPConnection::openTCPNoDelay()
+{
+    int optval = 1;
+    ::setsockopt(sockfd_, IPPROTO_TCP, TCP_NODELAY,
+                &optval, static_cast<socklen_t>(sizeof optval));
+}
+
+void TCPConnection::closeTCPNoDelay()
+{
+    int optval = 0;
+    ::setsockopt(sockfd_, IPPROTO_TCP, TCP_NODELAY,
+                &optval, static_cast<socklen_t>(sizeof optval));
+}
+
+void TCPConnection::send(const std::string& data)
 {
     if (loop_->isInLoopThread()) {
         sendInLoop(data);
@@ -96,7 +110,7 @@ void TCPConnection::send(std::string data)
     }
 }
 
-void TCPConnection::sendInLoop(std::string data)
+void TCPConnection::sendInLoop(const std::string& data)
 {
     if (state_ == DISCONNECTED) {
         LOG_INFO << "disconnected, give up send";
@@ -109,7 +123,7 @@ void TCPConnection::sendInLoop(std::string data)
     // 先还要判断是否已经注册写事件，已注册就跳过
     // 还判断写缓存区是否为空，为空才能直接发
     if (!channel_->isSending() && sendBuf_.size() == 0) {
-        nsend = ::send(channel_->fd(), data.data(), data.size(), 0);
+        nsend = ::send(channel_->fd(), data.c_str(), data.size(), 0);
         if (nsend >= 0) {
             remaining = data.size() - nsend;
             if (remaining == 0 && writeCompleteCallback_) {
@@ -119,9 +133,10 @@ void TCPConnection::sendInLoop(std::string data)
         }
         else {
             nsend = 0;
-            LOG_ERROR << "send error: " << strerror(errno);
             // EWOULDBLOCK 表示写缓冲区满，无需处理
             if (errno != EWOULDBLOCK) {
+                LOG_ERROR << "send error: " << strerror(errno);
+                // SIGPIPE or RST
                 if (errno == EPIPE || errno == ECONNRESET) {
                     sendError = true;
                 }
@@ -130,7 +145,7 @@ void TCPConnection::sendInLoop(std::string data)
     }
     // 还有剩余未发完，注册写事件
     if (!sendError && remaining > 0) {
-        sendBuf_.append(data.data() + nsend, remaining);
+        sendBuf_.append(data.c_str() + nsend, remaining);
         if (!channel_->isSending())
             channel_->enableSend();
     }
@@ -187,7 +202,7 @@ void TCPConnection::handleSend()
     if (channel_->isSending()) {
         ssize_t nsend = ::send(channel_->fd(), sendBuf_.data(), sendBuf_.size(), 0);
         if (nsend > 0) {
-            sendBuf_ = sendBuf_.substr(nsend, sendBuf_.size() - nsend);
+            sendBuf_.append(sendBuf_.data() + nsend, sendBuf_.size() - nsend);
             // 如果写缓存已经全部发送完毕，取消写事件
             if (sendBuf_.size() == 0) {
                 channel_->disableSend();
