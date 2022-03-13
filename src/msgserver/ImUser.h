@@ -10,10 +10,11 @@
 
 #include "slite/TCPConnection.h"
 #include "base/public_define.h"
+#include "ClientConnInfo.h"
 
 #define MAX_ONLINE_FRIEND_CNT		100	//通知好友状态通知的最多个数
 
-#include "slite/protobuf/codec.h"
+#include "base/protobuf_codec.h"
 
 #include <map>
 #include <set>
@@ -25,7 +26,7 @@ using namespace slite;
 class ImUser
 {
 public:
-    ImUser(std::string userName, ProtobufCodec codec);
+    ImUser(std::string userName, IM::ProtobufCodec codec);
     ~ImUser();
     
     void setUserId(uint32_t userId) { userId_ = userId; }
@@ -55,7 +56,7 @@ public:
     void broadcastMsg(MessagePtr message, TCPConnectionPtr fromConn = NULL);
     void broadcastMsgWithOutMobile(MessagePtr message, TCPConnectionPtr fromConn = NULL);
     void broadcastMsgToMobile(MessagePtr message, TCPConnectionPtr fromConn = NULL);
-    void broadcastClientMsgData(MessagePtr message, uint32_t msg_id, TCPConnectionPtr fromConn = NULL, uint32_t from_id = 0);
+    void broadcastClientMsgData(MessagePtr message, uint32_t msg_id, TCPConnectionPtr fromConn = NULL, uint32_t fromId = 0);
     void broadcastData(void* buff, uint32_t len, TCPConnectionPtr fromConn = NULL);
         
     void handleKickUser(TCPConnectionPtr msgConn, uint32_t reason);
@@ -69,10 +70,9 @@ private:
     std::string nickName_;            /* 花名 */
     bool userUpdated_;
     uint32_t pcLoginStatus_;  // pc client login状态，1: on 0: off
-    
     bool validate_;
 
-    ProtobufCodec codec_;
+    IM::ProtobufCodec codec_;
     std::map<std::string, TCPConnectionPtr>	conns_;
     std::set<TCPConnectionPtr> unvalidateConnSet_;
 };

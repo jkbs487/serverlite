@@ -12,7 +12,6 @@
 
 #include <google/protobuf/message.h>
 
-namespace IM {
 // struct ProtobufTransportFormat __attribute__ ((__packed__))
 // {
 //   int32_t  len;
@@ -24,6 +23,7 @@ namespace IM {
 
 typedef std::shared_ptr<google::protobuf::Message> MessagePtr;
 
+namespace IM {
 //
 // FIXME: merge with RpcCodec
 //

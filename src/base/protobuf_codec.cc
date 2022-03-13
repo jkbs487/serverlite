@@ -193,12 +193,7 @@ MessagePtr ProtobufCodec::parse(const char* buf, int len, ErrorCode* error)
     g_seqNum = asUint16(buf+8);
 
     std::string typeName = idToTypeName(serviceId, commandId);
-    LOG_DEBUG << "version=" << version;
-    LOG_DEBUG << "appid=" << appid;
-    LOG_DEBUG << "serviceId=" << serviceId;
-    LOG_DEBUG << "commandId=" << commandId;
-    LOG_DEBUG << "typeName=" << typeName;
-    LOG_DEBUG << "seqNum=" << g_seqNum;
+
     if (typeName != "unknow") {
         message.reset(createMessage(typeName));
         if (message) {
@@ -215,6 +210,12 @@ MessagePtr ProtobufCodec::parse(const char* buf, int len, ErrorCode* error)
             }
         }
     } else {
+        LOG_DEBUG << "version=" << version;
+        LOG_DEBUG << "appid=" << appid;
+        LOG_DEBUG << "serviceId=" << serviceId;
+        LOG_DEBUG << "commandId=" << commandId;
+        LOG_DEBUG << "typeName=" << typeName;
+        LOG_DEBUG << "seqNum=" << g_seqNum;
         *error = kUnknownMessageType;
     }
     
@@ -250,6 +251,9 @@ std::string ProtobufCodec::idToTypeName(uint16_t serviceId, uint16_t commandId)
     case IM::BaseDefine::CID_BUDDY_LIST_DEPARTMENT_REQUEST:
         typeName = "IM.Buddy.IMDepartmentReq";
         break;
+    case IM::BaseDefine::CID_MSG_DATA:
+        typeName = "IM.Message.IMMsgData";
+        break;
     case IM::BaseDefine::CID_MSG_UNREAD_CNT_REQUEST:
         typeName = "IM.Message.IMUnreadMsgCntReq";
         break;
@@ -281,10 +285,13 @@ std::pair<uint16_t, uint16_t> ProtobufCodec::typeNameToId(std::string typeName)
     std::pair<uint16_t, uint16_t> id;
     uint16_t serviceId;
     uint16_t commandId;
-    
+
     if (typeName == "IM.Login.IMLoginRes") {
         serviceId = 1;
         commandId = IM::BaseDefine::CID_LOGIN_RES_USERLOGIN;
+    } else if (typeName == "IM.Login.IMKickUser") {
+        serviceId = 1;
+        commandId = IM::BaseDefine::CID_LOGIN_KICK_USER;
     } else if (typeName == "IM.Login.IMLoginReq") {
         serviceId = 1;
         commandId = IM::BaseDefine::CID_LOGIN_REQ_USERLOGIN;
@@ -300,6 +307,15 @@ std::pair<uint16_t, uint16_t> ProtobufCodec::typeNameToId(std::string typeName)
     } else if (typeName == "IM.Buddy.IMRecentContactSessionRsp") {
         serviceId = 2;
         commandId = IM::BaseDefine::CID_BUDDY_LIST_RECENT_CONTACT_SESSION_RESPONSE;
+    } else if (typeName == "IM.Buddy.IMUsersStatRsp") {
+        serviceId = 2;
+        commandId = IM::BaseDefine::CID_BUDDY_LIST_USERS_STATUS_RESPONSE;
+    } else if (typeName == "IM.Buddy.IMUserStatNotify") {
+        serviceId = 2;
+        commandId = IM::BaseDefine::CID_BUDDY_LIST_STATUS_NOTIFY;
+    } else if (typeName == "IM.Buddy.IMRemoveSessionNotify") {
+        serviceId = 2;
+        commandId = IM::BaseDefine::CID_BUDDY_LIST_REMOVE_SESSION_NOTIFY;
     } else if (typeName == "IM.Message.IMUnreadMsgCntRsp") {
         serviceId = 3;
         commandId = IM::BaseDefine::CID_MSG_UNREAD_CNT_RESPONSE;

@@ -12,6 +12,7 @@
 #include "pbs/IM.Server.pb.h"
 #include "pbs/IM.Login.pb.h"
 
+using namespace IM;
 using namespace ::IM::BaseDefine;
 
 ImUser::ImUser(std::string userName, ProtobufCodec codec)
@@ -83,8 +84,8 @@ void ImUser::broadcastMsg(MessagePtr message, TCPConnectionPtr fromConn)
 void ImUser::broadcastMsgWithOutMobile(MessagePtr message, TCPConnectionPtr fromConn)
 {
     for (auto conn: conns_) {
-        Context* context = std::any_cast<Context*>(conn.second->getContext());
-        if (conn.second != fromConn && CHECK_CLIENT_TYPE_PC(context->clientType)) {
+        ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(conn.second->getContext());
+        if (conn.second != fromConn && CHECK_CLIENT_TYPE_PC(clientInfo->clientType())) {
             codec_.send(conn.second, *message.get());
         }
     }
@@ -93,8 +94,8 @@ void ImUser::broadcastMsgWithOutMobile(MessagePtr message, TCPConnectionPtr from
 void ImUser::broadcastMsgToMobile(MessagePtr message, TCPConnectionPtr fromConn)
 {
     for (auto conn: conns_) {
-        Context* context = std::any_cast<Context*>(conn.second->getContext());
-        if (conn.second != fromConn && CHECK_CLIENT_TYPE_PC(context->clientType)) {
+        ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(conn.second->getContext());
+        if (conn.second != fromConn && CHECK_CLIENT_TYPE_PC(clientInfo->clientType())) {
             codec_.send(conn.second, *message.get());
         }
     }
@@ -103,10 +104,10 @@ void ImUser::broadcastMsgToMobile(MessagePtr message, TCPConnectionPtr fromConn)
 void ImUser::broadcastClientMsgData(MessagePtr message, uint32_t msgId, TCPConnectionPtr fromConn, uint32_t fromId)
 {
     for (auto conn: conns_) {
-        Context* context = std::any_cast<Context*>(conn.second->getContext());
-        if (conn.second != fromConn && CHECK_CLIENT_TYPE_PC(context->clientType)) {
+        ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(conn.second->getContext());
+        if (conn.second != fromConn && CHECK_CLIENT_TYPE_PC(clientInfo->clientType())) {
             codec_.send(conn.second, *message.get());
-            //context->sendMsg.push_back(msgId, fromId);
+            clientInfo->addMsgToSendList(msgId, fromId);
         }
     }
 }
@@ -115,8 +116,8 @@ void ImUser::broadcastData(void *buff, uint32_t len, TCPConnectionPtr fromConn)
 {
     if (!buff) return;
     for (auto conn: conns_) {
-        Context* context = std::any_cast<Context*>(conn.second->getContext());
-        if (conn.second != fromConn && CHECK_CLIENT_TYPE_PC(context->clientType)) {
+        ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(conn.second->getContext());
+        if (conn.second != fromConn && CHECK_CLIENT_TYPE_PC(clientInfo->clientType())) {
             conn.second->send(std::string(static_cast<const char*>(buff), len));
         }
     }
@@ -133,8 +134,8 @@ void ImUser::handleKickUser(TCPConnectionPtr msgConn, uint32_t reason)
             msg.set_user_id(userId_);
             msg.set_kick_reason(static_cast<::IM::BaseDefine::KickReasonType>(reason));
             codec_.send(conn, msg);
-            Context* context = std::any_cast<Context*>(conn->getContext());
-            context->kickOff = true;
+            ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(conn->getContext());
+            clientInfo->setKickOff();
         }
     }
 }
@@ -144,9 +145,9 @@ bool ImUser::kickOutSameClientType(uint32_t clientType, uint32_t reason, TCPConn
 {
 
     for (auto conn: conns_) {
-        Context* context = std::any_cast<Context*>(conn.second->getContext());
+        ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(conn.second->getContext());
         //16进制位移计算
-        if ((((context->clientType ^ clientType) >> 4) == 0) && (conn.second != fromConn)) {
+        if ((((clientInfo->clientType() ^ clientType) >> 4) == 0) && (conn.second != fromConn)) {
             handleKickUser(conn.second, reason);
             break;
         }
@@ -161,8 +162,8 @@ uint32_t ImUser::getClientTypeFlag()
     for (; it != conns_.end(); it++)
     {
         TCPConnectionPtr conn = it->second;
-        Context* context = std::any_cast<Context*>(conn->getContext());
-        uint32_t clientType = context->clientType;
+        ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(conn->getContext());
+        uint32_t clientType = clientInfo->clientType();
         if (CHECK_CLIENT_TYPE_PC(clientType))
         {
             clientTypeFlag |= CLIENT_TYPE_FLAG_PC;
@@ -279,10 +280,10 @@ void ImUserManager::getOnlineUserInfo(list<user_stat_t>* onlineUserInfo)
             auto conns = imUser.second->getMsgConnMap();
             for (auto conn: conns) {
                 if (conn.second->connected()) {
-                    Context* context = std::any_cast<Context*>(conn.second->getContext());
+                    ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(conn.second->getContext());
                     status.user_id = imUser.second->getUserId();
-                    status.client_type = context->clientType;
-                    status.status = context->onlineStatus;
+                    status.client_type = clientInfo->clientType();
+                    status.status = clientInfo->onlineStatus();
                     onlineUserInfo->push_back(status);
                 }
             }
