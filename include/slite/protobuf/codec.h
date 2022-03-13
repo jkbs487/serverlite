@@ -5,9 +5,7 @@
 // that can be found in the License file.
 //
 // Author: Shuo Chen (chenshuo at chenshuo dot com)
-
-#ifndef MUDUO_EXAMPLES_PROTOBUF_CODEC_CODEC_H
-#define MUDUO_EXAMPLES_PROTOBUF_CODEC_CODEC_H
+#pragma once
 
 #include "slite/TCPConnection.h"
 
@@ -24,6 +22,7 @@
 
 typedef std::shared_ptr<google::protobuf::Message> MessagePtr;
 
+namespace slite {
 //
 // FIXME: merge with RpcCodec
 //
@@ -96,4 +95,4 @@ private:
     const static int kMaxMessageLen = 64*1024*1024; // same as codec_stream.h kDefaultTotalBytesLimit
 };
 
-#endif  // MUDUO_EXAMPLES_PROTOBUF_CODEC_CODEC_H
+}

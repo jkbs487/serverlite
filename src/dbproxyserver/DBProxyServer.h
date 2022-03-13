@@ -4,13 +4,7 @@
 #include "slite/protobuf/codec.h"
 #include "slite/protobuf/dispatcher.h"
 
-#include "pbs/IM.Login.pb.h"
-#include "pbs/IM.Server.pb.h"
-#include "pbs/IM.Buddy.pb.h"
-#include "pbs/IM.Group.pb.h"
-#include "pbs/IM.Other.pb.h"
-#include "pbs/IM.Message.pb.h"
-
+#include "base/messagePtr.h"
 #include "models/DBPool.h"
 #include "models/CachePool.h"
 #include "models/DepartmentModel.h"
@@ -20,19 +14,6 @@
 #include <set>
 #include <memory>
 #include <functional>
-
-typedef std::shared_ptr<IM::Server::IMValidateReq> IMValiReqPtr;
-typedef std::shared_ptr<IM::Login::IMLogoutReq> LogoutReqPtr;
-typedef std::shared_ptr<IM::Buddy::IMDepartmentReq> DepartmentReqPtr;
-typedef std::shared_ptr<IM::Buddy::IMAllUserReq> AllUserReqPtr;
-typedef std::shared_ptr<IM::Buddy::IMRecentContactSessionReq> RecentContactSessionReqPtr;
-typedef std::shared_ptr<IM::Buddy::IMUsersStatReq> UsersStatReqPtr;
-
-typedef std::shared_ptr<IM::Group::IMNormalGroupListReq> NormalGroupListReqPtr;
-typedef std::shared_ptr<IM::Group::IMGroupChangeMemberRsp> GroupChangeMemberRspPtr;
-
-typedef std::shared_ptr<IM::Message::IMUnreadMsgCntReq> UnreadMsgCntReqPtr;
-typedef std::shared_ptr<IM::Message::IMGetMsgListReq> GetMsgListReqPtr;
 
 namespace IM {
 
@@ -69,6 +50,7 @@ private:
 
     void onNormalGroupListRequest(const slite::TCPConnectionPtr& conn, const NormalGroupListReqPtr& message, int64_t receiveTime);
 
+    void onMsgData(const slite::TCPConnectionPtr& conn, const MsgDataPtr& message, int64_t receiveTime);
     void onUnreadMsgCntRequest(const slite::TCPConnectionPtr& conn, const UnreadMsgCntReqPtr& message, int64_t receiveTime);
     void onGetMsgListRequest(const slite::TCPConnectionPtr& conn, const GetMsgListReqPtr& message, int64_t receiveTime);
 
@@ -80,7 +62,7 @@ private:
     slite::TCPServer server_;
     slite::EventLoop *loop_;
     ProtobufDispatcher dispatcher_;
-    ProtobufCodec codec_;
+    slite::ProtobufCodec codec_;
     slite::ThreadPool threadPool_;
     DBPoolPtr dbPool_;
     CachePoolPtr cachePool_;
