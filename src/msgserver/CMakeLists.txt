@@ -1,5 +1,9 @@
 set(msgserver_SRCS
+    main.cc
     MsgServer.cc
+    DBProxyClient.cc
+    LoginClient.cc
+    RouteClient.cc
     ImUser.cc
     ../base/protobuf_codec.cc
 )
