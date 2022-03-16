@@ -254,6 +254,12 @@ std::string ProtobufCodec::idToTypeName(uint16_t serviceId, uint16_t commandId)
     case IM::BaseDefine::CID_MSG_DATA:
         typeName = "IM.Message.IMMsgData";
         break;
+    case IM::BaseDefine::CID_MSG_DATA_ACK:
+        typeName = "IM.Message.IMMsgDataAck";
+        break;
+    case IM::BaseDefine::CID_MSG_READ_ACK:
+        typeName = "IM.Message.IMMsgDataReadAck";
+        break;
     case IM::BaseDefine::CID_MSG_UNREAD_CNT_REQUEST:
         typeName = "IM.Message.IMUnreadMsgCntReq";
         break;
@@ -319,9 +325,18 @@ std::pair<uint16_t, uint16_t> ProtobufCodec::typeNameToId(std::string typeName)
     } else if (typeName == "IM.Message.IMUnreadMsgCntRsp") {
         serviceId = 3;
         commandId = IM::BaseDefine::CID_MSG_UNREAD_CNT_RESPONSE;
+    } else if (typeName == "IM.Message.IMMsgData") {
+        serviceId = 3;
+        commandId = IM::BaseDefine::CID_MSG_DATA;
     } else if (typeName == "IM.Message.IMGetMsgListRsp") {
         serviceId = 3;
         commandId = IM::BaseDefine::CID_MSG_LIST_RESPONSE;
+    } else if (typeName == "IM.Message.IMMsgDataAck") {
+        serviceId = 3;
+        commandId = IM::BaseDefine::CID_MSG_DATA_ACK;
+    } else if (typeName == "IM.Message.IMMsgDataReadNotify") {
+        serviceId = 3;
+        commandId = IM::BaseDefine::CID_MSG_READ_NOTIFY;
     } else if (typeName == "IM.Group.IMNormalGroupListRsp") {
         serviceId = 4;
         commandId = IM::BaseDefine::CID_GROUP_NORMAL_LIST_RESPONSE;
