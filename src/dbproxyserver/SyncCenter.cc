@@ -170,14 +170,14 @@ void SyncCenter::doSyncGroupChat()
         mapChangedGroup.clear();
         DBConn* dbConn = dbPool_->getDBConn();
         if(dbConn) {
-            string strSql = "select id, lastChated from IMGroup where status=0 and lastChated >=" + std::to_string(getLastUpdateGroup());
+            string strSql = "SELECT id, lastChated FROM IMGroup WHERE status=0 AND lastChated >= " + std::to_string(getLastUpdateGroup());
             ResultSet* result = dbConn->executeQuery(strSql);
             if(result) {
                 while (result->next()) {
-                    uint32_t nGroupId = result->getInt("id");
-                    uint32_t nLastChat = result->getInt("lastChated");
-                    if (nLastChat != 0) {   
-                        mapChangedGroup[nGroupId] = nLastChat;
+                    uint32_t groupId = result->getInt("id");
+                    uint32_t lastChat = result->getInt("lastChated");
+                    if (lastChat != 0) {   
+                        mapChangedGroup[groupId] = lastChat;
                     }
                 }
                 delete result;

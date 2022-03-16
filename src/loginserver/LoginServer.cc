@@ -20,7 +20,7 @@ LoginServer::LoginServer(std::string host, uint16_t port, EventLoop* loop):
     server_.setConnectionCallback(
         std::bind(&LoginServer::onConnection, this, _1));
     server_.setMessageCallback(
-        std::bind(&ProtobufCodec::onMessage, &codec_, _1, _2, _3));
+        std::bind(&LoginServer::onMessage, this, _1, _2, _3));
     server_.setWriteCompleteCallback(
         std::bind(&LoginServer::onWriteComplete, this, _1));
     dispatcher_.registerMessageCallback<IM::Other::IMHeartBeat>(
@@ -149,6 +149,7 @@ void LoginServer::onMessage(const TCPConnectionPtr& conn,
                             std::string& buffer, 
                             int64_t receiveTime)
 {
+    codec_.onMessage(conn, buffer, receiveTime);
     Context* context = std::any_cast<Context*>(conn->getContext());
     context->lastRecvTick = receiveTime;
 }
@@ -201,7 +202,6 @@ void LoginServer::onUserCntUpdate(const TCPConnectionPtr& conn,
                                 const UserCntUpdatePtr& message, 
                                 int64_t receiveTime)
 {
-    LOG_INFO << "onUserCntUpdate: " << message->GetTypeName();
     MsgServInfo* info = 
         std::any_cast<Context*>(conn->getContext())->msgServInfo;
     
@@ -209,11 +209,13 @@ void LoginServer::onUserCntUpdate(const TCPConnectionPtr& conn,
         info->curConnCnt++;
         totalOnlineUserCnt_++;
     } else {
-        info->curConnCnt--;
-        totalOnlineUserCnt_--;
+        if (info->curConnCnt > 0)
+            info->curConnCnt--;
+        if (totalOnlineUserCnt_ > 0)
+            totalOnlineUserCnt_--;
     }
 
-    LOG_INFO << info->hostname << ":" << info->port << ", curCnt=" 
+    LOG_INFO << "onUserCntUpdate: " << info->hostname << ":" << info->port << ", curCnt=" 
     << info->curConnCnt << ", totalCnt=" << totalOnlineUserCnt_;
 }
 

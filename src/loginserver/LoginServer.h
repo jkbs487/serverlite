@@ -62,7 +62,7 @@ private:
     TCPServer httpServer_;
     EventLoop *loop_;
     ProtobufDispatcher dispatcher_;
-    ProtobufCodec codec_;
+    slite::ProtobufCodec codec_;
     HTTPCodec httpCodec_;
     std::set<TCPConnectionPtr> clientConns_;
     std::set<TCPConnectionPtr> msgConns_;
