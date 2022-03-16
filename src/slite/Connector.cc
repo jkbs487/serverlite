@@ -188,7 +188,6 @@ void Connector::handleWrite()
 
 void Connector::handleError()
 {
-    LOG_ERROR << "Connector::handleError";
     // if new client, retry
     if (state_ == CONNECTING) {
         int connfd = removeChannel();
@@ -200,7 +199,7 @@ void Connector::handleError()
         } else {
             char buffer[512];
             ::bzero(buffer, sizeof buffer);
-            LOG_ERROR << strerror_r(optval, buffer, sizeof buffer);
+            LOG_ERROR << "handleError: " << strerror_r(optval, buffer, sizeof buffer);
         }
         retry(connfd);
     }

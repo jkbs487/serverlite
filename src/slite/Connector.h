@@ -57,4 +57,6 @@ private:
     SockAddr serverAddr_;
 };
 
+typedef std::shared_ptr<Connector> ConnectorPtr;
+
 }
