@@ -12,7 +12,9 @@ public:
     void getUserGroupIds(uint32_t nUserId, list<uint32_t>& lsGroupId, uint32_t nLimited = 100);
     void getGroupUser(uint32_t groupId, list<uint32_t>& userIds);
     bool isInGroup(uint32_t userId, uint32_t groupId);
+    bool isValidateGroupId(uint32_t nGroupId);
     uint32_t getUserJoinTime(uint32_t groupId, uint32_t userId);
+    void updateGroupChat(uint32_t groupId);
 
 private:
     void getGroupVersion(list<uint32_t>&lsGroupId, list<IM::BaseDefine::GroupVersionInfo>& lsGroup, uint32_t nGroupType);

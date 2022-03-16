@@ -51,8 +51,10 @@ private:
     void onNormalGroupListRequest(const slite::TCPConnectionPtr& conn, const NormalGroupListReqPtr& message, int64_t receiveTime);
 
     void onMsgData(const slite::TCPConnectionPtr& conn, const MsgDataPtr& message, int64_t receiveTime);
+    void onMsgDataReadAck(const slite::TCPConnectionPtr& conn, const MsgDataReadAckPtr& message, int64_t receiveTime);
     void onUnreadMsgCntRequest(const slite::TCPConnectionPtr& conn, const UnreadMsgCntReqPtr& message, int64_t receiveTime);
     void onGetMsgListRequest(const slite::TCPConnectionPtr& conn, const GetMsgListReqPtr& message, int64_t receiveTime);
+    void onGetDeviceTokenReq(const slite::TCPConnectionPtr& conn, const GetDeviceTokenReqPtr& message, int64_t receiveTime);
 
     bool doLogin(const std::string &strName, const std::string &strPass, IM::BaseDefine::UserInfo& user);
 

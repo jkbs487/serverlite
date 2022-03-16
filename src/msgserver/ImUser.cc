@@ -107,7 +107,7 @@ void ImUser::broadcastClientMsgData(MessagePtr message, uint32_t msgId, TCPConne
         ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(conn.second->getContext());
         if (conn.second != fromConn && CHECK_CLIENT_TYPE_PC(clientInfo->clientType())) {
             codec_.send(conn.second, *message.get());
-            clientInfo->addMsgToSendList(msgId, fromId);
+            clientInfo->addMsgToHalfMsgList(msgId, fromId);
         }
     }
 }

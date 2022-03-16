@@ -179,3 +179,187 @@ void GroupMessageModel::getMessage(uint32_t userId, uint32_t groupId, uint32_t m
         LOG_ERROR << "no db connection for teamtalk";
     }
 }
+
+uint32_t GroupMessageModel::getMsgId(uint32_t groupId)
+{
+    uint32_t msgId = 0;
+    CacheConn* cacheConn = cachePool_->getCacheConn();
+    if(cacheConn) {
+        string strKey = "group_msg_id_" + std::to_string(groupId);
+        msgId =  static_cast<uint32_t>(cacheConn->incrBy(strKey, 1));
+        cachePool_->relCacheConn(cacheConn);
+    } else {
+        LOG_ERROR << "no cache connection for unread";
+    }
+    return msgId;
+}
+
+bool GroupMessageModel::sendMessage(uint32_t fromId, uint32_t groupId, IM::BaseDefine::MsgType msgType,
+                                     uint32_t createTime, uint32_t msgId, const string& msgContent)
+{
+    bool ret = false;
+    GroupModel groupModel(dbPool_, cachePool_);
+    if (groupModel.isInGroup(fromId, groupId)) {
+        DBConn* dbConn = dbPool_->getDBConn();
+        if (dbConn) {
+            string tableName = "IMGroupMessage_" + std::to_string(groupId % 8);
+            string strSql = "insert into " + tableName + " (`groupId`, `userId`, `msgId`, `content`, `type`, `status`, `updated`, `created`) "\
+            "values(?, ?, ?, ?, ?, ?, ?, ?)";
+            
+            // 必须在释放连接前delete CPrepareStatement对象，否则有可能多个线程操作mysql对象，会crash
+            PrepareStatement* stmt = new PrepareStatement();
+            if (stmt->init(dbConn->getMysql(), strSql)) {
+                uint32_t nStatus = 0;
+                uint32_t nType = msgType;
+                uint32_t index = 0;
+                stmt->setParam(index++, groupId);
+                stmt->setParam(index++, fromId);
+                stmt->setParam(index++, msgId);
+                stmt->setParam(index++, msgContent);
+                stmt->setParam(index++, nType);
+                stmt->setParam(index++, nStatus);
+                stmt->setParam(index++, createTime);
+                stmt->setParam(index++, createTime);
+                
+                ret = stmt->executeUpdate();
+                if (ret) {
+                    groupModel.updateGroupChat(groupId);
+                    incMessageCount(fromId, groupId);
+                    clearMessageCount(fromId, groupId);
+                } else {
+                    LOG_ERROR << "insert message failed: " << strSql;
+                }
+            }
+            delete stmt;
+            dbPool_->relDBConn(dbConn);
+        } else {
+            LOG_ERROR << "no db connection for teamtalk_master";
+        }
+    } else {
+        LOG_ERROR << "not in the group.fromId=" << fromId << ", groupId=" << groupId;
+    }
+    return ret;
+}
+/*
+bool GroupMessageModel::sendAudioMessage(uint32_t fromId, uint32_t groupId, IM::BaseDefine::MsgType msgType, 
+                    uint32_t createTime, uint32_t msgId,const char* msgContent, uint32_t msgLen)
+{
+	if (msgLen <= 4) {
+		return false;
+	}
+
+    GroupModel groupModel(dbPool_, cachePool_);
+    if (!groupModel.isInGroup(fromId, groupId)) {
+        LOG_ERROR << "not in the group. fromId=" << fromId << ", groupId=" << groupId);
+        return false;
+    }
+    
+	AudioModel audioModel(dbPool_, cachePool_);
+	int audioId = audioModel.saveAudioInfo(fromId, groupId, createTime, msgContent, msgLen);
+
+	bool ret = true;
+	if (audioId != -1) {
+		string strMsg = std::to_string(audioId);
+        ret = sendMessage(fromId, groupId, msgType, createTime, msgId, strMsg);
+	} else {
+		ret = false;
+	}
+
+	return ret;
+}
+*/
+/**
+ *  增加群消息计数
+ *
+ *  @param userId  用户Id
+ *  @param groupId 群组Id
+ *
+ *  @return 成功返回true，失败返回false
+ */
+bool GroupMessageModel::incMessageCount(uint32_t userId, uint32_t groupId)
+{
+    bool ret = false;
+    CacheConn* cacheConn = cachePool_->getCacheConn();
+    if (cacheConn) {
+        string groupKey = std::to_string(groupId) + GROUP_TOTAL_MSG_COUNTER_REDIS_KEY_SUFFIX;
+        cacheConn->hincrBy(groupKey, GROUP_COUNTER_SUBKEY_COUNTER_FIELD, 1);
+        map<string, string> groupCount;
+        ret = cacheConn->hgetAll(groupKey, groupCount);
+        if (ret) {
+            string userKey = std::to_string(userId) + "_" + std::to_string(groupId) + GROUP_USER_MSG_COUNTER_REDIS_KEY_SUFFIX;
+            string strReply = cacheConn->hmset(userKey, groupCount);
+            if (!strReply.empty()) {
+                ret = true;
+            } else {
+                LOG_ERROR << "hmset " << userKey << " failed!";
+            }
+        } else {
+            LOG_ERROR << "hgetAll " << groupKey << " failed!";
+        }
+        cachePool_->relCacheConn(cacheConn);
+    } else {
+        LOG_ERROR << "no cache connection for unread";
+    }
+    return ret;
+}
+
+bool GroupMessageModel::clearMessageCount(uint32_t userId, uint32_t groupId)
+{
+    bool ret = false;
+    CacheConn* cacheConn = cachePool_->getCacheConn();
+    if (cacheConn) {
+        string groupKey = std::to_string(groupId) + GROUP_TOTAL_MSG_COUNTER_REDIS_KEY_SUFFIX;
+        map<string, string> groupCount;
+        ret = cacheConn->hgetAll(groupKey, groupCount);
+        if (ret) {
+            string userKey = std::to_string(userId) + "_" + std::to_string(groupId) + GROUP_USER_MSG_COUNTER_REDIS_KEY_SUFFIX;
+            string strReply = cacheConn->hmset(userKey, groupCount);
+            if(strReply.empty()) {
+                LOG_ERROR << "hmset " << userKey << " failed!";
+            } else {
+                ret = true;
+            }
+        } else{
+            LOG_ERROR << "hgetAll " << groupKey << " failed!";
+        }
+    }
+    else {
+        LOG_ERROR << "no cache connection for unread";
+    }
+    cachePool_->relCacheConn(cacheConn);
+    return ret;
+}
+
+void GroupMessageModel::getUnReadCntAll(uint32_t userId, uint32_t &totalCnt)
+{
+    list<uint32_t> groupIds;
+    GroupModel groupModel(dbPool_, cachePool_);
+    groupModel.getUserGroupIds(userId, groupIds, 0);
+    uint32_t count = 0;
+    
+    CacheConn* cacheConn = cachePool_->getCacheConn();
+    if (cacheConn) {
+        for (const auto& groupId : groupIds) {
+            string groupKey = std::to_string(groupId) + GROUP_TOTAL_MSG_COUNTER_REDIS_KEY_SUFFIX;
+            string strGroupCnt = cacheConn->hget(groupKey, GROUP_COUNTER_SUBKEY_COUNTER_FIELD);
+            if (strGroupCnt.empty()) {
+//                log("hget %s : count failed !", strGroupKey.c_str());
+                continue;
+            }
+            uint32_t groupCnt = static_cast<uint32_t>(std::stoi(strGroupCnt));
+            string userKey = std::to_string(userId) + "_" + std::to_string(groupId) + GROUP_USER_MSG_COUNTER_REDIS_KEY_SUFFIX;
+            string strUserCnt = cacheConn->hget(userKey, GROUP_COUNTER_SUBKEY_COUNTER_FIELD);
+            
+            uint32_t userCnt = (strUserCnt.empty() ? 0 : ((uint32_t)atoi(strUserCnt.c_str())) );
+            if (groupCnt >= userCnt) {
+                count = groupCnt - userCnt;
+            }
+            if (count > 0) {
+                totalCnt += count;
+            }
+        }
+        cachePool_->relCacheConn(cacheConn);
+    } else {
+        LOG_ERROR << "no cache connection for unread";
+    }
+}

@@ -71,6 +71,18 @@ bool MessageModel::resetMsgId(uint32_t relateId)
     return ret;
 }
 
+uint32_t MessageModel::getMsgId(uint32_t relateId)
+{
+    uint32_t msgId = 0;
+    CacheConn* cacheConn = cachePool_->getCacheConn();
+    if (cacheConn) {
+        string strKey = "msg_id_" + std::to_string(relateId);
+        msgId = static_cast<uint32_t>(cacheConn->incrBy(strKey, 1));
+        cachePool_->relCacheConn(cacheConn);
+    }
+    return msgId;
+}
+
 void MessageModel::getUnreadMsgCount(uint32_t userId, uint32_t &totalCnt, list<IM::BaseDefine::UnreadInfo>& unreadCounts)
 {
     CacheConn* cacheConn = cachePool_->getCacheConn();
@@ -157,4 +169,90 @@ void MessageModel::getMessage(uint32_t userId, uint32_t peerId, uint32_t msgId, 
 	} else {
         LOG_ERROR << "no relation between " << userId << " and " << peerId;
     }
+}
+
+
+/*
+ * IMMessage 分表
+ * AddFriendShip()
+ * if fromId or toId is ShopEmployee
+ * GetShopId
+ * Insert into IMMessage_ShopId%8
+ */
+bool MessageModel::sendMessage(uint32_t relateId, uint32_t fromId, uint32_t toId, IM::BaseDefine::MsgType msgType, uint32_t createTime,
+                     uint32_t msgId, string& msgContent)
+{
+    bool ret = false;
+    if (fromId == 0 || toId == 0) {
+        LOG_ERROR << "invalied userId." << fromId << "->" << toId;
+        return ret;
+    }
+    DBConn* dbConn = dbPool_->getDBConn();
+    if (dbConn) {
+        string tableName = "IMMessage_" + std::to_string(relateId % 8);
+        string strSql = "insert into " + tableName + " (`relateId`, `fromId`, `toId`, `msgId`, `content`, `status`, `type`, `created`, `updated`) values(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // 必须在释放连接前delete CPrepareStatement对象，否则有可能多个线程操作mysql对象，会crash
+        PrepareStatement* stmt = new PrepareStatement();
+        if (stmt->init(dbConn->getMysql(), strSql)) {
+            uint32_t status = 0;
+            uint32_t type = msgType;
+            uint32_t index = 0;
+            stmt->setParam(index++, relateId);
+            stmt->setParam(index++, fromId);
+            stmt->setParam(index++, toId);
+            stmt->setParam(index++, msgId);
+            stmt->setParam(index++, msgContent);
+            stmt->setParam(index++, status);
+            stmt->setParam(index++, type);
+            stmt->setParam(index++, createTime);
+            stmt->setParam(index++, createTime);
+            
+            ret = stmt->executeUpdate();
+            if (ret) {
+                //uint32_t now = static_cast<uint32_t>(time(NULL));
+                LOG_DEBUG << "sql: " << strSql << ", insert Id: " << stmt->getInsertId();
+                incMsgCount(fromId, toId);
+            } else {
+                LOG_ERROR << "insert message failed: " << strSql;
+            }
+        }
+        delete stmt;
+        dbPool_->relDBConn(dbConn);
+    } else {
+        LOG_ERROR << "no db connection for teamtalk_master";
+    }
+
+    return ret;
+}
+
+void MessageModel::incMsgCount(uint32_t fromId, uint32_t toId)
+{
+	CacheConn* cacheConn = cachePool_->getCacheConn();
+	if (cacheConn) {
+		cacheConn->hincrBy("unread_" + std::to_string(toId), std::to_string(fromId), 1);
+		cachePool_->relCacheConn(cacheConn);
+	} else {
+		LOG_ERROR << "no cache connection to increase unread count: " << fromId << "->%d" << toId;
+	}
+}
+
+void MessageModel::getUnReadCntAll(uint32_t userId, uint32_t &totalCnt)
+{
+    CacheConn* cacheConn = cachePool_->getCacheConn();
+    if (cacheConn) {
+        map<string, string> mapUnread;
+        string key = "unread_" + std::to_string(userId);
+        bool ret = cacheConn->hgetAll(key, mapUnread);
+        cachePool_->relCacheConn(cacheConn);
+        
+        if (ret) {
+            for (auto it = mapUnread.begin(); it != mapUnread.end(); it++) {
+                totalCnt += std::stoi(it->second);
+            }
+        } else {
+            LOG_ERROR << "hgetall " << key << " failed!";
+        }
+    } else {
+        LOG_ERROR << "no cache connection for unread";
+    }   
 }

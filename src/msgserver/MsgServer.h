@@ -20,6 +20,10 @@ extern std::set<slite::TCPConnectionPtr> g_dbProxyConns;
 extern std::set<slite::TCPConnectionPtr> g_routeConns;
 extern std::set<slite::TCPConnectionPtr> g_fileConns;
 
+extern slite::TCPConnectionPtr getRandomRouteConn();
+extern slite::TCPConnectionPtr getRandomDBProxyConn();
+extern slite::TCPConnectionPtr getRandomDBProxyConnForLogin();
+
 namespace IM {
 
 class MsgServer
@@ -54,8 +58,11 @@ private:
     void onGroupChangeMemberResponse(const slite::TCPConnectionPtr& conn, const GroupChangeMemberRspPtr& message, int64_t receiveTime);
 
     void onMsgData(const slite::TCPConnectionPtr& conn, const MsgDataPtr& message, int64_t receiveTime);
+    void onMsgDataAck(const slite::TCPConnectionPtr& conn, const MsgDataAckPtr& message, int64_t receiveTime);
+    void onMsgDataReadAck(const slite::TCPConnectionPtr& conn, const MsgDataReadAckPtr& message, int64_t receiveTime);
     void onUnreadMsgCntRequest(const slite::TCPConnectionPtr& conn, const UnreadMsgCntReqPtr& message, int64_t receiveTime);
     void onGetMsgListRequest(const slite::TCPConnectionPtr& conn, const GetMsgListReqPtr& message, int64_t receiveTime);
+    void onClientTimeRequest(const slite::TCPConnectionPtr& conn, const ClientTimeReqPtr& message, int64_t receiveTime);
 
     void onFileHasOfflineRequest(const slite::TCPConnectionPtr& conn, const FileHasOfflineReqPtr& message, int64_t receiveTime);
 
@@ -66,9 +73,12 @@ private:
     ProtobufDispatcher dispatcher_;
     slite::ProtobufCodec codec_;
     IM::ProtobufCodec clientCodec_;
+    int64_t lastStatTick_;
 
     static const int heartBeatInterVal = 5000;
     static const int timeout = 30000;
+    static const int waitMsgDataAckTimeout = 15000;
+    static const int msgStatInterval = 300000;
 };
 
 }

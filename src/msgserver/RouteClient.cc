@@ -29,6 +29,8 @@ RouteClient::RouteClient(std::string host, uint16_t port, EventLoop* loop)
         std::bind(&RouteClient::onKickUser, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Buddy::IMUserStatNotify>(
         std::bind(&RouteClient::onStatusNotify, this, _1, _2, _3));
+    dispatcher_.registerMessageCallback<IM::Message::IMMsgDataReadNotify>(
+        std::bind(&RouteClient::onMsgReadNotify, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Message::IMMsgData>(
         std::bind(&RouteClient::onMsgData, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Server::IMServerPCLoginStatusNotify>(
@@ -37,6 +39,9 @@ RouteClient::RouteClient(std::string host, uint16_t port, EventLoop* loop)
         std::bind(&RouteClient::onRemoveSessionNotify, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Buddy::IMSignInfoChangedNotify>(
         std::bind(&RouteClient::onSignInfoChangedNotify, this, _1, _2, _3));
+
+    dispatcher_.registerMessageCallback<IM::SwitchService::IMP2PCmdMsg>(
+        std::bind(&RouteClient::onP2PMsg, this, _1, _2, _3));
 
     loop_->runEvery(1.0, std::bind(&RouteClient::onTimer, this));
 }

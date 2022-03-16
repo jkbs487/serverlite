@@ -5,42 +5,16 @@
 #include "ClientConnInfo.h"
 
 #include <sys/time.h>
-#include <random>
 
 using namespace IM;
 using namespace slite;
 using namespace std::placeholders;
 
 //static uint32_t g_dbServerLoginCount;
-
-TCPConnectionPtr getRandomConn(std::set<TCPConnectionPtr> conns, size_t start, size_t end)
-{
-    std::default_random_engine e;
-    std::uniform_int_distribution<unsigned long> u(start, end);
-    while (true && !conns.empty()) {
-        auto it = conns.begin();
-        if (it == conns.end()) return nullptr;
-        std::advance(it, u(e));
-        if (it != conns.end())
-            return *it;
-    }
-    return nullptr;
-}
-
-TCPConnectionPtr getRandomDBProxyConnForLogin()
-{
-    return getRandomConn(g_dbProxyConns, 0, g_dbProxyConns.size()-1);
-}
-
-TCPConnectionPtr getRandomDBProxyConn()
-{
-    return getRandomConn(g_dbProxyConns, g_dbProxyConns.size()/2, g_dbProxyConns.size()-1);
-}
-
-TCPConnectionPtr getRandomRouteConn()
-{
-    return getRandomConn(g_routeConns, 0, g_routeConns.size()-1);
-}
+extern uint32_t g_downMsgMissCnt;
+extern uint32_t g_downMsgTotalCnt;
+extern uint32_t g_upMsgTotalCnt;
+extern uint32_t g_upMsgMissCnt;
 
 MsgServer::MsgServer(std::string host, uint16_t port, EventLoop* loop):
     server_(host, port, loop, "MsgServer"),
@@ -77,6 +51,10 @@ MsgServer::MsgServer(std::string host, uint16_t port, EventLoop* loop):
 
     dispatcher_.registerMessageCallback<IM::Message::IMMsgData>(
         std::bind(&MsgServer::onMsgData, this, _1, _2, _3));
+    dispatcher_.registerMessageCallback<IM::Message::IMMsgDataAck>(
+        std::bind(&MsgServer::onMsgDataAck, this, _1, _2, _3));
+    dispatcher_.registerMessageCallback<IM::Message::IMMsgDataReadAck>(
+        std::bind(&MsgServer::onMsgDataReadAck, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Message::IMUnreadMsgCntReq>(
         std::bind(&MsgServer::onUnreadMsgCntRequest, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Message::IMGetMsgListReq>(
@@ -89,6 +67,11 @@ MsgServer::MsgServer(std::string host, uint16_t port, EventLoop* loop):
         std::bind(&MsgServer::onP2PCmdMsg, this, _1, _2, _3));
 
     loop_->runEvery(1.0, std::bind(&MsgServer::onTimer, this));
+    
+    struct timeval tval;
+    ::gettimeofday(&tval, NULL);
+    int64_t currTick = tval.tv_sec * 1000L + tval.tv_usec / 1000L;
+    lastStatTick_ = currTick;
 }
 
 MsgServer::~MsgServer()
@@ -102,12 +85,33 @@ void MsgServer::onTimer()
     int64_t currTick = tval.tv_sec * 1000L + tval.tv_usec / 1000L;
 
     for (const auto& clientConn : g_clientConns) {
-        ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(clientConn->getContext());
-        
-        if (currTick > clientInfo->lastRecvTick() + 30000) {
-            LOG_ERROR << "client timeout";
+        ClientConnInfo* clientInfo = 
+            std::any_cast<ClientConnInfo*>(clientConn->getContext());
+        if (currTick > clientInfo->lastRecvTick() + 120000) {
+            LOG_DEBUG << "currTick=" << currTick << ", lastRecvTick=" << clientInfo->lastRecvTick();
+            LOG_ERROR << "client timeout, conn=" << clientConn->name();
             clientConn->shutdown();
         }
+
+        std::list<HalfMsg> halfMsgs = clientInfo->halfMsgs();
+        for (auto it = halfMsgs.begin(); 
+            it != halfMsgs.end(); ) {
+            if (currTick >= it->timestamp + waitMsgDataAckTimeout) {
+                LOG_ERROR << "a msg missed, msgId=" << it->msgId 
+                    << ", " << it->fromId << "->" << clientInfo->userId();
+                g_downMsgMissCnt++;
+                it = halfMsgs.erase(it);
+            } else {
+                it++;
+            }
+        }
+    }
+    
+    if (currTick > lastStatTick_ + msgStatInterval) {
+        lastStatTick_ = currTick;
+        LOG_INFO << "upMsgCnt=" << g_upMsgTotalCnt << ", upMsgMissCnt=" 
+            << g_upMsgMissCnt << ", downMsgCnt=" << g_downMsgTotalCnt 
+            << ", downMsgMissCnt=" << g_downMsgMissCnt;
     }
 }
 
@@ -122,12 +126,14 @@ void MsgServer::onConnection(const TCPConnectionPtr& conn)
         clientInfo->setLastSendTick(tval.tv_sec * 1000L + tval.tv_usec / 1000L); 
         conn->setContext(clientInfo);
     } else {
+        g_clientConns.erase(conn);
         ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(conn->getContext());
         ImUser* user = ImUserManager::getInstance()->getImUserById(clientInfo->userId());
         if (user) {
             user->delMsgConn(conn->name());
             user->delUnValidateMsgConn(conn);
             
+            // add user cnt to login server, for load balance
             IM::Server::IMUserCntUpdate msg;
             msg.set_user_action(USER_CNT_DEC);
             msg.set_user_id(clientInfo->clientType());
@@ -136,6 +142,7 @@ void MsgServer::onConnection(const TCPConnectionPtr& conn)
                 codec_.send(loginConn, msg);
             }
             
+            // notify offline to other freands
             IM::Server::IMUserStatusUpdate msg2;
             msg2.set_user_status(::IM::BaseDefine::USER_STATUS_OFFLINE);
             msg2.set_user_id(clientInfo->userId());
@@ -144,8 +151,19 @@ void MsgServer::onConnection(const TCPConnectionPtr& conn)
             for (auto routeConn: g_routeConns) {
                 codec_.send(routeConn, msg2);
             }
+            
+            if (user->isMsgConnEmpty()) {
+                ImUserManager::getInstance()->removeImUser(user);
+            }
         }
-        g_clientConns.erase(conn);
+
+        user = ImUserManager::getInstance()->getImUserByLoginName(clientInfo->loginName());
+        if (user) {
+            user->delUnValidateMsgConn(conn);
+            if (user->isMsgConnEmpty()) {
+                ImUserManager::getInstance()->removeImUser(user);
+            }
+        }
     }
 }
 
@@ -415,7 +433,7 @@ void MsgServer::onP2PCmdMsg(const TCPConnectionPtr& conn,
 	uint32_t fromUserId = message->from_user_id();
 	uint32_t toUserId = message->to_user_id();
 
-	LOG_ERROR << "onP2PCmdMsg, " << fromUserId << "->" << toUserId << ", cmd_msg: " << cmdMsg;
+	LOG_INFO << "onP2PCmdMsg, " << fromUserId << "->" << toUserId << ", cmd_msg: " << cmdMsg;
 
     ImUser* fromImUser = ImUserManager::getInstance()->getImUserById(clientInfo->userId());
 	ImUser* toImUser = ImUserManager::getInstance()->getImUserById(toUserId);
@@ -445,13 +463,12 @@ void MsgServer::onMsgData(const slite::TCPConnectionPtr& conn,
 	}
 
 	if (clientInfo->msgCntPerSec() >= MAX_MSG_CNT_PER_SECOND) {
-		LOG_WARN << "!!!too much msg cnt in one second, uid=" << clientInfo->userId();
+		LOG_WARN << "too much msg cnt in one second, uid=" << clientInfo->userId();
 		return;
 	}
     
-    if (message->from_user_id() == message->to_session_id() && CHECK_MSG_TYPE_SINGLE(message->msg_type()))
-    {
-        LOG_WARN << "!!!from_user_id == to_user_id";
+    if (message->from_user_id() == message->to_session_id() && CHECK_MSG_TYPE_SINGLE(message->msg_type())) {
+        LOG_WARN << "from_user_id == to_user_id";
         return;
     }
 
@@ -473,4 +490,53 @@ void MsgServer::onMsgData(const slite::TCPConnectionPtr& conn,
 	if (dbConn) {
 		codec_.send(dbConn, *message.get());
 	}
+}
+
+void MsgServer::onMsgDataReadAck(const slite::TCPConnectionPtr& conn, 
+                                const MsgDataReadAckPtr& message, 
+                                int64_t receiveTime)
+{
+    ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(conn->getContext());
+    uint32_t sessionType = message->session_type();
+    uint32_t sessionId = message->session_id();
+    uint32_t msgId = message->msg_id();
+    LOG_INFO << "onMsgDataReadAck, user_id=" << clientInfo->userId() << ", sessionId=" 
+        << sessionId << ", msgId=" << msgId << ", sessionType=" << sessionType;
+    
+	TCPConnectionPtr dbConn = getRandomDBProxyConn();
+	if (dbConn) {
+        message->set_user_id(clientInfo->userId());
+		codec_.send(dbConn, *message.get());
+	}
+    // tell other client of current user, this msg has been readed.
+    std::shared_ptr<::Message::IMMsgDataReadNotify> msg2(new ::Message::IMMsgDataReadNotify);
+    msg2->set_user_id(clientInfo->userId());
+    msg2->set_session_id(sessionId);
+    msg2->set_msg_id(msgId);
+    msg2->set_session_type(static_cast<IM::BaseDefine::SessionType>(sessionType));
+    ImUser* user = ImUserManager::getInstance()->getImUserById(clientInfo->userId());
+    if (user) {
+        user->broadcastMsg(msg2, conn);
+    }
+    TCPConnectionPtr routeConn = getRandomRouteConn();
+    if (routeConn) { 
+        codec_.send(routeConn, *msg2.get());
+    }
+    
+    // for fromUser msgserver
+    if (sessionType == IM::BaseDefine::SESSION_TYPE_SINGLE) {
+        clientInfo->delMsgFromHalfList(msgId, sessionId);
+    }
+}
+
+void MsgServer::onMsgDataAck(const slite::TCPConnectionPtr& conn, const MsgDataAckPtr& message, int64_t receiveTime)
+{
+    ClientConnInfo* clientInfo = std::any_cast<ClientConnInfo*>(conn->getContext());
+    IM::BaseDefine::SessionType sessionType = message->session_type();
+    // for toUser msgserver
+    if (sessionType == IM::BaseDefine::SESSION_TYPE_SINGLE) {
+        uint32_t msgId = message->msg_id();
+        uint32_t sessionId = message->session_id();
+        clientInfo->delMsgFromHalfList(msgId, sessionId);
+    }
 }

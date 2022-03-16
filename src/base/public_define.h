@@ -207,16 +207,3 @@ typedef struct
 } auth_struct;
 
 #define MAX_MSG_LEN     4096
-
-typedef struct {
-    int32_t userId;
-    int64_t lastRecvTick;
-    int64_t lastSendTick;
-    std::string clientVersion;
-    std::string loginName;
-    uint32_t clientType;
-    uint32_t onlineStatus;
-    bool kickOff;
-    bool isOpen;
-    std::vector<std::string> sendMsg;
-} Context;

@@ -153,3 +153,28 @@ uint32_t GroupModel::getUserJoinTime(uint32_t groupId, uint32_t userId)
     }
     return time;
 }
+
+bool GroupModel::isValidateGroupId(uint32_t groupId)
+{
+    bool ret = false;
+    CacheConn* cacheConn = cachePool_->getCacheConn();
+    if (cacheConn) {
+        string strKey = "group_member_" + std::to_string(groupId);
+        ret = cacheConn->isExists(strKey);
+        cachePool_->relCacheConn(cacheConn);
+    }
+    return ret;
+}
+
+void GroupModel::updateGroupChat(uint32_t groupId)
+{
+    DBConn* dbConn = dbPool_->getDBConn();
+    if (dbConn) {
+        uint32_t now = static_cast<uint32_t>(time(NULL));
+        string strSql = "update IMGroup set lastChated=" + std::to_string(now) + " where id=" + std::to_string(groupId);
+        dbConn->executeUpdate(strSql);
+        dbPool_->relDBConn(dbConn);
+    } else {
+        LOG_ERROR << "no db connection for teamtalk_master";
+    }
+}

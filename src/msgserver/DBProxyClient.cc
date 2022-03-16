@@ -25,6 +25,9 @@ DBProxyClient::DBProxyClient(std::string host, uint16_t port, EventLoop* loop)
         std::bind(&DBProxyClient::onHeartBeat, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Server::IMValidateRsp>(
         std::bind(&DBProxyClient::onValidateResponse, this, _1, _2, _3));
+    dispatcher_.registerMessageCallback<IM::Server::IMGetDeviceTokenRsp>(
+        std::bind(&DBProxyClient::onGetDeviceTokenResponse, this, _1, _2, _3));
+
     dispatcher_.registerMessageCallback<IM::Buddy::IMDepartmentRsp>(
         std::bind(&DBProxyClient::onClientDepartmentResponse, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Buddy::IMRecentContactSessionRsp>(
@@ -36,6 +39,8 @@ DBProxyClient::DBProxyClient(std::string host, uint16_t port, EventLoop* loop)
         std::bind(&DBProxyClient::onUnreadMsgCntResponse, this, _1, _2, _3));
     dispatcher_.registerMessageCallback<IM::Message::IMGetMsgListRsp>(
         std::bind(&DBProxyClient::onGetMsgListResponse, this, _1, _2, _3));
+    dispatcher_.registerMessageCallback<IM::Message::IMMsgData>(
+        std::bind(&DBProxyClient::onMsgData, this, _1, _2, _3));
 
     dispatcher_.registerMessageCallback<IM::Group::IMNormalGroupListRsp>(
         std::bind(&DBProxyClient::onNormalGroupListResponse, this, _1, _2, _3));
@@ -102,7 +107,7 @@ void DBProxyClient::onUnknownMessage(const TCPConnectionPtr& conn,
                                 int64_t receiveTime)
 {
     LOG_ERROR << "onUnknownMessage: " << message->GetTypeName();
-    conn->shutdown();
+    //conn->shutdown();
 }
 
 void DBProxyClient::onHeartBeat(const TCPConnectionPtr& conn,
@@ -336,4 +341,188 @@ void DBProxyClient::onGetMsgListResponse(const TCPConnectionPtr& conn,
     if (msgConn && msgConn->connected()) {
         clientCodec_.send(msgConn, *message.get());
     }
+}
+
+void DBProxyClient::onMsgData(const slite::TCPConnectionPtr& conn, 
+                            const MsgDataPtr& message, 
+                            int64_t receiveTime)
+{
+    if (CHECK_MSG_TYPE_GROUP(message->msg_type())) {
+        //s_group_chat->HandleGroupMessage();
+        return;
+    }
+    
+    uint32_t fromUserId = message->from_user_id();
+    uint32_t toUserId = message->to_session_id();
+    uint32_t msgId = message->msg_id();
+    if (msgId == 0) {
+        LOG_ERROR << "onMsgData, write db failed, " << fromUserId << "->" << toUserId;
+        return;
+    }
+    
+    uint8_t msgType = message->msg_type();
+    
+    LOG_INFO << "onMsgData, fromUserId=" << fromUserId << ", toUserId=" << toUserId 
+        << ", msgId=" << msgId << ", msgType=" << msgType;
+    
+    TCPConnectionPtr msgConn = ImUserManager::getInstance()->getMsgConnByHandle(fromUserId, message->attach_data());
+    if (msgConn) {
+        IM::Message::IMMsgDataAck msg;
+        msg.set_user_id(fromUserId);
+        msg.set_msg_id(msgId);
+        msg.set_session_id(toUserId);
+        msg.set_session_type(::IM::BaseDefine::SESSION_TYPE_SINGLE);
+        clientCodec_.send(msgConn, msg);
+    }
+    
+    TCPConnectionPtr routeConn = getRandomRouteConn();
+    if (routeConn) {
+        codec_.send(routeConn, *message.get());
+    }
+    
+    message->clear_attach_data();
+
+    ImUser* fromImUser = ImUserManager::getInstance()->getImUserById(fromUserId);
+    ImUser* toImUser = ImUserManager::getInstance()->getImUserById(toUserId);
+  
+    if (fromImUser) {
+        fromImUser->broadcastClientMsgData(message, msgId, msgConn, fromUserId);
+    }
+
+    if (toImUser) {
+        toImUser->broadcastClientMsgData(message, msgId, nullptr, fromUserId);
+    }
+    
+    // for android and ios
+    IM::Server::IMGetDeviceTokenReq msg3;
+    msg3.add_user_id(toUserId);
+    //msg3.set_attach_data(*message.get());
+    codec_.send(conn, msg3);
+}
+
+void DBProxyClient::onGetDeviceTokenResponse(const slite::TCPConnectionPtr& conn, 
+                                            const GetDeviceTokenRspPtr& message, 
+                                            int64_t receiveTime)
+{/*
+    IM::Message::IMMsgData msg2;
+    msg2.ParseFromArray(message->attach_data().data(), message->attach_data().size());
+    string msgData = msg2.msg_data();
+    uint32_t msgType = msg2.msg_type();
+    uint32_t fromId = msg2.from_user_id();
+    uint32_t toId = msg2.to_session_id();
+    if (msgType == IM::BaseDefine::MSG_TYPE_SINGLE_TEXT || msgType == IM::BaseDefine::MSG_TYPE_GROUP_TEXT) {
+        //msg_data =
+        char* msgOut = NULL;
+        uint32_t msgOutLen = 0;
+        if (pAes->Decrypt(msg_data.c_str(), msg_data.length(), &msg_out, msg_out_len) == 0)
+        {
+            msg_data = string(msg_out, msg_out_len);
+        }
+        else
+        {
+            log("HandleGetDeviceTokenResponse, decrypt msg failed, from_id: %u, to_id: %u, msg_type: %u.", from_id, to_id, msg_type);
+            return;
+        }
+        pAes->Free(msg_out);
+    }
+    
+    build_ios_push_flash(msg_data, msg2.msg_type(), from_id);
+    //{
+    //    "msg_type": 1,
+    //    "from_id": "1345232",
+    //    "group_type": "12353",
+    //}
+    jsonxx::Object json_obj;
+    json_obj << "msg_type" << (uint32_t)msg2.msg_type();
+    json_obj << "from_id" << from_id;
+    if (CHECK_MSG_TYPE_GROUP(msg2.msg_type())) {
+        json_obj << "group_id" << to_id;
+    }
+    
+    uint32_t user_token_cnt = msg.user_token_info_size();
+    log("HandleGetDeviceTokenResponse, user_token_cnt = %u.", user_token_cnt);
+    
+    IM::Server::IMPushToUserReq msg3;
+    for (uint32_t i = 0; i < user_token_cnt; i++)
+    {
+        IM::BaseDefine::UserTokenInfo user_token = msg.user_token_info(i);
+        uint32_t user_id = user_token.user_id();
+        string device_token = user_token.token();
+        uint32_t push_cnt = user_token.push_count();
+        uint32_t client_type = user_token.user_type();
+        //自己发得消息不给自己发推送
+        if (from_id == user_id) {
+            continue;
+        }
+        
+        log("HandleGetDeviceTokenResponse, user_id = %u, device_token = %s, push_cnt = %u, client_type = %u.",
+            user_id, device_token.c_str(), push_cnt, client_type);
+        
+        CImUser* pUser = CImUserManager::GetInstance()->GetImUserById(user_id);
+        if (pUser)
+        {
+            msg3.set_flash(msg_data);
+            msg3.set_data(json_obj.json());
+            IM::BaseDefine::UserTokenInfo* user_token_tmp = msg3.add_user_token_list();
+            user_token_tmp->set_user_id(user_id);
+            user_token_tmp->set_user_type((IM::BaseDefine::ClientType)client_type);
+            user_token_tmp->set_token(device_token);
+            user_token_tmp->set_push_count(push_cnt);
+            //pc client登录，则为勿打扰式推送
+            if (pUser->GetPCLoginStatus() == IM_PC_LOGIN_STATUS_ON)
+            {
+                user_token_tmp->set_push_type(IM_PUSH_TYPE_SILENT);
+                log("HandleGetDeviceTokenResponse, user id: %d, push type: silent.", user_id);
+            }
+            else
+            {
+                user_token_tmp->set_push_type(IM_PUSH_TYPE_NORMAL);
+                log("HandleGetDeviceTokenResponse, user id: %d, push type: normal.", user_id);
+            }
+        }
+        else
+        {
+            IM::Server::IMPushToUserReq msg4;
+            msg4.set_flash(msg_data);
+            msg4.set_data(json_obj.json());
+            IM::BaseDefine::UserTokenInfo* user_token_tmp = msg4.add_user_token_list();
+            user_token_tmp->set_user_id(user_id);
+            user_token_tmp->set_user_type((IM::BaseDefine::ClientType)client_type);
+            user_token_tmp->set_token(device_token);
+            user_token_tmp->set_push_count(push_cnt);
+            user_token_tmp->set_push_type(IM_PUSH_TYPE_NORMAL);
+            CImPdu pdu;
+            pdu.SetPBMsg(&msg4);
+            pdu.SetServiceId(SID_OTHER);
+            pdu.SetCommandId(CID_OTHER_PUSH_TO_USER_REQ);
+            
+            CPduAttachData attach_data(ATTACH_TYPE_PDU_FOR_PUSH, 0, pdu.GetBodyLength(), pdu.GetBodyData());
+            IM::Buddy::IMUsersStatReq msg5;
+            msg5.set_user_id(0);
+            msg5.add_user_id_list(user_id);
+            msg5.set_attach_data(attach_data.GetBuffer(), attach_data.GetLength());
+            CImPdu pdu2;
+            pdu2.SetPBMsg(&msg5);
+            pdu2.SetServiceId(SID_BUDDY_LIST);
+            pdu2.SetCommandId(CID_BUDDY_LIST_USERS_STATUS_REQUEST);
+            CRouteServConn* route_conn = get_route_serv_conn();
+            if (route_conn)
+            {
+                route_conn->SendPdu(&pdu2);
+            }
+        }
+    }
+    
+    if (msg3.user_token_list_size() > 0)
+    {
+        CImPdu pdu3;
+        pdu3.SetPBMsg(&msg3);
+        pdu3.SetServiceId(SID_OTHER);
+        pdu3.SetCommandId(CID_OTHER_PUSH_TO_USER_REQ);
+        
+        CPushServConn* PushConn = get_push_serv_conn();
+        if (PushConn) {
+            PushConn->SendPdu(&pdu3);
+        }
+    }*/
 }

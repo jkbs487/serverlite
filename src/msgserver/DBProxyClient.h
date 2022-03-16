@@ -20,6 +20,10 @@ extern std::set<slite::TCPConnectionPtr> g_dbProxyConns;
 extern std::set<slite::TCPConnectionPtr> g_routeConns;
 extern std::set<slite::TCPConnectionPtr> g_fileConns;
 
+extern slite::TCPConnectionPtr getRandomRouteConn();
+extern slite::TCPConnectionPtr getRandomDBProxyConn();
+extern slite::TCPConnectionPtr getRandomDBProxyConnForLogin();
+
 namespace IM {
 
 class DBProxyClient
@@ -44,8 +48,10 @@ private:
     void onClientAllUserResponse(const slite::TCPConnectionPtr& conn, const AllUserRspPtr& message, int64_t receiveTime);
 
     // Message
+    void onMsgData(const slite::TCPConnectionPtr& conn, const MsgDataPtr& message, int64_t receiveTime);
     void onUnreadMsgCntResponse(const slite::TCPConnectionPtr& conn, const UnreadMsgCntRspPtr& message, int64_t receiveTime);
     void onGetMsgListResponse(const slite::TCPConnectionPtr& conn, const GetMsgListRspPtr& message, int64_t receiveTime);
+    void onGetDeviceTokenResponse(const slite::TCPConnectionPtr& conn, const GetDeviceTokenRspPtr& message, int64_t receiveTime);
 
     // Group
     void onNormalGroupListResponse(const slite::TCPConnectionPtr& conn, const NormalGroupListRspPtr& message, int64_t receiveTime);
