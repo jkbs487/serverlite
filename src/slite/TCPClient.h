@@ -1,6 +1,7 @@
 #pragma once
 
 #include "TCPConnection.h"
+#include "Connector.h"
 
 #include <functional>
 #include <memory>
@@ -14,7 +15,7 @@ typedef std::function<void (const TCPConnectionPtr& conn, std::string&, int64_t)
 typedef std::function<void (const TCPConnectionPtr& conn)> WriteCompleteCallback;
 
 class EventLoop;
-class Connector;
+//class Connector;
 
 class TCPClient
 {
@@ -43,7 +44,7 @@ private:
     uint16_t port_;
     std::string name_;
     std::mutex mutex_;
-    std::shared_ptr<Connector> connector_;
+    ConnectorPtr connector_;
 
     ConnectionCallback connectionCallback_;
     MessageCallback messageCallback_;

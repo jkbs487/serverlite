@@ -1,12 +1,25 @@
 #include "TCPClient.h"
 
 #include "EventLoop.h"
-#include "Connector.h"
 #include "Logger.h"
 
 #include <cassert>
 
 using namespace slite;
+
+namespace slite {
+
+void removeConnection(EventLoop* loop, const TCPConnectionPtr& conn)
+{
+  loop->pushTask(std::bind(&TCPConnection::connectDestroyed, conn));
+}
+
+void removeConnector(const ConnectorPtr& connector)
+{
+  //connector->
+}
+
+}
 
 TCPClient::TCPClient(std::string host, uint16_t port, EventLoop *loop, std::string name):
     loop_(loop),
@@ -31,15 +44,16 @@ TCPClient::~TCPClient()
         unique = connection_.unique();
         conn = connection_;
     }
+    // force close when tcpclient destroied, if conn is unique 
     if (conn) {
-        CloseCallback cb = std::bind(&TCPConnection::connectDestroyed, conn);
+        CloseCallback cb = std::bind(&slite::removeConnection, loop_, std::placeholders::_1);
         loop_->runTask(std::bind(&TCPConnection::setCloseCallback, conn, cb));
         if (unique) {
             conn->forceClose();
         }
     } else {
         connector_->stop();
-        //loop_->runAfter(1, std::bind());
+        loop_->runAfter(1, std::bind(&removeConnector, connector_));
     }
 }
 
