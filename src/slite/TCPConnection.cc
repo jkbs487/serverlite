@@ -143,6 +143,8 @@ void TCPConnection::sendInLoop(const std::string& data)
             }
         }
     }
+
+    // 如果 SIGPIPE 或者 RST，不注册任何写事件，直接退出
     // 还有剩余未发完，注册写事件
     if (!sendError && remaining > 0) {
         sendBuf_.append(data.c_str() + nsend, remaining);
@@ -202,7 +204,7 @@ void TCPConnection::handleSend()
     if (channel_->isSending()) {
         ssize_t nsend = ::send(channel_->fd(), sendBuf_.data(), sendBuf_.size(), 0);
         if (nsend > 0) {
-            sendBuf_.append(sendBuf_.data() + nsend, sendBuf_.size() - nsend);
+            sendBuf_.erase(0, nsend);
             // 如果写缓存已经全部发送完毕，取消写事件
             if (sendBuf_.size() == 0) {
                 channel_->disableSend();
@@ -293,7 +295,7 @@ void TCPConnection::handleError()
     } else {
         char buffer[512];
         ::bzero(buffer, sizeof buffer);
-        LOG_ERROR << strerror_r(optval, buffer, sizeof buffer);
+        LOG_ERROR << "handleError: " << strerror_r(optval, buffer, sizeof buffer);
     }
 }
 
