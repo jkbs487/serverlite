@@ -38,7 +38,7 @@ void AsyncLogger::stop()
     if (thread_.joinable())
         thread_.join();
 }
-#include <iostream>
+
 void AsyncLogger::append(const std::string& log)
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -48,13 +48,10 @@ EventLoop::EventLoop():
     LOG_DEBUG << "EventLoop created " << this << " in thread " << threadId_;
     ::signal(SIGPIPE, SIG_IGN);
     // make shure one loop per thread
-    if (t_loopInThisThread)
-    {
+    if (t_loopInThisThread) {
         LOG_FATAL << "Another EventLoop " << t_loopInThisThread
                 << " exists in this thread " << threadId_;
-    }
-    else
-    {
+    } else {
         t_loopInThisThread = this;
     }
     wakeupChannel_->setRecvCallback(std::bind(&EventLoop::handleRead, this));
@@ -69,6 +66,7 @@ EventLoop::~EventLoop()
     wakeupChannel_->disableAll();
     wakeupChannel_->remove();
     ::close(wakeupFd_);
+    t_loopInThisThread = nullptr;
 }
 
 void EventLoop::assertInLoopThread()
@@ -89,8 +87,7 @@ void EventLoop::loop()
     assertInLoopThread();
     quit_ = false;
     LOG_TRACE << "EventLoop " << this << " start looping";
-    while (!quit_)
-    {
+    while (!quit_) {
         for (auto c: channels_) LOG_TRACE << "channel: " << c.first << " " << c.second;
         int numEvents = epoll_wait(epollFd_, &*events_.begin(), static_cast<int>(events_.size()), 10000);
         if (numEvents < 0) {

@@ -38,7 +38,9 @@ TCPServer::~TCPServer()
     LOG_DEBUG << "dtor [" << name_ << "]";
     for (TCPConnectionPtr& conn : connections_) {
         conn.reset();
-        conn->getLoop()->runTask(std::bind(&TCPConnection::connectDestroyed, conn));
+        EventLoop* loop = conn->getLoop();
+        if (loop)
+            loop->runTask(std::bind(&TCPConnection::connectDestroyed, conn));
     }
 }
 
@@ -99,8 +101,10 @@ void TCPServer::removeConnectionInLoop(const TCPConnectionPtr& conn)
     }
     EventLoop* loop = conn->getLoop();
     // 确保事件执行完毕后执行销毁
-    loop->pushTask(std::bind(&TCPConnection::connectDestroyed, conn));
-    LOG_TRACE << "[10]TCPConnection use count: " << conn.use_count();
+    if (loop) {
+        loop->pushTask(std::bind(&TCPConnection::connectDestroyed, conn));
+        LOG_TRACE << "[10]TCPConnection use count: " << conn.use_count();
+    }
 }
 
 void TCPServer::setThreadNum(int numThreads)
