@@ -45,7 +45,6 @@ HTTPServer::~HTTPServer()
 
 HTTPResponse HTTPServer::onRequest(HTTPRequest* req)
 {
-    printf("path = %s\n", req->path().c_str());
     HTTPResponse resp;
     std::string body;
 
