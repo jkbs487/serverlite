@@ -20,6 +20,16 @@ const char* logLevelName[6] =
   "FATAL ",
 };
 
+Logger::LogLevel defaultLevel()
+{
+    if (::getenv("SLITE_LOG_TRACE"))
+        return Logger::TRACE;
+    else if (::getenv("SLITE_LOG_DEBUG"))
+        return Logger::DEBUG;
+    else 
+        return Logger::INFO;
+}
+
 void defaultOutput(const std::string& output)
 {
     size_t n = ::fwrite(output.c_str(), 1, output.size(), stdout);
@@ -31,9 +41,9 @@ void defaultFlush()
     ::fflush(stdout);
 }
 
-static Logger::LogLevel g_level;
-static OutputFunc g_output = defaultOutput;
-static FlushFunc g_flush = defaultFlush;
+Logger::LogLevel g_level = defaultLevel();
+OutputFunc g_output = defaultOutput;
+FlushFunc g_flush = defaultFlush;
 
 Logger::LogLevel Logger::logLevel()
 {
