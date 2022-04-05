@@ -44,9 +44,18 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 find_package(Protobuf)
+find_package(ZLIB)
+find_path(HIREDIS_INCLUDE_DIR hiredis/hiredis.h)
+find_library(HIREDIS_LIBRARY NAMES hiredis)
 
 if(PROTOBUF_FOUND)
   message(STATUS "found protobuf")
+endif()
+if(ZLIB_FOUND)
+  message(STATUS "found zlib")
+endif()
+if(HIREDIS_INCLUDE_DIR AND HIREDIS_LIBRARY)
+  message(STATUS "found hiredis")
 endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/src)

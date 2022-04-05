@@ -19,8 +19,7 @@ target_link_libraries(pingpong_bench slite_net)
 add_executable(subpub subpub.cc)
 target_link_libraries(subpub slite_net)
 
-add_subdirectory(http)
+add_executable(sing sing.cc)
+target_link_libraries(sing slite_net)
 
-if(PROTOBUF_FOUND)
-    add_subdirectory(protobuf)
-endif()
+add_subdirectory(http)

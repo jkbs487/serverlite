@@ -171,21 +171,22 @@ private:
 
 int main(int argc, char *argv[])
 {
+    Logger::setLogLevel(Logger::DEBUG);
     EventLoop loop;
 
-    EchoServer echoServer("0.0.0.0", 10001, &loop);
+    EchoServer echoServer("0.0.0.0", 20001, &loop);
     echoServer.start();
 
-    DiscardServer discardServer("0.0.0.0", 10002, &loop);
+    DiscardServer discardServer("0.0.0.0", 20002, &loop);
     discardServer.start();
     
-    DaytimeServer daytimeServer("0.0.0.0", 10003, &loop);
+    DaytimeServer daytimeServer("0.0.0.0", 20003, &loop);
     daytimeServer.start();
 
-    TimeServer timeServer("0.0.0.0", 10004, &loop);
+    TimeServer timeServer("0.0.0.0", 20004, &loop);
     timeServer.start();
 
-    ChargenServer chargenServer("0.0.0.0", 10005, &loop);
+    ChargenServer chargenServer("0.0.0.0", 20005, &loop);
     chargenServer.start();
 
     loop.loop();

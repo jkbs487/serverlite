@@ -14,7 +14,7 @@ void print()
 
 void printString(const std::string& str)
 {
-    printf("%s\n", str.c_str());
+    LOG_INFO << str;
     usleep(100*1000);
 }
 

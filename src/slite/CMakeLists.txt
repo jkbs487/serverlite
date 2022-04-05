@@ -43,4 +43,6 @@ install(FILES ${HEADERS} DESTINATION include/slite)
 add_subdirectory(test)
 
 if(PROTOBUF_FOUND)
+    add_subdirectory(protobuf)
+    #add_subdirectory(protorpc)
 endif()

@@ -48,6 +48,7 @@ void TCPServer::start()
 {
     threadPool_->start();
     loop_->runTask(std::bind(&Acceptor::listen, acceptor_.get()));
+    LOG_INFO << name_ << " listened at " << host_ << ":" << port_;
 }
 
 void TCPServer::newConnection(int connfd) 

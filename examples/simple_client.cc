@@ -19,7 +19,7 @@ void onConnection(const TCPConnectionPtr& conn)
         return;
     }
 
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < 1000; i++) {
         count++;
         conn->send("1234567890abcdefghijklmnopqrst");
     }
@@ -36,8 +36,8 @@ int main()
 {
     EventLoop loop;
     g_loop = &loop;
-    TCPClient discardClient("127.0.0.1", 10005, &loop, "client");
-    discardClient.setConnectionCallback(onConnection);
+    TCPClient discardClient("127.0.0.1", 20005, &loop, "client");
+    //discardClient.setConnectionCallback(onConnection);
     //discardClient.setWriteCompleteCallback(close);
     discardClient.connect();
     loop.loop();
