@@ -4,6 +4,11 @@ A High performance & Simple TcpServer, used in Linux
 
 base on muduo
 
+### start
+
+```bash
+./build.sh
+```
 
 ### bench
 
