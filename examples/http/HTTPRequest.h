@@ -9,7 +9,7 @@ public:
         POST
     };
     
-    HTTPRequest(std::string content);
+    HTTPRequest();
     ~HTTPRequest() {};
 
     HTTPMethod method() 
@@ -21,7 +21,11 @@ public:
     std::string version()
     { return version_; }
 
+    void setMethod(HTTPMethod method) { method_ = method; }
+    void setPath(std::string path) { path_ = path; }
+    void setVersion(std::string version) { version_ = version; }
     std::string getHeader(std::string field);
+    void addHeader(std::string field, std::string value);
 
 private:
     void parseHttpRequest(std::string content);

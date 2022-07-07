@@ -48,6 +48,10 @@ HTTPResponse HTTPServer::onRequest(HTTPRequest* req)
     HTTPResponse resp;
     std::string body;
 
+    LOG_DEBUG << "request version: " << req->version();
+    LOG_DEBUG << "request path: " << req->path();
+    LOG_DEBUG << "request method: " << req->method();
+
     if (req->path() == "/") {
         if (req->method() == HTTPRequest::GET) {
             body += "GET ";
@@ -56,7 +60,14 @@ HTTPResponse HTTPServer::onRequest(HTTPRequest* req)
         resp.setStatus(HTTPResponse::OK);
         resp.setContentType("text/html");
         body += "<h1>Hello World</h1>";
-/*
+        resp.setBody(body);
+        resp.setContentLength(body.size());
+    } else if(req->path() == "/hello") {
+        resp.setStatus(HTTPResponse::OK);
+        resp.setBody("hello world\n");
+        resp.setContentType("text/plain");
+        resp.setContentLength(12);
+    } else if (req->path() == "/time") {
         time_t rawtime;
         struct tm *info;
         char buffer[80];
@@ -65,19 +76,15 @@ HTTPResponse HTTPServer::onRequest(HTTPRequest* req)
         info = localtime(&rawtime);
         strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", info);
         std::string now = std::string(buffer);
-        body += now;
-*/
+        body = now;
         resp.setBody(body);
         resp.setContentLength(body.size());
-    } else if(req->path() == "/hello") {
-        resp.setStatus(HTTPResponse::OK);
-        resp.setBody("hello world\n");
-        resp.setContentType("text/plain");
-        resp.setContentLength(12);
     } else if (req->path() == "/favicon.ico") {
         resp.setStatus(HTTPResponse::BAD_REQUEST);
     } else {
-        resp.setStatus(HTTPResponse::BAD_REQUEST);
+        body = "<h1>Not Found</h1>";
+        resp.setStatus(HTTPResponse::NOT_FOUND);
+        resp.setBody(body);
     }
     
     return resp;
@@ -85,7 +92,7 @@ HTTPResponse HTTPServer::onRequest(HTTPRequest* req)
 
 int main(int argc, char** argv)
 {
-    Logger::setLogLevel(Logger::INFO);
+    Logger::setLogLevel(Logger::DEBUG);
 
     if (argc != 4) {
         printf("Usage: %s ip port thread\n", argv[0]);
