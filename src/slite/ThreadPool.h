@@ -19,7 +19,7 @@ namespace slite
 class ThreadPool
 {
 public:
-    typedef std::function<void ()> Task;
+    using Task = std::function<void ()>;
 
     explicit ThreadPool(const std::string& nameArg = std::string("ThreadPool"));
     ~ThreadPool();

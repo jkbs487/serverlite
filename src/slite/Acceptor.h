@@ -12,7 +12,7 @@ class Channel;
 class Acceptor
 {
 public:
-    typedef std::function<void (int connfd)> NewConnectionCallback;
+    using NewConnectionCallback = std::function<void (int connfd)>;
 
     Acceptor(std::string host, uint16_t port, EventLoop *loop);
     ~Acceptor();
