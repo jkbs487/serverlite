@@ -9,6 +9,8 @@
 using namespace slite;
 using namespace std::placeholders;
 
+using RouteCallback = std::function<std::string()>;
+
 class HTTPServer
 {
 public:
@@ -23,12 +25,15 @@ public:
     void setThreadNum(int num)
     { server_.setThreadNum(num); }
 
+    void addRouteCallback(std::string rule, HTTPMethod method, RouteCallback cb);
     HTTPResponse onRequest(HTTPRequest* req);
 
 private:
     EventLoop loop_;
     TCPServer server_;
     HTTPCodec codec_;
+
+    std::map<std::string, std::map<HTTPRequest, RouteCallback>> rules_;
 };
 
 HTTPServer::HTTPServer(std::string host, uint16_t port)
@@ -43,15 +48,30 @@ HTTPServer::~HTTPServer()
 {
 }
 
+void HTTPServer::addRouteCallback(std::string rule, HTTPMethod method, RouteCallback cb)
+{
+    rules_[rule][method] = cb;
+}
+
 HTTPResponse HTTPServer::onRequest(HTTPRequest* req)
 {
     HTTPResponse resp;
     std::string body;
 
-    LOG_DEBUG << "request version: " << req->version();
-    LOG_DEBUG << "request path: " << req->path();
-    LOG_DEBUG << "request method: " << req->method();
+    LOG_DEBUG << "http request version: " << req->version();
+    LOG_DEBUG << "http request path: " << req->path();
+    LOG_DEBUG << "http request method: " << req->method();
 
+    if (!rules_.count(req->path()) || !rules_[req->path()].count(req->method())) {
+        body = "<h1>Not Found</h1>";
+        resp.setStatus(HTTPResponse::NOT_FOUND);
+        resp.setBody(body);
+    }
+
+    resp.setBody(rules_[req->path()][req->method()]);
+    resp.setStatus(HTTPResponse::OK);
+
+/*
     if (req->path() == "/") {
         if (req->method() == HTTPRequest::GET) {
             body += "GET ";
@@ -86,10 +106,11 @@ HTTPResponse HTTPServer::onRequest(HTTPRequest* req)
         resp.setStatus(HTTPResponse::NOT_FOUND);
         resp.setBody(body);
     }
-    
+*/
+
     return resp;
 }
-
+/*
 int main(int argc, char** argv)
 {
     Logger::setLogLevel(Logger::DEBUG);
@@ -102,3 +123,4 @@ int main(int argc, char** argv)
         httpServer.start();
     }
 }
+*/

@@ -15,7 +15,7 @@ namespace slite
 class Channel;
 class Timer;
 
-typedef std::function<void()> TimerCallback;
+using TimerCallback = std::function<void()>;
 
 class EventLoop
 {

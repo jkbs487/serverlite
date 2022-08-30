@@ -2,6 +2,7 @@ set(http_SRCS
     HTTPRequest.cc
     HTTPResponse.cc
     HTTPCodec.cc
+    HTTPServer.cc
 )
 
 add_library(http ${http_SRCS})
@@ -14,6 +15,3 @@ set(HEADERS
     HTTPCodec.h
 )
 install(FILES ${HEADERS} DESTINATION include/slite/http)
-
-add_executable(httpserver HTTPServer.cc)
-target_link_libraries(httpserver http)

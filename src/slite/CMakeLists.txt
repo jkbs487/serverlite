@@ -41,6 +41,7 @@ set(HEADERS
 install(FILES ${HEADERS} DESTINATION include/slite)
 
 add_subdirectory(test)
+add_subdirectory(http)
 
 if(PROTOBUF_FOUND)
     add_subdirectory(protobuf)

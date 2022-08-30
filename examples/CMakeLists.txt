@@ -21,5 +21,3 @@ target_link_libraries(subpub slite_net)
 
 add_executable(sing sing.cc)
 target_link_libraries(sing slite_net)
-
-add_subdirectory(http)
