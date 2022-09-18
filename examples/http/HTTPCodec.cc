@@ -72,8 +72,8 @@ void HTTPCodec::onMessage(const TCPConnectionPtr& conn, std::string& buffer, int
             resp.setVersion(request.version());
             resp.setHeader("Connection", request.getHeader("Connection"));
             conn->send(resp.toString());
-            if (request.getHeader("Connection") == "close" || resp.status() != HTTPResponse::OK)
-                conn->shutdown();
+            //if (request.getHeader("Connection") == "close")
+            //    conn->shutdown();
             isComplete = false;
             state_ = kRequestLine;
         }

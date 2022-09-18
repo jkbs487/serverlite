@@ -1,6 +1,7 @@
 #include "slite/TCPServer.h"
 #include "slite/EventLoop.h"
 #include "slite/Logger.h"
+#include "slite/Logging.h"
 #include "HTTPCodec.h"
 
 #include <cstdio>
@@ -93,6 +94,14 @@ HTTPResponse HTTPServer::onRequest(HTTPRequest* req)
 int main(int argc, char** argv)
 {
     Logger::setLogLevel(Logger::DEBUG);
+    Logging* logging = new Logging("http", 1024 * 1024 * 1, true, 3, 1);
+    Logger::setOutput([&](const std::string& line) {
+        logging->append(line);
+    });
+
+    Logger::setFlush([&]() {
+        logging->flush();
+    });
 
     if (argc != 4) {
         printf("Usage: %s ip port thread\n", argv[0]);
