@@ -1,3 +1,6 @@
+[![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
+
+
 # Serverlite
 
 A High performance & Simple TcpServer, used in Linux

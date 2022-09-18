@@ -11,7 +11,7 @@ namespace slite
 
 class EventLoop;
 
-typedef std::function<void()> TimerCallback;
+using TimerCallback = std::function<void()>;
 
 class Timer : public std::enable_shared_from_this<Timer>
 {

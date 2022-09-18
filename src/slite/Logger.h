@@ -6,8 +6,8 @@
 namespace slite
 {
 
-typedef std::function<void(const std::string&)> OutputFunc;
-typedef std::function<void()> FlushFunc;
+using OutputFunc = std::function<void(const std::string&)>;
+using FlushFunc = typedef std::function<void()>;
 
 class Logger
 {

@@ -10,10 +10,10 @@ class EventLoop;
 
 class Channel
 {
-    typedef std::function<void (int64_t)> RecvCallback;
-    typedef std::function<void ()> SendCallback;
-    typedef std::function<void ()> CloseCallback;
-    typedef std::function<void ()> ErrorCallback;
+    using RecvCallback = std::function<void (int64_t)>;
+    using SendCallback = std::function<void ()>;
+    using CloseCallback = std::function<void ()>;
+    using ErrorCallback = std::function<void ()>;
 public:
     enum ChannelState {
         NEW, 
