@@ -171,8 +171,7 @@ void Connector::handleWrite()
         int optval;
         socklen_t optlen = static_cast<socklen_t>(sizeof optval);
 
-        if (::getsockopt(connfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0)
-        {
+        if (::getsockopt(connfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0) {
             char errnoBuf[512];
             LOG_WARN << "Connector::handleWrite - SO_ERROR = " << strerror_r(errno, errnoBuf, sizeof errnoBuf);
             retry(connfd);
