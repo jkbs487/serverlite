@@ -12,6 +12,7 @@ class Channel;
 class EventLoop;
 class TCPConnection;
 
+using TCPConnectionPtr = std::shared_ptr<TCPConnection>;
 using ConnectionCallback = std::function<void (const TCPConnectionPtr& conn)>;
 using MessageCallback = std::function<void (const TCPConnectionPtr& conn, std::string&, int64_t)>;
 using CloseCallback = std::function<void (const TCPConnectionPtr& conn)>;
@@ -119,7 +120,6 @@ private:
     CloseCallback closeCallback_;
     WriteCompleteCallback writeCompleteCallback_;
 };
-using TCPConnectionPtr = std::shared_ptr<TCPConnection>;
 
 void defaultConnectionCallback(const TCPConnectionPtr& conn);
 void defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime);
