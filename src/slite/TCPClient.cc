@@ -2,6 +2,7 @@
 
 #include "EventLoop.h"
 #include "Logger.h"
+#include "TCPHandle.h"
 
 #include <cassert>
 
@@ -77,21 +78,14 @@ void TCPClient::stop()
     connector_->stop();
 }
 
-void TCPClient::newConnection(int connfd)
+void TCPClient::newConnection(std::shared_ptr<TCPHandle> handle)
 {
     loop_->assertInLoopThread();
-    struct sockaddr_in localAddr;
-    socklen_t localLen = sizeof(localAddr);
-    ::getsockname(connfd, reinterpret_cast<struct sockaddr*>(&localAddr), &localLen);
-
-    struct sockaddr_in peerAddr;
-    socklen_t peerLen = sizeof(peerAddr);
-    ::getpeername(connfd, reinterpret_cast<struct sockaddr*>(&peerAddr), &peerLen);
 
     std::string connName;
     connName = name_ + "-" + host_ + ":" + std::to_string(port_) + "#" + std::to_string(nextConnId_++);
     
-    TCPConnectionPtr conn(new TCPConnection(loop_, connfd, localAddr, peerAddr, connName));
+    TCPConnectionPtr conn(new TCPConnection(loop_, handle, connName));
     conn->setConnectionCallback(connectionCallback_);
     conn->setMessageCallback(messageCallback_);
     conn->setWriteCompleteCallback(writeCompleteCallback_);
@@ -104,12 +98,10 @@ void TCPClient::removeConnection(const TCPConnectionPtr& conn)
 {
     loop_->assertInLoopThread();
     assert(loop_ == conn->getLoop());
-
     {
         std::lock_guard<std::mutex> lock(mutex_);
         connection_.reset();
     }
-
     loop_->pushTask(std::bind(&TCPConnection::connectDestroyed, conn));
     connector_->restart();
 }

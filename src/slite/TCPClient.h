@@ -15,7 +15,7 @@ using MessageCallback = std::function<void (const TCPConnectionPtr& conn, std::s
 using WriteCompleteCallback = std::function<void (const TCPConnectionPtr& conn)>;
 
 class EventLoop;
-//class Connector;
+class TCPHandle;
 
 class TCPClient
 {
@@ -36,7 +36,7 @@ public:
     void stop();
 
 private:
-    void newConnection(int sockfd);
+    void newConnection(std::shared_ptr<TCPHandle> handle);
     void removeConnection(const TCPConnectionPtr& conn);
    
     EventLoop* loop_;

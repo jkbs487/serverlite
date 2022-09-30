@@ -6,6 +6,7 @@
 namespace slite
 {
 
+class TCPHandle;
 class EventLoop;
 
 class Channel

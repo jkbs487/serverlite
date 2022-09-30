@@ -9,13 +9,14 @@ namespace slite
 
 class EventLoop;
 class Channel;
+class TCPHandle;
 
 typedef struct sockaddr_in SockAddr; 
 
 class Connector : public std::enable_shared_from_this<Connector>
 {
 public:
-    typedef std::function<void (int connfd)> NewConnectionCallback;
+    typedef std::function<void (std::shared_ptr<TCPHandle>)> NewConnectionCallback;
 
     Connector(std::string host, uint16_t port, EventLoop *loop);
     ~Connector();
@@ -29,10 +30,10 @@ private:
     void startInLoop();
     void stopInLoop();
     void connect();
-    void retry(int connfd);
-    void connecting(int connfd);
+    void retry();
+    void connecting();
     void resetChannel();
-    int removeChannel();
+    void removeChannel();
     void handleWrite();
     void handleError();
     void setState(int state) 
@@ -44,11 +45,11 @@ private:
         CONNECTED
     };
     EventLoop *loop_;
+    std::shared_ptr<TCPHandle> handle_;
     std::string host_;
     uint16_t port_;
     bool connect_;
     int state_;
-    int connectFd_;
     int retryMs_;
     int maxRetryMs_;
 

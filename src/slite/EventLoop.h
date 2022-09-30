@@ -14,6 +14,7 @@ namespace slite
 
 class Channel;
 class Timer;
+class TCPHandle;
 
 using TimerCallback = std::function<void()>;
 

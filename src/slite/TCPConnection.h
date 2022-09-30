@@ -3,12 +3,12 @@
 #include <any>
 #include <functional>
 #include <memory>
-#include <netinet/in.h>
 
 namespace slite
 {
 
 class Channel;
+class TCPHandle;
 class EventLoop;
 class TCPConnection;
 
@@ -21,7 +21,7 @@ using WriteCompleteCallback = std::function<void (const TCPConnectionPtr& conn)>
 class TCPConnection: public std::enable_shared_from_this<TCPConnection>
 {
 public:
-    TCPConnection(EventLoop *eventLoop, int fd, struct sockaddr_in localAddr, struct sockaddr_in peerAddr, std::string name);
+    TCPConnection(EventLoop *eventLoop, std::shared_ptr<TCPHandle> handle, std::string name);
     ~TCPConnection();
     
     void send(const std::string& data);
@@ -57,18 +57,6 @@ public:
     std::string name() 
     { return name_; }
 
-    std::string peerAddr() 
-    { return peerAddr_; }
-
-    uint16_t peerPort()
-    { return peerPort_; }
-
-    std::string localAddr() 
-    { return localAddr_; }
-
-    uint16_t localPort()
-    { return localPort_; }
-
     void setContext(std::any context) 
     { context_ = context; }
 
@@ -80,6 +68,10 @@ public:
 
     std::string getTcpInfoString() const;
 
+    std::string peerAddr();
+    uint16_t peerPort();
+    std::string localAddr();
+    uint16_t localPort();
     void openTCPNoDelay();
     void closeTCPNoDelay();
 
@@ -106,13 +98,9 @@ private:
     std::any context_;
     std::string name_;
     EventLoop* loop_;
-    int sockfd_;
     std::string recvBuf_;
     std::string sendBuf_;
-    std::string localAddr_;
-    uint16_t localPort_;
-    std::string peerAddr_;
-    uint16_t peerPort_;
+    std::shared_ptr<TCPHandle> handle_;
     ConnState state_;
     std::unique_ptr<Channel>channel_;
     ConnectionCallback connectionCallback_;

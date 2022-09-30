@@ -1,5 +1,6 @@
 #include "EventLoop.h"
 #include "Channel.h"
+#include "TCPHandle.h"
 #include "Timer.h"
 #include "Logger.h"
 
@@ -65,7 +66,6 @@ EventLoop::~EventLoop()
     ::close(epollFd_);
     wakeupChannel_->disableAll();
     wakeupChannel_->remove();
-    ::close(wakeupFd_);
     t_loopInThisThread = nullptr;
 }
 
@@ -186,18 +186,18 @@ void EventLoop::removeChannel(Channel *channel)
 void EventLoop::handleRead()
 {
     uint64_t one = 1;
-    ssize_t n = ::read(wakeupFd_, &one, sizeof one);
+    ssize_t n = read(wakeupFd_, &one, sizeof one);
     if (n != sizeof one) {
-        perror("read eventfd");
+        LOG_ERROR << "recv eventfd error";
     }
 }
 
 void EventLoop::wakeup()
 {
     uint64_t one = 1;
-    ssize_t n = ::write(wakeupFd_, &one, sizeof one);
+    ssize_t n =  write(wakeupFd_, &one, sizeof one);
     if (n != sizeof one) {
-        perror("read eventfd");
+        LOG_ERROR << "send eventfd error";
     }
 }
 

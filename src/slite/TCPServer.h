@@ -12,6 +12,7 @@ namespace slite
 
 class Channel;
 class Acceptor;
+class TCPHandle;
 class EventLoop;
 class EventLoopThreadPool;
 
@@ -40,7 +41,7 @@ public:
     std::string host() { return host_; }
     uint16_t port() { return port_; }
 private:
-    void newConnection(int connfd);
+    void newConnection(std::shared_ptr<TCPHandle> handle);
     void removeConnection(const TCPConnectionPtr& conn);
     void removeConnectionInLoop(const TCPConnectionPtr& conn);
 

@@ -3,6 +3,7 @@ include(CheckFunctionExists)
 set(net_SRCS
     Timer.cc
     Channel.cc
+    TCPHandle.cc
     Acceptor.cc
     Connector.cc
     EventLoop.cc
@@ -26,6 +27,7 @@ set(HEADERS
     Logger.h
     Channel.h
     Acceptor.h
+    TCPHandle.h
     Connector.h
     EventLoop.h
     TCPClient.h
@@ -41,7 +43,7 @@ set(HEADERS
 install(FILES ${HEADERS} DESTINATION include/slite)
 
 add_subdirectory(test)
-add_subdirectory(http)
+#add_subdirectory(http)
 
 if(PROTOBUF_FOUND)
     add_subdirectory(protobuf)

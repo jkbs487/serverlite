@@ -8,11 +8,12 @@ namespace slite
 
 class EventLoop;
 class Channel;
+class TCPHandle;
 
 class Acceptor
 {
 public:
-    using NewConnectionCallback = std::function<void (int connfd)>;
+    using NewConnectionCallback = std::function<void (std::shared_ptr<TCPHandle> handle)>;
 
     Acceptor(std::string host, uint16_t port, EventLoop *loop);
     ~Acceptor();
@@ -26,9 +27,8 @@ private:
     
     EventLoop *loop_;
     bool listening_;
-    int acceptFd_;
+    std::shared_ptr<TCPHandle> serverHandle_;
     std::unique_ptr<Channel> acceptChannel_;
-    int nullFd_;
     NewConnectionCallback newConnectionCallback_;
 };
 

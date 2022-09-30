@@ -3,6 +3,7 @@
 #include "Logger.h"
 #include "Channel.h"
 #include "Acceptor.h"
+#include "TCPHandle.h"
 #include "EventLoop.h"
 #include "EventLoopThreadPool.h"
 
@@ -51,27 +52,17 @@ void TCPServer::start()
     LOG_INFO << name_ << " listened at " << host_ << ":" << port_;
 }
 
-void TCPServer::newConnection(int connfd) 
+void TCPServer::newConnection(std::shared_ptr<TCPHandle> handle) 
 {
-    int flags = fcntl(connfd, F_GETFL, 0); 
-    fcntl(connfd, F_SETFL, flags | O_NONBLOCK);
-
-    struct sockaddr_in localAddr;
-    socklen_t localLen = sizeof(localAddr);
-    ::getsockname(connfd, reinterpret_cast<struct sockaddr*>(&localAddr), &localLen);
-
-    struct sockaddr_in peerAddr;
-    socklen_t peerLen = sizeof(peerAddr);
-    ::getpeername(connfd, reinterpret_cast<struct sockaddr*>(&peerAddr), &peerLen);
-
+    handle->setNonBlock();
     std::string connName;
     connName = name_ + "-" + host_ + ":" + std::to_string(port_) + "#" + std::to_string(nextConnId_++);
 
     LOG_DEBUG << "new connection [" << connName 
-    << "] from " << inet_ntoa(peerAddr.sin_addr) << ":" << peerAddr.sin_port;
+    << "] from " << handle->peerIp() << ":" << handle->peerPort();
 
     EventLoop* loop = threadPool_->getNextLoop();
-    TCPConnectionPtr conn = std::make_shared<TCPConnection>(loop, connfd, localAddr, peerAddr, connName);
+    TCPConnectionPtr conn = std::make_shared<TCPConnection>(loop, handle, connName);
 
     LOG_TRACE << "[1]TCPConnection use count: " << conn.use_count();
     connections_.push_back(conn);

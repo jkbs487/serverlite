@@ -5,6 +5,7 @@
 #include "EventLoop.h"
 #include "Channel.h"
 #include "Logger.h"
+#include "TCPHandle.h"
 
 using namespace slite;
 
@@ -13,8 +14,8 @@ const int Channel::RecvEvent = EPOLLIN;
 const int Channel::NoneEvent = 0;
 
 Channel::Channel(EventLoop *eventLoop, int fd)
-:   eventLoop_(eventLoop), 
-    fd_(fd), 
+:   eventLoop_(eventLoop),  
+    fd_(fd),
     events_(NoneEvent), 
     revents_(NoneEvent),
     tied_(false),
