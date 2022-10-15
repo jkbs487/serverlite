@@ -41,14 +41,14 @@ private:
     std::stringstream sstream_;
 };
 
-#define LOG_TRACE if (Logger::logLevel() <= Logger::TRACE) \
-    Logger(__FILE__, __func__, __LINE__, Logger::TRACE).stream()
+#define LOG_TRACE if (slite::Logger::logLevel() <= slite::Logger::TRACE) \
+    slite::Logger(__FILE__, __func__, __LINE__, slite::Logger::TRACE).stream()
 #define LOG_DEBUG if (Logger::logLevel() <= Logger::DEBUG) \
-    Logger(__FILE__,__func__, __LINE__, Logger::DEBUG).stream()
-#define LOG_INFO if (Logger::logLevel() <= Logger::INFO) \
-    Logger(__FILE__, __LINE__, Logger::INFO).stream()
-#define LOG_WARN Logger(__FILE__, __LINE__, Logger::WARN).stream()
-#define LOG_ERROR Logger(__FILE__, __LINE__, Logger::ERROR).stream()
-#define LOG_FATAL Logger(__FILE__, __LINE__, Logger::FATAL).stream()
+    slite::Logger(__FILE__,__func__, __LINE__, slite::Logger::DEBUG).stream()
+#define LOG_INFO if (slite::Logger::logLevel() <= slite::Logger::INFO) \
+    slite::Logger(__FILE__, __LINE__, slite::Logger::INFO).stream()
+#define LOG_WARN slite::Logger(__FILE__, __LINE__, slite::Logger::WARN).stream()
+#define LOG_ERROR slite::Logger(__FILE__, __LINE__, slite::Logger::ERROR).stream()
+#define LOG_FATAL slite::Logger(__FILE__, __LINE__, slite::Logger::FATAL).stream()
 
 } // namespace tcpserver
