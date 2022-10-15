@@ -16,7 +16,9 @@ using namespace std::placeholders;
 
 class EchoServer {
 public:
-    EchoServer(std::string host, uint16_t port, EventLoop *eventLoop): server(host, port, eventLoop, "EchoServer") {
+    EchoServer(std::string host, uint16_t port, EventLoop *eventLoop): 
+        server(host, port, eventLoop, "EchoServer") 
+    {
         server.setMessageCallback(std::bind(&EchoServer::onMessage, this, _1, _2, _3));
     }
     void start() {
@@ -27,7 +29,8 @@ private:
     void onMessage(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime) {
         LOG_INFO << conn->name() << " echo " << buffer.size()
             << " bytes, received at " << receiveTime;
-        conn->send(std::move(buffer));
+        conn->send(buffer);
+        buffer.clear();
     }
 };
 
@@ -37,7 +40,6 @@ public:
         server.setMessageCallback(std::bind(&DiscardServer::onMessage, this, _1, _2, _3));
     }
     void start() {
-        //server.setThreadNum(4);
         server.start();
     }
 private:
@@ -46,7 +48,7 @@ private:
     {
         LOG_INFO << conn->name() << " discards " << buffer.size() 
             << " bytes, received at " << receiveTime;
-        std::string().swap(buffer);
+        buffer.clear();
     }
 };
 
@@ -70,7 +72,7 @@ private:
         info = localtime(&rawtime);
         strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", info);
         if (conn->connected()) {
-            conn->send(std::string(buffer));
+            conn->send(buffer);
             conn->shutdown();
         }
     }
@@ -116,7 +118,6 @@ public:
     void start() {
         loop_->runEvery(3.0, std::bind(&ChargenServer::printThroughput, this));
         Logger::setLogLevel(Logger::DEBUG);
-        //server.setThreadNum(4);
         server_.start();
     }
 private:
@@ -171,7 +172,6 @@ private:
 
 int main(int argc, char *argv[])
 {
-    Logger::setLogLevel(Logger::DEBUG);
     EventLoop loop;
 
     EchoServer echoServer("0.0.0.0", 20001, &loop);
