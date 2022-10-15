@@ -1,5 +1,7 @@
 #include "HTTPRequest.h"
 
+using namespace slite::http;
+
 HTTPRequest::HTTPRequest()
 {
 }

@@ -1,62 +1,44 @@
+#include "HTTPServer.h"
 #include "slite/TCPServer.h"
 #include "slite/EventLoop.h"
 #include "slite/Logger.h"
 #include "slite/Logging.h"
-#include "HTTPCodec.h"
 
 #include <cstdio>
 #include <map>
 
-using namespace slite;
+using namespace slite::http;
 using namespace std::placeholders;
 
-using RouteCallback = std::function<std::string()>;
-
-class HTTPServer
+HTTPServer::HTTPServer(std::string host, uint16_t port, slite::EventLoop* loop, const std::string& name)
+    : server_(std::make_unique<slite::TCPServer>(host, port, loop, name)),
+    codec_(std::bind(&HTTPServer::onRequest, this, _1, _2))
 {
-public:
-    HTTPServer(std::string host, uint16_t port);
-    ~HTTPServer();
-
-    void start() {
-        server_.start();
-        loop_.loop();
-    }
-
-    void setThreadNum(int num)
-    { server_.setThreadNum(num); }
-
-    void addRouteCallback(std::string rule, HTTPMethod method, RouteCallback cb);
-    HTTPResponse onRequest(HTTPRequest* req);
-
-private:
-    EventLoop loop_;
-    TCPServer server_;
-    HTTPCodec codec_;
-
-    std::map<std::string, std::map<HTTPRequest, RouteCallback>> rules_;
-};
-
-HTTPServer::HTTPServer(std::string host, uint16_t port)
-    : server_(host, port, &loop_, "HTTPServer"),
-    codec_(std::bind(&HTTPServer::onRequest, this, std::placeholders::_1))
-{
-    server_.setMessageCallback(std::bind(&HTTPCodec::onMessage, &codec_, _1, _2, _3));
-    //server_.setConnectionCallback();
+    server_->setMessageCallback(std::bind(&HTTPCodec::onMessage, &codec_, _1, _2, _3));
+    server_->setConnectionCallback(std::bind(&HTTPServer::onConnection, this, _1));
 }
 
 HTTPServer::~HTTPServer()
 {
 }
 
-void HTTPServer::addRouteCallback(std::string rule, HTTPMethod method, RouteCallback cb)
+void HTTPServer::start() 
+{
+    server_->start();
+}
+
+void HTTPServer::setThreadNum(int num)
+{ 
+    server_->setThreadNum(num); 
+}
+
+void HTTPServer::addRouteCallback(const std::string& rule, HTTPMethod method, const RouteCallback& cb)
 {
     rules_[rule][method] = cb;
 }
 
-HTTPResponse HTTPServer::onRequest(HTTPRequest* req)
+void HTTPServer::onRequest(HTTPRequest* req, HTTPResponse* resp)
 {
-    HTTPResponse resp;
     std::string body;
 
     LOG_DEBUG << "http request version: " << req->version();
@@ -64,72 +46,23 @@ HTTPResponse HTTPServer::onRequest(HTTPRequest* req)
     LOG_DEBUG << "http request method: " << req->method();
 
     if (!rules_.count(req->path()) || !rules_[req->path()].count(req->method())) {
-        body = "<h1>Not Found</h1>";
-        resp.setStatus(HTTPResponse::NOT_FOUND);
-        resp.setBody(body);
+        body += "<h1>404 Not Found</h1>";
+        body += "slite";
+        resp->setStatus(HTTPResponse::NOT_FOUND);
+        resp->setBody(body);
+        resp->setContentLength(body.size());
+        return;
     }
 
-    resp.setBody(rules_[req->path()][req->method()]);
-    resp.setStatus(HTTPResponse::OK);
-
-/*
-    if (req->path() == "/") {
-        if (req->method() == HTTPRequest::GET) {
-            body += "GET ";
-        }
-        body += req->version() + "</br>";
-        resp.setStatus(HTTPResponse::OK);
-        resp.setContentType("text/html");
-        body += "<h1>Hello World</h1>";
-        resp.setBody(body);
-        resp.setContentLength(body.size());
-    } else if(req->path() == "/hello") {
-        resp.setStatus(HTTPResponse::OK);
-        resp.setBody("hello world\n");
-        resp.setContentType("text/plain");
-        resp.setContentLength(12);
-    } else if (req->path() == "/time") {
-        time_t rawtime;
-        struct tm *info;
-        char buffer[80];
-
-        time(&rawtime);    
-        info = localtime(&rawtime);
-        strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", info);
-        std::string now = std::string(buffer);
-        body = now;
-        resp.setBody(body);
-        resp.setContentLength(body.size());
-    } else if (req->path() == "/favicon.ico") {
-        resp.setStatus(HTTPResponse::BAD_REQUEST);
-    } else {
-        body = "<h1>Not Found</h1>";
-        resp.setStatus(HTTPResponse::NOT_FOUND);
-        resp.setBody(body);
-    }
-*/
-
-    return resp;
+    body = rules_[req->path()][req->method()]();
+    resp->setBody(body);
+    resp->setStatus(HTTPResponse::OK);
+    resp->setContentLength(body.size());
 }
-/*
-int main(int argc, char** argv)
+
+void HTTPServer::onConnection(const TCPConnectionPtr& conn)
 {
-    Logger::setLogLevel(Logger::DEBUG);
-    Logging* logging = new Logging("http", 1024 * 1024 * 1, true, 3, 1);
-    Logger::setOutput([&](const std::string& line) {
-        logging->append(line);
-    });
-
-    Logger::setFlush([&]() {
-        logging->flush();
-    });
-
-    if (argc != 4) {
-        printf("Usage: %s ip port thread\n", argv[0]);
-    } else {
-        HTTPServer httpServer(argv[1], static_cast<uint16_t>(atoi(argv[2])));
-        httpServer.setThreadNum(static_cast<uint16_t>(atoi(argv[3])));
-        httpServer.start();
+    if (conn->connected()) {
+        conn->setContext(HTTPRequest());
     }
 }
-*/

@@ -1,14 +1,19 @@
+#pragma once
+
 #include "HTTPRequest.h"
 #include "HTTPResponse.h"
 #include "slite/TCPConnection.h"
 
 #include <functional>
 
-using namespace slite;
+namespace slite
+{
+namespace http
+{
 
 class HTTPCodec
 {
-    typedef std::function<HTTPResponse (HTTPRequest* req)> RequestCallback;
+    using RequestCallback = std::function<void (HTTPRequest* req, HTTPResponse* resp)>;
 public:
     enum HTTPRequestState {
         kRequestLine,
@@ -30,3 +35,6 @@ private:
     HTTPRequestState state_;
     static const std::string kCRLF;
 };
+
+} // namespace http
+} // namespace slite

@@ -1,6 +1,8 @@
 #include "HTTPCodec.h"
 #include "slite/Logger.h"
 
+using namespace slite::http;
+
 const std::string HTTPCodec::kCRLF = "\r\n";
 
 HTTPCodec::HTTPCodec(const RequestCallback& cb)
@@ -16,7 +18,7 @@ HTTPCodec::~HTTPCodec()
 void HTTPCodec::parseRequestLine(HTTPRequest* request, std::string requestLine)
 {
     size_t curPos = requestLine.find_first_of(" ");
-    HTTPRequest::HTTPMethod method = requestLine.substr(0, curPos) == "GET" ? HTTPRequest::GET : HTTPRequest::POST;
+    HTTPMethod method = requestLine.substr(0, curPos) == "GET" ? HTTPMethod::GET : HTTPMethod::POST;
     request->setMethod(method);
 
     size_t prevPos = curPos;
@@ -43,7 +45,7 @@ bool HTTPCodec::parseRequestHeader(HTTPRequest* request, std::string requestHead
 
 void HTTPCodec::onMessage(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime)
 {
-    HTTPRequest request;
+    HTTPRequest request = std::any_cast<HTTPRequest>(conn->getContext());
     bool isComplete = true;
     
     while (isComplete) {
@@ -68,12 +70,13 @@ void HTTPCodec::onMessage(const TCPConnectionPtr& conn, std::string& buffer, int
                 isComplete = false;
             }
         } else if (state_ == kGotAll) {
-            HTTPResponse resp = requestCallback_(&request);
+            HTTPResponse resp;
+            requestCallback_(&request, &resp);
             resp.setVersion(request.version());
             resp.setHeader("Connection", request.getHeader("Connection"));
             conn->send(resp.toString());
-            //if (request.getHeader("Connection") == "close")
-            //    conn->shutdown();
+            if (request.getHeader("Connection") == "close")
+                conn->shutdown();
             isComplete = false;
             state_ = kRequestLine;
         }

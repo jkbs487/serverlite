@@ -1,5 +1,7 @@
 #include "HTTPResponse.h"
 
+using namespace slite::http;
+
 std::string HTTPResponse::statusToString(HTTPStatus status)
 {
     std::string result;
@@ -11,6 +13,10 @@ std::string HTTPResponse::statusToString(HTTPStatus status)
     
     case BAD_REQUEST: 
         result = "Bad Request";
+        break;
+
+    case NOT_FOUND: 
+        result = "Not Found";
         break;
 
     default:
@@ -25,8 +31,8 @@ std::string HTTPResponse::toString()
 {
     std::string resp;
     resp += version_ + " " + std::to_string(status_) + " " + statusToString(status_) + "\r\n";
-    resp += "Content-Length: " + std::to_string(length_) + "\r\n";
-    resp += "Content-Type: " + type_ + "\r\n";
+    if (length_) resp += "Content-Length: " + std::to_string(length_) + "\r\n";
+    if (!type_.empty()) resp += "Content-Type: " + type_ + "\r\n";
     for (auto head : header_) {
         resp += head.first + ": " + head.second + "\r\n";
     }

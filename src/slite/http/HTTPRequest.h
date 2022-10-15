@@ -1,14 +1,21 @@
+#pragma once
+
 #include <string>
 #include <map>
+
+namespace slite
+{
+namespace http
+{
+
+enum HTTPMethod {
+    GET,
+    POST
+};
 
 class HTTPRequest
 {
 public:
-    enum HTTPMethod {
-        GET,
-        POST
-    };
-    
     HTTPRequest();
     ~HTTPRequest() {};
 
@@ -35,3 +42,6 @@ private:
     std::string version_;
     std::map<std::string, std::string> header_;
 };
+
+}
+}

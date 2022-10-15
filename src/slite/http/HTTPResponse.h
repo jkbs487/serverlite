@@ -1,5 +1,12 @@
+#pragma once
+
 #include <string>
 #include <map>
+
+namespace slite
+{
+namespace http
+{
 
 class HTTPResponse
 {
@@ -43,3 +50,6 @@ private:
     std::string body_;
     std::map<std::string, std::string> header_;
 };
+
+} //
+} // slite
