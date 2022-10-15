@@ -19,12 +19,12 @@
 
 using namespace slite;
 
-TCPServer::TCPServer(std::string host, uint16_t port, EventLoop *loop, std::string name): 
+TCPServer::TCPServer(std::string ipAddr, uint16_t port, EventLoop *loop, const std::string& name): 
     name_(name),
-    host_(host), 
+    host_(ipAddr), 
     port_(port),
     loop_(loop),
-    acceptor_(new Acceptor(host, port, loop)),
+    acceptor_(new Acceptor(ipAddr, port, loop)),
     threadPool_(new EventLoopThreadPool(loop)),
     connectionCallback_(defaultConnectionCallback),
     messageCallback_(&defaultMessageCallback),

@@ -23,7 +23,7 @@ using WriteCompleteCallback = std::function<void (const TCPConnectionPtr& conn)>
 class TCPServer
 {
 public:
-    TCPServer(std::string host, uint16_t port, EventLoop *eventLoop, std::string name);
+    TCPServer(std::string ipAddr, uint16_t port, EventLoop *loop, const std::string& name);
     ~TCPServer();
     void start();
     void setConnectionCallback(const ConnectionCallback& cb) {
