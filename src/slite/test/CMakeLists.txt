@@ -1,14 +1,11 @@
-add_executable(echoserver_test EchoServerTest.cc)
-target_link_libraries(echoserver_test slite_net)
-
 add_executable(eventloop_test EventLoopTest.cc)
 target_link_libraries(eventloop_test slite_net)
 
 add_executable(eventloopthread_test EventLoopThreadTest.cc)
 target_link_libraries(eventloopthread_test slite_net)
 
-add_executable(eventLoopthreadpool_est EventLoopThreadPoolTest.cc)
-target_link_libraries(eventLoopthreadpool_est slite_net)
+add_executable(eventloopthreadpool_test EventLoopThreadPoolTest.cc)
+target_link_libraries(eventloopthreadpool_test slite_net)
 
 add_executable(logger_test LoggerTest.cc)
 target_link_libraries(logger_test slite_net)

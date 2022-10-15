@@ -40,13 +40,7 @@ void onConnection(const TCPConnectionPtr& conn)
 
 void onMessage(const TCPConnectionPtr& conn, std::string buffer, int64_t receiveTime)
 {
-    if (buffer == "recv\n") {
-        LOG_INFO << "start transfer...";
-        conn->sendFile("/home/jiangkun/workspace/test/client.c");
-    }
-    if (buffer == "exit\n") {
-        conn->shutdown();
-    }
+
 }
 
 int main(int argc, char *argv[])

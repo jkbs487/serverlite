@@ -21,3 +21,12 @@ target_link_libraries(subpub slite_net)
 
 add_executable(sing sing.cc)
 target_link_libraries(sing slite_net)
+
+add_executable(echoserver echoserver.cc)
+target_link_libraries(echoserver slite_net)
+
+add_executable(memdb memdb.cc)
+target_link_libraries(memdb slite_net)
+
+add_executable(simple_http simple_http.cc)
+target_link_libraries(simple_http slite_net slite_http)
