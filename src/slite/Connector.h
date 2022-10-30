@@ -2,7 +2,6 @@
 
 #include <functional>
 #include <memory>
-#include <netinet/in.h>
 
 namespace slite
 {
@@ -10,8 +9,6 @@ namespace slite
 class EventLoop;
 class Channel;
 class TCPHandle;
-
-typedef struct sockaddr_in SockAddr; 
 
 class Connector : public std::enable_shared_from_this<Connector>
 {
@@ -55,7 +52,6 @@ private:
 
     std::unique_ptr<Channel> connectChannel_;
     NewConnectionCallback newConnectionCallback_;
-    SockAddr serverAddr_;
 };
 
 typedef std::shared_ptr<Connector> ConnectorPtr;

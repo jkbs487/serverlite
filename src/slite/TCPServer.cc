@@ -7,16 +7,6 @@
 #include "EventLoop.h"
 #include "EventLoopThreadPool.h"
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <unistd.h>
-#include <string.h>
-#include <string>
-#include <algorithm>
-
 using namespace slite;
 
 TCPServer::TCPServer(std::string ipAddr, uint16_t port, EventLoop *loop, const std::string& name): 

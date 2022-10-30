@@ -11,7 +11,7 @@
 
 using namespace slite;
 
-TCPHandle::TCPHandle() {
+TCPHandle::TCPHandle(): nullFd_(0) {
     fd_ = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
     if (fd_ == -1) {
         LOG_FATAL << "socket error: " << strerror(errno);
@@ -23,6 +23,7 @@ TCPHandle::TCPHandle() {
 
 TCPHandle::TCPHandle(int fd, const SockAddr& peerAddr, const SockAddr& localAddr)
     : fd_(fd), 
+    nullFd_(0),
     peerAddr_(peerAddr), 
     localAddr_(localAddr)
 {

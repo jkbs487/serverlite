@@ -4,14 +4,7 @@
 #include "Channel.h"
 #include "Logger.h"
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <cstring>
 #include <cassert>
-#include <cerrno>
 
 using namespace slite;
 
@@ -24,10 +17,6 @@ Connector::Connector(std::string host, uint16_t port, EventLoop *loop):
     retryMs_(1000), 
     maxRetryMs_(100000)
 {
-    memset(&serverAddr_, 0, sizeof serverAddr_);
-    serverAddr_.sin_family = AF_INET;
-    serverAddr_.sin_port = htons(port);
-    serverAddr_.sin_addr.s_addr = inet_addr(host.c_str());
 }
 
 Connector::~Connector()
