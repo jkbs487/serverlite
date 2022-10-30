@@ -13,6 +13,7 @@ public:
     : server_(host, port, loop, "SimpleHttpServer") 
     {
         server_.addRouteCallback("/hello", HTTPMethod::GET, std::bind(&SimpleHttpServer::onHello, this));
+        server_.addRouteCallback("/", HTTPMethod::GET, std::bind(&SimpleHttpServer::onIndex, this));
     }
 
     void start()
@@ -23,7 +24,12 @@ public:
 private:
     std::string onHello()
     {
-        return "<h1>Hello Slite</h1>";
+        return "<h1>Hello ServerLite</h1>";
+    }
+
+    std::string onIndex()
+    {
+        return "<h1>ServerLite</h1>";
     }
 
     HTTPServer server_;
@@ -31,7 +37,7 @@ private:
 
 int main()
 {
-    slite::Logger::setLogLevel(slite::Logger::FATAL);
+    slite::Logger::setLogLevel(slite::Logger::DEBUG);
     slite::EventLoop loop;
     SimpleHttpServer httpServer("0.0.0.0", 8080, &loop);
     httpServer.start();
