@@ -15,8 +15,9 @@ HTTPCodec::~HTTPCodec()
 {
 }
 
-void HTTPCodec::parseRequestLine(HTTPRequest* request, std::string requestLine)
+void HTTPCodec::parseRequestLine(HTTPRequest* request, const std::string& requestLine)
 {
+    LOG_DEBUG << requestLine;
     size_t curPos = requestLine.find_first_of(" ");
     HTTPMethod method = requestLine.substr(0, curPos) == "GET" ? HTTPMethod::GET : HTTPMethod::POST;
     request->setMethod(method);
@@ -31,7 +32,7 @@ void HTTPCodec::parseRequestLine(HTTPRequest* request, std::string requestLine)
     request->setVersion(version);
 }
 
-bool HTTPCodec::parseRequestHeader(HTTPRequest* request, std::string requestHeader)
+bool HTTPCodec::parseRequestHeader(HTTPRequest* request, const std::string& requestHeader)
 {
     std::string field = requestHeader.substr(0, requestHeader.find_first_of(":"));
     if (!field.empty()) {

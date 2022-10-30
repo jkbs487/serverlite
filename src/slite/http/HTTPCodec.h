@@ -28,8 +28,8 @@ public:
     void onMessage(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime);
 
 private:
-    void parseRequestLine(HTTPRequest* request, std::string requestLine);
-    bool parseRequestHeader(HTTPRequest* request, std::string requestHeader);
+    void parseRequestLine(HTTPRequest* request, const std::string& requestLine);
+    bool parseRequestHeader(HTTPRequest* request, const std::string& requestHeader);
 
     RequestCallback requestCallback_;
     HTTPRequestState state_;

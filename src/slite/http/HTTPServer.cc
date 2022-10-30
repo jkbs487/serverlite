@@ -41,10 +41,6 @@ void HTTPServer::onRequest(HTTPRequest* req, HTTPResponse* resp)
 {
     std::string body;
 
-    LOG_DEBUG << "http request version: " << req->version();
-    LOG_DEBUG << "http request path: " << req->path();
-    LOG_DEBUG << "http request method: " << req->method();
-
     if (!rules_.count(req->path()) || !rules_[req->path()].count(req->method())) {
         body += "<h1>404 Not Found</h1>";
         body += "slite";

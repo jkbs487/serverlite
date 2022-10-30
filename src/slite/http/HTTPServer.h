@@ -7,8 +7,6 @@
 #include <functional>
 #include <memory>
 
-using RouteCallback = std::function<std::string()>;
-
 namespace slite
 {
 
@@ -16,6 +14,9 @@ class EventLoop;
 class TCPServer;
 namespace http
 {
+
+using RouteCallback = std::function<std::string()>;
+using RouteMap = std::map<std::string, std::map<HTTPMethod, RouteCallback>>;
 
 class HTTPServer
 {
@@ -26,14 +27,14 @@ public:
     void start();
     void setThreadNum(int num);
     void addRouteCallback(const std::string& rule, HTTPMethod method, const RouteCallback& cb);
+
+private:
     void onRequest(HTTPRequest* req, HTTPResponse* resp);
     void onConnection(const TCPConnectionPtr& conn);
 
-private:
     std::unique_ptr<slite::TCPServer> server_;
     HTTPCodec codec_;
-
-    std::map<std::string, std::map<HTTPMethod, RouteCallback>> rules_;
+    RouteMap rules_;
 };
 
 }
