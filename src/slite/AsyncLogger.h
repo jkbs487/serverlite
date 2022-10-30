@@ -36,9 +36,9 @@ private:
     std::mutex mutex_;
     std::condition_variable cond_;
 
-    std::unique_ptr<std::string> buffer_;
-    std::unique_ptr<std::string> nextBuffer_;
-    std::vector<std::unique_ptr<std::string>> buffers_;
+    std::string buffer_;
+    std::string nextBuffer_;
+    std::vector<std::string> buffers_;
 
     static const int kBufferSize = 686000;
 };

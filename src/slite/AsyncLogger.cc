@@ -9,12 +9,10 @@ AsyncLogger::AsyncLogger(const std::string& baseName, size_t roolSize, int flush
     : running_(false), 
     roolSize_(roolSize),
     flushInterval_(flushInterval),
-    baseName_(baseName),
-    buffer_(new std::string()),
-    nextBuffer_(new std::string())
+    baseName_(baseName)
 {
-    buffer_->reserve(kBufferSize);
-    nextBuffer_->reserve(kBufferSize);
+    buffer_.reserve(kBufferSize);
+    nextBuffer_.reserve(kBufferSize);
 }
 
 AsyncLogger::~AsyncLogger()
@@ -42,27 +40,27 @@ void AsyncLogger::stop()
 void AsyncLogger::append(const std::string& log)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (kBufferSize - buffer_->size() > log.size()) {
-        buffer_->append(log);
+    if (kBufferSize - buffer_.size() > log.size()) {
+        buffer_.append(log);
     } else {
         buffers_.push_back(std::move(buffer_));
-        if (!nextBuffer_) {
+        if (nextBuffer_.empty()) {
             buffer_ = std::move(nextBuffer_);
         } else {
-            buffer_.reset(new std::string());
+            buffer_ = std::string();
         }
-        buffer_->append(log);
+        buffer_.append(log);
         cond_.notify_one();
     }
 }
 
 void AsyncLogger::backend()
 {
-    std::vector<std::unique_ptr<std::string>> buffersToWrite;
-    std::unique_ptr<std::string> buffer1(new std::string());
-    std::unique_ptr<std::string> buffer2(new std::string());
-    buffer1->reserve(kBufferSize);
-    buffer2->reserve(kBufferSize);
+    std::vector<std::string> buffersToWrite;
+    std::string buffer1;
+    std::string buffer2;
+    buffer1.reserve(kBufferSize);
+    buffer2.reserve(kBufferSize);
     buffersToWrite.reserve(16);
     Logging logging(baseName_, roolSize_, false);
     while (running_) {
@@ -72,10 +70,10 @@ void AsyncLogger::backend()
                 return !buffers_.empty() || !running_;
             });
             buffers_.push_back(std::move(buffer_));
-            buffer_ = std::move(buffer1);
+            buffer_.swap(buffer1);
             buffersToWrite.swap(buffers_);
-            if (!nextBuffer_) {
-                nextBuffer_ = std::move(buffer2);
+            if (!nextBuffer_.empty()) {
+                nextBuffer_.swap(buffer2);
             }
         }
 
@@ -89,24 +87,24 @@ void AsyncLogger::backend()
         }
 
         for (const auto &buffer: buffersToWrite) {
-            logging.append(*buffer);
+            logging.append(buffer);
         }
 
         if (buffersToWrite.size() > 2) {
             buffersToWrite.resize(2);
         }
 
-        if (!buffer1) {
+        if (!buffer1.empty()) {
             assert(!buffersToWrite.empty());
-            buffer1 = std::move(buffersToWrite.back());
-            buffer1->clear();
+            buffer1.swap(buffersToWrite.back());
+            buffer1.clear();
             buffersToWrite.pop_back();
         }
 
-        if (!buffer2) {
+        if (!buffer2.empty()) {
             assert(!buffersToWrite.empty());
-            buffer2 = std::move(buffersToWrite.back());
-            buffer2->clear();
+            buffer2.swap(buffersToWrite.back());
+            buffer2.clear();
             buffersToWrite.pop_back();
         }
 
