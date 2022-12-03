@@ -1,5 +1,5 @@
-package muduo;
-option java_package = "muduo.codec.tests";
+package slite;
+option java_package = "slite.codec.tests";
 option java_outer_classname = "QueryProtos";
 
 message Query {

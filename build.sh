@@ -1,12 +1,10 @@
 #!/bin/bash
 
-set -x
-
 SOURCE_DIR=`pwd`
 BUILD_DIR=${BUILD_DIR:-build}
 BUILD_TYPE=${BUILD_TYPE:-debug}
-#INSTALL_DIR=${INSTALL_DIR:-${BUILD_TYPE}-install}
-INSTALL_DIR=/home/jiangkun/workspace/project/imlite/slite
+INSTALL_DIR=${INSTALL_DIR:-${BUILD_TYPE}-install}
+#INSTALL_DIR=/home/jiangkun/workspace/project/imlite/slite
 CXX=${CXX:-g++}
 
 ln -sf $BUILD_DIR/$BUILD_TYPE/compile_commands.json

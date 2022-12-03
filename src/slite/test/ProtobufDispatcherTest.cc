@@ -1,5 +1,4 @@
-#include "dispatcher.h"
-
+#include "slite/protobuf/ProtobufDispatcher.h"
 #include "query.pb.h"
 
 #include <iostream>
@@ -7,13 +6,13 @@
 using std::cout;
 using std::endl;
 
-typedef std::shared_ptr<muduo::Query> QueryPtr;
-typedef std::shared_ptr<muduo::Answer> AnswerPtr;
+typedef std::shared_ptr<slite::Query> QueryPtr;
+typedef std::shared_ptr<slite::Answer> AnswerPtr;
 
 void test_down_pointer_cast()
 {
-  ::std::shared_ptr<google::protobuf::Message> msg(new muduo::Query);
-  ::std::shared_ptr<muduo::Query> query(down_pointer_cast<muduo::Query>(msg));
+  ::std::shared_ptr<google::protobuf::Message> msg(new slite::Query);
+  ::std::shared_ptr<slite::Query> query(down_pointer_cast<slite::Query>(msg));
   assert(msg && query);
   if (!query)
   {
@@ -48,15 +47,15 @@ int main()
   test_down_pointer_cast();
 
   ProtobufDispatcher dispatcher(onUnknownMessageType);
-  dispatcher.registerMessageCallback<muduo::Query>(onQuery);
-  dispatcher.registerMessageCallback<muduo::Answer>(onAnswer);
+  dispatcher.registerMessageCallback<slite::Query>(onQuery);
+  dispatcher.registerMessageCallback<slite::Answer>(onAnswer);
 
   slite::TCPConnectionPtr conn;
   int64_t t = 0;
 
-  std::shared_ptr<muduo::Query> query(new muduo::Query);
-  std::shared_ptr<muduo::Answer> answer(new muduo::Answer);
-  std::shared_ptr<muduo::Empty> empty(new muduo::Empty);
+  std::shared_ptr<slite::Query> query(new slite::Query);
+  std::shared_ptr<slite::Answer> answer(new slite::Answer);
+  std::shared_ptr<slite::Empty> empty(new slite::Empty);
   dispatcher.onProtobufMessage(conn, query, t);
   dispatcher.onProtobufMessage(conn, answer, t);
   dispatcher.onProtobufMessage(conn, empty, t);

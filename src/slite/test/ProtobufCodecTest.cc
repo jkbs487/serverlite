@@ -1,11 +1,11 @@
-#include "codec.h"
+#include "slite/protobuf/ProtobufCodec.h"
 #include "query.pb.h"
 
 #include <stdio.h>
 #include <zlib.h>  // adler32
 #include <arpa/inet.h>
 
-using namespace slite;
+using namespace slite::protobuf;
 
 template<typename To, typename From>
 inline To implicit_cast(From const &f)
@@ -53,7 +53,7 @@ void print(const std::string buf)
 
 void testQuery()
 {
-  muduo::Query query;
+  slite::Query query;
   query.set_id(1);
   query.set_questioner("Chen Shuo");
   query.add_question("Running?");
@@ -74,13 +74,13 @@ void testQuery()
   message->PrintDebugString();
   assert(message->DebugString() == query.DebugString());
 
-  std::shared_ptr<muduo::Query> newQuery = down_pointer_cast<muduo::Query>(message);
+  std::shared_ptr<slite::Query> newQuery = down_pointer_cast<slite::Query>(message);
   assert(newQuery != NULL);
 }
 
 void testAnswer()
 {
-  muduo::Answer answer;
+  slite::Answer answer;
   answer.set_id(1);
   answer.set_questioner("Chen Shuo");
   answer.set_answerer("blog.csdn.net/Solstice");
@@ -103,13 +103,13 @@ void testAnswer()
   message->PrintDebugString();
   assert(message->DebugString() == answer.DebugString());
 
-  std::shared_ptr<muduo::Answer> newAnswer = down_pointer_cast<muduo::Answer>(message);
+  std::shared_ptr<slite::Answer> newAnswer = down_pointer_cast<slite::Answer>(message);
   assert(newAnswer != NULL);
 }
 
 void testEmpty()
 {
-  muduo::Empty empty;
+  slite::Empty empty;
 
   std::string buf;
   ProtobufCodec::fillEmptyBuffer(buf, empty);
@@ -141,7 +141,7 @@ void redoCheckSum(std::string& data, int len)
 
 void testBadBuffer()
 {
-  muduo::Empty empty;
+  slite::Empty empty;
   empty.set_id(43);
 
   std::string buf;
@@ -243,7 +243,7 @@ void onMessage(const slite::TCPConnectionPtr& conn,
 
 void testOnMessage()
 {
-  muduo::Query query;
+  slite::Query query;
   query.set_id(1);
   query.set_questioner("Chen Shuo");
   query.add_question("Running?");
@@ -251,7 +251,7 @@ void testOnMessage()
   std::string buf1;
   ProtobufCodec::fillEmptyBuffer(buf1, query);
 
-  muduo::Empty empty;
+  slite::Empty empty;
   empty.set_id(43);
   empty.set_id(1982);
 

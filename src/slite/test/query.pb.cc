@@ -16,7 +16,7 @@
 #include <google/protobuf/port_def.inc>
 
 PROTOBUF_PRAGMA_INIT_SEG
-namespace muduo {
+namespace slite {
 constexpr Query::Query(
   ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
   : question_()
@@ -58,65 +58,65 @@ struct EmptyDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT EmptyDefaultTypeInternal _Empty_default_instance_;
-}  // namespace muduo
+}  // namespace slite
 static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_query_2eproto[3];
 static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_query_2eproto = nullptr;
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_query_2eproto = nullptr;
 
 const uint32_t TableStruct_query_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  PROTOBUF_FIELD_OFFSET(::muduo::Query, _has_bits_),
-  PROTOBUF_FIELD_OFFSET(::muduo::Query, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::slite::Query, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::slite::Query, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::muduo::Query, id_),
-  PROTOBUF_FIELD_OFFSET(::muduo::Query, questioner_),
-  PROTOBUF_FIELD_OFFSET(::muduo::Query, question_),
+  PROTOBUF_FIELD_OFFSET(::slite::Query, id_),
+  PROTOBUF_FIELD_OFFSET(::slite::Query, questioner_),
+  PROTOBUF_FIELD_OFFSET(::slite::Query, question_),
   1,
   0,
   ~0u,
-  PROTOBUF_FIELD_OFFSET(::muduo::Answer, _has_bits_),
-  PROTOBUF_FIELD_OFFSET(::muduo::Answer, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::slite::Answer, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::slite::Answer, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::muduo::Answer, id_),
-  PROTOBUF_FIELD_OFFSET(::muduo::Answer, questioner_),
-  PROTOBUF_FIELD_OFFSET(::muduo::Answer, answerer_),
-  PROTOBUF_FIELD_OFFSET(::muduo::Answer, solution_),
+  PROTOBUF_FIELD_OFFSET(::slite::Answer, id_),
+  PROTOBUF_FIELD_OFFSET(::slite::Answer, questioner_),
+  PROTOBUF_FIELD_OFFSET(::slite::Answer, answerer_),
+  PROTOBUF_FIELD_OFFSET(::slite::Answer, solution_),
   2,
   0,
   1,
   ~0u,
-  PROTOBUF_FIELD_OFFSET(::muduo::Empty, _has_bits_),
-  PROTOBUF_FIELD_OFFSET(::muduo::Empty, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::slite::Empty, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::slite::Empty, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::muduo::Empty, id_),
+  PROTOBUF_FIELD_OFFSET(::slite::Empty, id_),
   0,
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, 9, -1, sizeof(::muduo::Query)},
-  { 12, 22, -1, sizeof(::muduo::Answer)},
-  { 26, 33, -1, sizeof(::muduo::Empty)},
+  { 0, 9, -1, sizeof(::slite::Query)},
+  { 12, 22, -1, sizeof(::slite::Answer)},
+  { 26, 33, -1, sizeof(::slite::Empty)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::muduo::_Query_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::muduo::_Answer_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::muduo::_Empty_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::slite::_Query_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::slite::_Answer_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::slite::_Empty_default_instance_),
 };
 
 const char descriptor_table_protodef_query_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\013query.proto\022\005muduo\"9\n\005Query\022\n\n\002id\030\001 \002("
+  "\n\013query.proto\022\005slite\"9\n\005Query\022\n\n\002id\030\001 \002("
   "\003\022\022\n\nquestioner\030\002 \002(\t\022\020\n\010question\030\003 \003(\t\""
   "L\n\006Answer\022\n\n\002id\030\001 \002(\003\022\022\n\nquestioner\030\002 \002("
   "\t\022\020\n\010answerer\030\003 \002(\t\022\020\n\010solution\030\004 \003(\t\"\023\n"
-  "\005Empty\022\n\n\002id\030\001 \001(\005B \n\021muduo.codec.testsB"
+  "\005Empty\022\n\n\002id\030\001 \001(\005B \n\021slite.codec.testsB"
   "\013QueryProtos"
   ;
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_query_2eproto_once;
@@ -132,7 +132,7 @@ PROTOBUF_ATTRIBUTE_WEAK const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable
 
 // Force running AddDescriptors() at dynamic initialization time.
 PROTOBUF_ATTRIBUTE_INIT_PRIORITY static ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptorsRunner dynamic_init_dummy_query_2eproto(&descriptor_table_query_2eproto);
-namespace muduo {
+namespace slite {
 
 // ===================================================================
 
@@ -158,7 +158,7 @@ Query::Query(::PROTOBUF_NAMESPACE_ID::Arena* arena,
   if (!is_message_owned) {
     RegisterArenaDtor(arena);
   }
-  // @@protoc_insertion_point(arena_constructor:muduo.Query)
+  // @@protoc_insertion_point(arena_constructor:slite.Query)
 }
 Query::Query(const Query& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
@@ -174,7 +174,7 @@ Query::Query(const Query& from)
       GetArenaForAllocation());
   }
   id_ = from.id_;
-  // @@protoc_insertion_point(copy_constructor:muduo.Query)
+  // @@protoc_insertion_point(copy_constructor:slite.Query)
 }
 
 inline void Query::SharedCtor() {
@@ -186,7 +186,7 @@ id_ = int64_t{0};
 }
 
 Query::~Query() {
-  // @@protoc_insertion_point(destructor:muduo.Query)
+  // @@protoc_insertion_point(destructor:slite.Query)
   if (GetArenaForAllocation() != nullptr) return;
   SharedDtor();
   _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
@@ -208,7 +208,7 @@ void Query::SetCachedSize(int size) const {
 }
 
 void Query::Clear() {
-// @@protoc_insertion_point(message_clear_start:muduo.Query)
+// @@protoc_insertion_point(message_clear_start:slite.Query)
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
@@ -245,7 +245,7 @@ const char* Query::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inte
           auto str = _internal_mutable_questioner();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
           #ifndef NDEBUG
-          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "muduo.Query.questioner");
+          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "slite.Query.questioner");
           #endif  // !NDEBUG
           CHK_(ptr);
         } else
@@ -260,7 +260,7 @@ const char* Query::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inte
             auto str = _internal_add_question();
             ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
             #ifndef NDEBUG
-            ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "muduo.Query.question");
+            ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "slite.Query.question");
             #endif  // !NDEBUG
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
@@ -294,7 +294,7 @@ failure:
 
 uint8_t* Query::_InternalSerialize(
     uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:muduo.Query)
+  // @@protoc_insertion_point(serialize_to_array_start:slite.Query)
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -310,7 +310,7 @@ uint8_t* Query::_InternalSerialize(
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
       this->_internal_questioner().data(), static_cast<int>(this->_internal_questioner().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
-      "muduo.Query.questioner");
+      "slite.Query.questioner");
     target = stream->WriteStringMaybeAliased(
         2, this->_internal_questioner(), target);
   }
@@ -321,7 +321,7 @@ uint8_t* Query::_InternalSerialize(
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
       s.data(), static_cast<int>(s.length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
-      "muduo.Query.question");
+      "slite.Query.question");
     target = stream->WriteString(3, s, target);
   }
 
@@ -329,12 +329,12 @@ uint8_t* Query::_InternalSerialize(
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:muduo.Query)
+  // @@protoc_insertion_point(serialize_to_array_end:slite.Query)
   return target;
 }
 
 size_t Query::RequiredFieldsByteSizeFallback() const {
-// @@protoc_insertion_point(required_fields_byte_size_fallback_start:muduo.Query)
+// @@protoc_insertion_point(required_fields_byte_size_fallback_start:slite.Query)
   size_t total_size = 0;
 
   if (_internal_has_questioner()) {
@@ -352,7 +352,7 @@ size_t Query::RequiredFieldsByteSizeFallback() const {
   return total_size;
 }
 size_t Query::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:muduo.Query)
+// @@protoc_insertion_point(message_byte_size_start:slite.Query)
   size_t total_size = 0;
 
   if (((_has_bits_[0] & 0x00000003) ^ 0x00000003) == 0) {  // All required fields are present.
@@ -396,7 +396,7 @@ void Query::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to,
 
 
 void Query::MergeFrom(const Query& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:muduo.Query)
+// @@protoc_insertion_point(class_specific_merge_from_start:slite.Query)
   GOOGLE_DCHECK_NE(&from, this);
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
@@ -416,7 +416,7 @@ void Query::MergeFrom(const Query& from) {
 }
 
 void Query::CopyFrom(const Query& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:muduo.Query)
+// @@protoc_insertion_point(class_specific_copy_from_start:slite.Query)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
@@ -475,7 +475,7 @@ Answer::Answer(::PROTOBUF_NAMESPACE_ID::Arena* arena,
   if (!is_message_owned) {
     RegisterArenaDtor(arena);
   }
-  // @@protoc_insertion_point(arena_constructor:muduo.Answer)
+  // @@protoc_insertion_point(arena_constructor:slite.Answer)
 }
 Answer::Answer(const Answer& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
@@ -499,7 +499,7 @@ Answer::Answer(const Answer& from)
       GetArenaForAllocation());
   }
   id_ = from.id_;
-  // @@protoc_insertion_point(copy_constructor:muduo.Answer)
+  // @@protoc_insertion_point(copy_constructor:slite.Answer)
 }
 
 inline void Answer::SharedCtor() {
@@ -515,7 +515,7 @@ id_ = int64_t{0};
 }
 
 Answer::~Answer() {
-  // @@protoc_insertion_point(destructor:muduo.Answer)
+  // @@protoc_insertion_point(destructor:slite.Answer)
   if (GetArenaForAllocation() != nullptr) return;
   SharedDtor();
   _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
@@ -538,7 +538,7 @@ void Answer::SetCachedSize(int size) const {
 }
 
 void Answer::Clear() {
-// @@protoc_insertion_point(message_clear_start:muduo.Answer)
+// @@protoc_insertion_point(message_clear_start:slite.Answer)
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
@@ -580,7 +580,7 @@ const char* Answer::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::int
           auto str = _internal_mutable_questioner();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
           #ifndef NDEBUG
-          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "muduo.Answer.questioner");
+          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "slite.Answer.questioner");
           #endif  // !NDEBUG
           CHK_(ptr);
         } else
@@ -592,7 +592,7 @@ const char* Answer::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::int
           auto str = _internal_mutable_answerer();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
           #ifndef NDEBUG
-          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "muduo.Answer.answerer");
+          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "slite.Answer.answerer");
           #endif  // !NDEBUG
           CHK_(ptr);
         } else
@@ -607,7 +607,7 @@ const char* Answer::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::int
             auto str = _internal_add_solution();
             ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
             #ifndef NDEBUG
-            ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "muduo.Answer.solution");
+            ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "slite.Answer.solution");
             #endif  // !NDEBUG
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
@@ -641,7 +641,7 @@ failure:
 
 uint8_t* Answer::_InternalSerialize(
     uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:muduo.Answer)
+  // @@protoc_insertion_point(serialize_to_array_start:slite.Answer)
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -657,7 +657,7 @@ uint8_t* Answer::_InternalSerialize(
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
       this->_internal_questioner().data(), static_cast<int>(this->_internal_questioner().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
-      "muduo.Answer.questioner");
+      "slite.Answer.questioner");
     target = stream->WriteStringMaybeAliased(
         2, this->_internal_questioner(), target);
   }
@@ -667,7 +667,7 @@ uint8_t* Answer::_InternalSerialize(
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
       this->_internal_answerer().data(), static_cast<int>(this->_internal_answerer().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
-      "muduo.Answer.answerer");
+      "slite.Answer.answerer");
     target = stream->WriteStringMaybeAliased(
         3, this->_internal_answerer(), target);
   }
@@ -678,7 +678,7 @@ uint8_t* Answer::_InternalSerialize(
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
       s.data(), static_cast<int>(s.length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
-      "muduo.Answer.solution");
+      "slite.Answer.solution");
     target = stream->WriteString(4, s, target);
   }
 
@@ -686,12 +686,12 @@ uint8_t* Answer::_InternalSerialize(
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:muduo.Answer)
+  // @@protoc_insertion_point(serialize_to_array_end:slite.Answer)
   return target;
 }
 
 size_t Answer::RequiredFieldsByteSizeFallback() const {
-// @@protoc_insertion_point(required_fields_byte_size_fallback_start:muduo.Answer)
+// @@protoc_insertion_point(required_fields_byte_size_fallback_start:slite.Answer)
   size_t total_size = 0;
 
   if (_internal_has_questioner()) {
@@ -716,7 +716,7 @@ size_t Answer::RequiredFieldsByteSizeFallback() const {
   return total_size;
 }
 size_t Answer::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:muduo.Answer)
+// @@protoc_insertion_point(message_byte_size_start:slite.Answer)
   size_t total_size = 0;
 
   if (((_has_bits_[0] & 0x00000007) ^ 0x00000007) == 0) {  // All required fields are present.
@@ -765,7 +765,7 @@ void Answer::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to,
 
 
 void Answer::MergeFrom(const Answer& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:muduo.Answer)
+// @@protoc_insertion_point(class_specific_merge_from_start:slite.Answer)
   GOOGLE_DCHECK_NE(&from, this);
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
@@ -788,7 +788,7 @@ void Answer::MergeFrom(const Answer& from) {
 }
 
 void Answer::CopyFrom(const Answer& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:muduo.Answer)
+// @@protoc_insertion_point(class_specific_copy_from_start:slite.Answer)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
@@ -842,14 +842,14 @@ Empty::Empty(::PROTOBUF_NAMESPACE_ID::Arena* arena,
   if (!is_message_owned) {
     RegisterArenaDtor(arena);
   }
-  // @@protoc_insertion_point(arena_constructor:muduo.Empty)
+  // @@protoc_insertion_point(arena_constructor:slite.Empty)
 }
 Empty::Empty(const Empty& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
       _has_bits_(from._has_bits_) {
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   id_ = from.id_;
-  // @@protoc_insertion_point(copy_constructor:muduo.Empty)
+  // @@protoc_insertion_point(copy_constructor:slite.Empty)
 }
 
 inline void Empty::SharedCtor() {
@@ -857,7 +857,7 @@ id_ = 0;
 }
 
 Empty::~Empty() {
-  // @@protoc_insertion_point(destructor:muduo.Empty)
+  // @@protoc_insertion_point(destructor:slite.Empty)
   if (GetArenaForAllocation() != nullptr) return;
   SharedDtor();
   _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
@@ -878,7 +878,7 @@ void Empty::SetCachedSize(int size) const {
 }
 
 void Empty::Clear() {
-// @@protoc_insertion_point(message_clear_start:muduo.Empty)
+// @@protoc_insertion_point(message_clear_start:slite.Empty)
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
@@ -930,7 +930,7 @@ failure:
 
 uint8_t* Empty::_InternalSerialize(
     uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:muduo.Empty)
+  // @@protoc_insertion_point(serialize_to_array_start:slite.Empty)
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -945,12 +945,12 @@ uint8_t* Empty::_InternalSerialize(
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:muduo.Empty)
+  // @@protoc_insertion_point(serialize_to_array_end:slite.Empty)
   return target;
 }
 
 size_t Empty::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:muduo.Empty)
+// @@protoc_insertion_point(message_byte_size_start:slite.Empty)
   size_t total_size = 0;
 
   uint32_t cached_has_bits = 0;
@@ -980,7 +980,7 @@ void Empty::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to,
 
 
 void Empty::MergeFrom(const Empty& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:muduo.Empty)
+// @@protoc_insertion_point(class_specific_merge_from_start:slite.Empty)
   GOOGLE_DCHECK_NE(&from, this);
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
@@ -992,7 +992,7 @@ void Empty::MergeFrom(const Empty& from) {
 }
 
 void Empty::CopyFrom(const Empty& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:muduo.Empty)
+// @@protoc_insertion_point(class_specific_copy_from_start:slite.Empty)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
@@ -1016,16 +1016,16 @@ void Empty::InternalSwap(Empty* other) {
 }
 
 // @@protoc_insertion_point(namespace_scope)
-}  // namespace muduo
+}  // namespace slite
 PROTOBUF_NAMESPACE_OPEN
-template<> PROTOBUF_NOINLINE ::muduo::Query* Arena::CreateMaybeMessage< ::muduo::Query >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::muduo::Query >(arena);
+template<> PROTOBUF_NOINLINE ::slite::Query* Arena::CreateMaybeMessage< ::slite::Query >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::slite::Query >(arena);
 }
-template<> PROTOBUF_NOINLINE ::muduo::Answer* Arena::CreateMaybeMessage< ::muduo::Answer >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::muduo::Answer >(arena);
+template<> PROTOBUF_NOINLINE ::slite::Answer* Arena::CreateMaybeMessage< ::slite::Answer >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::slite::Answer >(arena);
 }
-template<> PROTOBUF_NOINLINE ::muduo::Empty* Arena::CreateMaybeMessage< ::muduo::Empty >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::muduo::Empty >(arena);
+template<> PROTOBUF_NOINLINE ::slite::Empty* Arena::CreateMaybeMessage< ::slite::Empty >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::slite::Empty >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

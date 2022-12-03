@@ -53,7 +53,7 @@ struct TableStruct_query_2eproto {
   static const uint32_t offsets[];
 };
 extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_query_2eproto;
-namespace muduo {
+namespace slite {
 class Answer;
 struct AnswerDefaultTypeInternal;
 extern AnswerDefaultTypeInternal _Answer_default_instance_;
@@ -63,18 +63,18 @@ extern EmptyDefaultTypeInternal _Empty_default_instance_;
 class Query;
 struct QueryDefaultTypeInternal;
 extern QueryDefaultTypeInternal _Query_default_instance_;
-}  // namespace muduo
+}  // namespace slite
 PROTOBUF_NAMESPACE_OPEN
-template<> ::muduo::Answer* Arena::CreateMaybeMessage<::muduo::Answer>(Arena*);
-template<> ::muduo::Empty* Arena::CreateMaybeMessage<::muduo::Empty>(Arena*);
-template<> ::muduo::Query* Arena::CreateMaybeMessage<::muduo::Query>(Arena*);
+template<> ::slite::Answer* Arena::CreateMaybeMessage<::slite::Answer>(Arena*);
+template<> ::slite::Empty* Arena::CreateMaybeMessage<::slite::Empty>(Arena*);
+template<> ::slite::Query* Arena::CreateMaybeMessage<::slite::Query>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
-namespace muduo {
+namespace slite {
 
 // ===================================================================
 
 class Query final :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:muduo.Query) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:slite.Query) */ {
  public:
   inline Query() : Query(nullptr) {}
   ~Query() override;
@@ -182,7 +182,7 @@ class Query final :
   private:
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "muduo.Query";
+    return "slite.Query";
   }
   protected:
   explicit Query(::PROTOBUF_NAMESPACE_ID::Arena* arena,
@@ -261,7 +261,7 @@ class Query final :
   void _internal_set_id(int64_t value);
   public:
 
-  // @@protoc_insertion_point(class_scope:muduo.Query)
+  // @@protoc_insertion_point(class_scope:slite.Query)
  private:
   class _Internal;
 
@@ -281,7 +281,7 @@ class Query final :
 // -------------------------------------------------------------------
 
 class Answer final :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:muduo.Answer) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:slite.Answer) */ {
  public:
   inline Answer() : Answer(nullptr) {}
   ~Answer() override;
@@ -389,7 +389,7 @@ class Answer final :
   private:
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "muduo.Answer";
+    return "slite.Answer";
   }
   protected:
   explicit Answer(::PROTOBUF_NAMESPACE_ID::Arena* arena,
@@ -487,7 +487,7 @@ class Answer final :
   void _internal_set_id(int64_t value);
   public:
 
-  // @@protoc_insertion_point(class_scope:muduo.Answer)
+  // @@protoc_insertion_point(class_scope:slite.Answer)
  private:
   class _Internal;
 
@@ -508,7 +508,7 @@ class Answer final :
 // -------------------------------------------------------------------
 
 class Empty final :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:muduo.Empty) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:slite.Empty) */ {
  public:
   inline Empty() : Empty(nullptr) {}
   ~Empty() override;
@@ -616,7 +616,7 @@ class Empty final :
   private:
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "muduo.Empty";
+    return "slite.Empty";
   }
   protected:
   explicit Empty(::PROTOBUF_NAMESPACE_ID::Arena* arena,
@@ -651,7 +651,7 @@ class Empty final :
   void _internal_set_id(int32_t value);
   public:
 
-  // @@protoc_insertion_point(class_scope:muduo.Empty)
+  // @@protoc_insertion_point(class_scope:slite.Empty)
  private:
   class _Internal;
 
@@ -690,7 +690,7 @@ inline int64_t Query::_internal_id() const {
   return id_;
 }
 inline int64_t Query::id() const {
-  // @@protoc_insertion_point(field_get:muduo.Query.id)
+  // @@protoc_insertion_point(field_get:slite.Query.id)
   return _internal_id();
 }
 inline void Query::_internal_set_id(int64_t value) {
@@ -699,7 +699,7 @@ inline void Query::_internal_set_id(int64_t value) {
 }
 inline void Query::set_id(int64_t value) {
   _internal_set_id(value);
-  // @@protoc_insertion_point(field_set:muduo.Query.id)
+  // @@protoc_insertion_point(field_set:slite.Query.id)
 }
 
 // required string questioner = 2;
@@ -715,7 +715,7 @@ inline void Query::clear_questioner() {
   _has_bits_[0] &= ~0x00000001u;
 }
 inline const std::string& Query::questioner() const {
-  // @@protoc_insertion_point(field_get:muduo.Query.questioner)
+  // @@protoc_insertion_point(field_get:slite.Query.questioner)
   return _internal_questioner();
 }
 template <typename ArgT0, typename... ArgT>
@@ -723,11 +723,11 @@ inline PROTOBUF_ALWAYS_INLINE
 void Query::set_questioner(ArgT0&& arg0, ArgT... args) {
  _has_bits_[0] |= 0x00000001u;
  questioner_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:muduo.Query.questioner)
+  // @@protoc_insertion_point(field_set:slite.Query.questioner)
 }
 inline std::string* Query::mutable_questioner() {
   std::string* _s = _internal_mutable_questioner();
-  // @@protoc_insertion_point(field_mutable:muduo.Query.questioner)
+  // @@protoc_insertion_point(field_mutable:slite.Query.questioner)
   return _s;
 }
 inline const std::string& Query::_internal_questioner() const {
@@ -742,7 +742,7 @@ inline std::string* Query::_internal_mutable_questioner() {
   return questioner_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArenaForAllocation());
 }
 inline std::string* Query::release_questioner() {
-  // @@protoc_insertion_point(field_release:muduo.Query.questioner)
+  // @@protoc_insertion_point(field_release:slite.Query.questioner)
   if (!_internal_has_questioner()) {
     return nullptr;
   }
@@ -768,7 +768,7 @@ inline void Query::set_allocated_questioner(std::string* questioner) {
     questioner_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:muduo.Query.questioner)
+  // @@protoc_insertion_point(field_set_allocated:slite.Query.questioner)
 }
 
 // repeated string question = 3;
@@ -783,66 +783,66 @@ inline void Query::clear_question() {
 }
 inline std::string* Query::add_question() {
   std::string* _s = _internal_add_question();
-  // @@protoc_insertion_point(field_add_mutable:muduo.Query.question)
+  // @@protoc_insertion_point(field_add_mutable:slite.Query.question)
   return _s;
 }
 inline const std::string& Query::_internal_question(int index) const {
   return question_.Get(index);
 }
 inline const std::string& Query::question(int index) const {
-  // @@protoc_insertion_point(field_get:muduo.Query.question)
+  // @@protoc_insertion_point(field_get:slite.Query.question)
   return _internal_question(index);
 }
 inline std::string* Query::mutable_question(int index) {
-  // @@protoc_insertion_point(field_mutable:muduo.Query.question)
+  // @@protoc_insertion_point(field_mutable:slite.Query.question)
   return question_.Mutable(index);
 }
 inline void Query::set_question(int index, const std::string& value) {
   question_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set:muduo.Query.question)
+  // @@protoc_insertion_point(field_set:slite.Query.question)
 }
 inline void Query::set_question(int index, std::string&& value) {
   question_.Mutable(index)->assign(std::move(value));
-  // @@protoc_insertion_point(field_set:muduo.Query.question)
+  // @@protoc_insertion_point(field_set:slite.Query.question)
 }
 inline void Query::set_question(int index, const char* value) {
   GOOGLE_DCHECK(value != nullptr);
   question_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set_char:muduo.Query.question)
+  // @@protoc_insertion_point(field_set_char:slite.Query.question)
 }
 inline void Query::set_question(int index, const char* value, size_t size) {
   question_.Mutable(index)->assign(
     reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:muduo.Query.question)
+  // @@protoc_insertion_point(field_set_pointer:slite.Query.question)
 }
 inline std::string* Query::_internal_add_question() {
   return question_.Add();
 }
 inline void Query::add_question(const std::string& value) {
   question_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add:muduo.Query.question)
+  // @@protoc_insertion_point(field_add:slite.Query.question)
 }
 inline void Query::add_question(std::string&& value) {
   question_.Add(std::move(value));
-  // @@protoc_insertion_point(field_add:muduo.Query.question)
+  // @@protoc_insertion_point(field_add:slite.Query.question)
 }
 inline void Query::add_question(const char* value) {
   GOOGLE_DCHECK(value != nullptr);
   question_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add_char:muduo.Query.question)
+  // @@protoc_insertion_point(field_add_char:slite.Query.question)
 }
 inline void Query::add_question(const char* value, size_t size) {
   question_.Add()->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_add_pointer:muduo.Query.question)
+  // @@protoc_insertion_point(field_add_pointer:slite.Query.question)
 }
 inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>&
 Query::question() const {
-  // @@protoc_insertion_point(field_list:muduo.Query.question)
+  // @@protoc_insertion_point(field_list:slite.Query.question)
   return question_;
 }
 inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
 Query::mutable_question() {
-  // @@protoc_insertion_point(field_mutable_list:muduo.Query.question)
+  // @@protoc_insertion_point(field_mutable_list:slite.Query.question)
   return &question_;
 }
 
@@ -866,7 +866,7 @@ inline int64_t Answer::_internal_id() const {
   return id_;
 }
 inline int64_t Answer::id() const {
-  // @@protoc_insertion_point(field_get:muduo.Answer.id)
+  // @@protoc_insertion_point(field_get:slite.Answer.id)
   return _internal_id();
 }
 inline void Answer::_internal_set_id(int64_t value) {
@@ -875,7 +875,7 @@ inline void Answer::_internal_set_id(int64_t value) {
 }
 inline void Answer::set_id(int64_t value) {
   _internal_set_id(value);
-  // @@protoc_insertion_point(field_set:muduo.Answer.id)
+  // @@protoc_insertion_point(field_set:slite.Answer.id)
 }
 
 // required string questioner = 2;
@@ -891,7 +891,7 @@ inline void Answer::clear_questioner() {
   _has_bits_[0] &= ~0x00000001u;
 }
 inline const std::string& Answer::questioner() const {
-  // @@protoc_insertion_point(field_get:muduo.Answer.questioner)
+  // @@protoc_insertion_point(field_get:slite.Answer.questioner)
   return _internal_questioner();
 }
 template <typename ArgT0, typename... ArgT>
@@ -899,11 +899,11 @@ inline PROTOBUF_ALWAYS_INLINE
 void Answer::set_questioner(ArgT0&& arg0, ArgT... args) {
  _has_bits_[0] |= 0x00000001u;
  questioner_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:muduo.Answer.questioner)
+  // @@protoc_insertion_point(field_set:slite.Answer.questioner)
 }
 inline std::string* Answer::mutable_questioner() {
   std::string* _s = _internal_mutable_questioner();
-  // @@protoc_insertion_point(field_mutable:muduo.Answer.questioner)
+  // @@protoc_insertion_point(field_mutable:slite.Answer.questioner)
   return _s;
 }
 inline const std::string& Answer::_internal_questioner() const {
@@ -918,7 +918,7 @@ inline std::string* Answer::_internal_mutable_questioner() {
   return questioner_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArenaForAllocation());
 }
 inline std::string* Answer::release_questioner() {
-  // @@protoc_insertion_point(field_release:muduo.Answer.questioner)
+  // @@protoc_insertion_point(field_release:slite.Answer.questioner)
   if (!_internal_has_questioner()) {
     return nullptr;
   }
@@ -944,7 +944,7 @@ inline void Answer::set_allocated_questioner(std::string* questioner) {
     questioner_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:muduo.Answer.questioner)
+  // @@protoc_insertion_point(field_set_allocated:slite.Answer.questioner)
 }
 
 // required string answerer = 3;
@@ -960,7 +960,7 @@ inline void Answer::clear_answerer() {
   _has_bits_[0] &= ~0x00000002u;
 }
 inline const std::string& Answer::answerer() const {
-  // @@protoc_insertion_point(field_get:muduo.Answer.answerer)
+  // @@protoc_insertion_point(field_get:slite.Answer.answerer)
   return _internal_answerer();
 }
 template <typename ArgT0, typename... ArgT>
@@ -968,11 +968,11 @@ inline PROTOBUF_ALWAYS_INLINE
 void Answer::set_answerer(ArgT0&& arg0, ArgT... args) {
  _has_bits_[0] |= 0x00000002u;
  answerer_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:muduo.Answer.answerer)
+  // @@protoc_insertion_point(field_set:slite.Answer.answerer)
 }
 inline std::string* Answer::mutable_answerer() {
   std::string* _s = _internal_mutable_answerer();
-  // @@protoc_insertion_point(field_mutable:muduo.Answer.answerer)
+  // @@protoc_insertion_point(field_mutable:slite.Answer.answerer)
   return _s;
 }
 inline const std::string& Answer::_internal_answerer() const {
@@ -987,7 +987,7 @@ inline std::string* Answer::_internal_mutable_answerer() {
   return answerer_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArenaForAllocation());
 }
 inline std::string* Answer::release_answerer() {
-  // @@protoc_insertion_point(field_release:muduo.Answer.answerer)
+  // @@protoc_insertion_point(field_release:slite.Answer.answerer)
   if (!_internal_has_answerer()) {
     return nullptr;
   }
@@ -1013,7 +1013,7 @@ inline void Answer::set_allocated_answerer(std::string* answerer) {
     answerer_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:muduo.Answer.answerer)
+  // @@protoc_insertion_point(field_set_allocated:slite.Answer.answerer)
 }
 
 // repeated string solution = 4;
@@ -1028,66 +1028,66 @@ inline void Answer::clear_solution() {
 }
 inline std::string* Answer::add_solution() {
   std::string* _s = _internal_add_solution();
-  // @@protoc_insertion_point(field_add_mutable:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_add_mutable:slite.Answer.solution)
   return _s;
 }
 inline const std::string& Answer::_internal_solution(int index) const {
   return solution_.Get(index);
 }
 inline const std::string& Answer::solution(int index) const {
-  // @@protoc_insertion_point(field_get:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_get:slite.Answer.solution)
   return _internal_solution(index);
 }
 inline std::string* Answer::mutable_solution(int index) {
-  // @@protoc_insertion_point(field_mutable:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_mutable:slite.Answer.solution)
   return solution_.Mutable(index);
 }
 inline void Answer::set_solution(int index, const std::string& value) {
   solution_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_set:slite.Answer.solution)
 }
 inline void Answer::set_solution(int index, std::string&& value) {
   solution_.Mutable(index)->assign(std::move(value));
-  // @@protoc_insertion_point(field_set:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_set:slite.Answer.solution)
 }
 inline void Answer::set_solution(int index, const char* value) {
   GOOGLE_DCHECK(value != nullptr);
   solution_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set_char:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_set_char:slite.Answer.solution)
 }
 inline void Answer::set_solution(int index, const char* value, size_t size) {
   solution_.Mutable(index)->assign(
     reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_set_pointer:slite.Answer.solution)
 }
 inline std::string* Answer::_internal_add_solution() {
   return solution_.Add();
 }
 inline void Answer::add_solution(const std::string& value) {
   solution_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_add:slite.Answer.solution)
 }
 inline void Answer::add_solution(std::string&& value) {
   solution_.Add(std::move(value));
-  // @@protoc_insertion_point(field_add:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_add:slite.Answer.solution)
 }
 inline void Answer::add_solution(const char* value) {
   GOOGLE_DCHECK(value != nullptr);
   solution_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add_char:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_add_char:slite.Answer.solution)
 }
 inline void Answer::add_solution(const char* value, size_t size) {
   solution_.Add()->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_add_pointer:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_add_pointer:slite.Answer.solution)
 }
 inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>&
 Answer::solution() const {
-  // @@protoc_insertion_point(field_list:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_list:slite.Answer.solution)
   return solution_;
 }
 inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
 Answer::mutable_solution() {
-  // @@protoc_insertion_point(field_mutable_list:muduo.Answer.solution)
+  // @@protoc_insertion_point(field_mutable_list:slite.Answer.solution)
   return &solution_;
 }
 
@@ -1111,7 +1111,7 @@ inline int32_t Empty::_internal_id() const {
   return id_;
 }
 inline int32_t Empty::id() const {
-  // @@protoc_insertion_point(field_get:muduo.Empty.id)
+  // @@protoc_insertion_point(field_get:slite.Empty.id)
   return _internal_id();
 }
 inline void Empty::_internal_set_id(int32_t value) {
@@ -1120,7 +1120,7 @@ inline void Empty::_internal_set_id(int32_t value) {
 }
 inline void Empty::set_id(int32_t value) {
   _internal_set_id(value);
-  // @@protoc_insertion_point(field_set:muduo.Empty.id)
+  // @@protoc_insertion_point(field_set:slite.Empty.id)
 }
 
 #ifdef __GNUC__
@@ -1133,7 +1133,7 @@ inline void Empty::set_id(int32_t value) {
 
 // @@protoc_insertion_point(namespace_scope)
 
-}  // namespace muduo
+}  // namespace slite
 
 // @@protoc_insertion_point(global_scope)
 

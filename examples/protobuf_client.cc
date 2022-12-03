@@ -1,36 +1,38 @@
-#include "examples/protobuf/codec/dispatcher.h"
-#include "examples/protobuf/codec/codec.h"
-#include "examples/protobuf/codec/query.pb.h"
+#include "slite/protobuf/ProtobufCodec.h"
+#include "slite/protobuf/ProtobufDispatcher.h"
+#include "slite/test/query.pb.h"
 
-#include "muduo/base/Logging.h"
-#include "muduo/base/Mutex.h"
-#include "muduo/net/EventLoop.h"
-#include "muduo/net/TcpClient.h"
+#include "slite/Logger.h"
+#include "slite/EventLoop.h"
+#include "slite/TCPClient.h"
 
 #include <stdio.h>
 #include <unistd.h>
+#include <functional>
 
-using namespace muduo;
-using namespace muduo::net;
+using namespace slite;
+using namespace slite::protobuf;
+using namespace std::placeholders;
 
-typedef std::shared_ptr<muduo::Empty> EmptyPtr;
-typedef std::shared_ptr<muduo::Answer> AnswerPtr;
+typedef std::shared_ptr<slite::Empty> EmptyPtr;
+typedef std::shared_ptr<slite::Answer> AnswerPtr;
 
 google::protobuf::Message* messageToSend;
 
-class QueryClient : noncopyable
+class QueryClient
 {
  public:
   QueryClient(EventLoop* loop,
-              const InetAddress& serverAddr)
+              const std::string& addr,
+              uint16_t port)
   : loop_(loop),
-    client_(loop, serverAddr, "QueryClient"),
+    client_(addr, port, loop, "QueryClient"),
     dispatcher_(std::bind(&QueryClient::onUnknownMessage, this, _1, _2, _3)),
     codec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3))
   {
-    dispatcher_.registerMessageCallback<muduo::Answer>(
+    dispatcher_.registerMessageCallback<slite::Answer>(
         std::bind(&QueryClient::onAnswer, this, _1, _2, _3));
-    dispatcher_.registerMessageCallback<muduo::Empty>(
+    dispatcher_.registerMessageCallback<slite::Empty>(
         std::bind(&QueryClient::onEmpty, this, _1, _2, _3));
     client_.setConnectionCallback(
         std::bind(&QueryClient::onConnection, this, _1));
@@ -45,10 +47,10 @@ class QueryClient : noncopyable
 
  private:
 
-  void onConnection(const TcpConnectionPtr& conn)
+  void onConnection(const TCPConnectionPtr& conn)
   {
-    LOG_INFO << conn->localAddress().toIpPort() << " -> "
-        << conn->peerAddress().toIpPort() << " is "
+    LOG_INFO << conn->peerAddr() << ":" << conn->peerPort() << " -> "
+        << conn->localAddr() << ":" << conn->localPort() << " is "
         << (conn->connected() ? "UP" : "DOWN");
 
     if (conn->connected())
@@ -61,29 +63,29 @@ class QueryClient : noncopyable
     }
   }
 
-  void onUnknownMessage(const TcpConnectionPtr&,
+  void onUnknownMessage(const TCPConnectionPtr&,
                         const MessagePtr& message,
-                        Timestamp)
+                        uint64_t)
   {
     LOG_INFO << "onUnknownMessage: " << message->GetTypeName();
   }
 
-  void onAnswer(const muduo::net::TcpConnectionPtr&,
+  void onAnswer(const TCPConnectionPtr&,
                 const AnswerPtr& message,
-                muduo::Timestamp)
+                uint64_t)
   {
     LOG_INFO << "onAnswer:\n" << message->GetTypeName() << message->DebugString();
   }
 
-  void onEmpty(const muduo::net::TcpConnectionPtr&,
+  void onEmpty(const TCPConnectionPtr&,
                const EmptyPtr& message,
-               muduo::Timestamp)
+               uint64_t)
   {
     LOG_INFO << "onEmpty: " << message->GetTypeName();
   }
 
   EventLoop* loop_;
-  TcpClient client_;
+  TCPClient client_;
   ProtobufDispatcher dispatcher_;
   ProtobufCodec codec_;
 };
@@ -95,13 +97,12 @@ int main(int argc, char* argv[])
   {
     EventLoop loop;
     uint16_t port = static_cast<uint16_t>(atoi(argv[2]));
-    InetAddress serverAddr(argv[1], port);
 
-    muduo::Query query;
+    slite::Query query;
     query.set_id(1);
     query.set_questioner("Chen Shuo");
     query.add_question("Running?");
-    muduo::Empty empty;
+    slite::Empty empty;
     messageToSend = &query;
 
     if (argc > 3 && argv[3][0] == 'e')
@@ -109,7 +110,7 @@ int main(int argc, char* argv[])
       messageToSend = &empty;
     }
 
-    QueryClient client(&loop, serverAddr);
+    QueryClient client(&loop, argv[1], port);
     client.connect();
     loop.loop();
   }

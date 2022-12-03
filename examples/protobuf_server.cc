@@ -1,33 +1,35 @@
-#include "examples/protobuf/codec/codec.h"
-#include "examples/protobuf/codec/dispatcher.h"
-#include "examples/protobuf/codec/query.pb.h"
+#include "slite/protobuf/ProtobufCodec.h"
+#include "slite/protobuf/ProtobufDispatcher.h"
+#include "slite/test/query.pb.h"
 
-#include "muduo/base/Logging.h"
-#include "muduo/base/Mutex.h"
-#include "muduo/net/EventLoop.h"
-#include "muduo/net/TcpServer.h"
+#include "slite/Logger.h"
+#include "slite/EventLoop.h"
+#include "slite/TCPServer.h"
 
 #include <stdio.h>
 #include <unistd.h>
+#include <functional>
 
-using namespace muduo;
-using namespace muduo::net;
+using namespace slite;
+using namespace slite::protobuf;
+using namespace std::placeholders;
 
-typedef std::shared_ptr<muduo::Query> QueryPtr;
-typedef std::shared_ptr<muduo::Answer> AnswerPtr;
+typedef std::shared_ptr<slite::Query> QueryPtr;
+typedef std::shared_ptr<slite::Answer> AnswerPtr;
 
-class QueryServer : noncopyable
+class QueryServer
 {
  public:
   QueryServer(EventLoop* loop,
-              const InetAddress& listenAddr)
-  : server_(loop, listenAddr, "QueryServer"),
+              const std::string& addr,
+              uint16_t port)
+  : server_(addr, port, loop, "QueryServer"),
     dispatcher_(std::bind(&QueryServer::onUnknownMessage, this, _1, _2, _3)),
     codec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3))
   {
-    dispatcher_.registerMessageCallback<muduo::Query>(
+    dispatcher_.registerMessageCallback<slite::Query>(
         std::bind(&QueryServer::onQuery, this, _1, _2, _3));
-    dispatcher_.registerMessageCallback<muduo::Answer>(
+    dispatcher_.registerMessageCallback<slite::Answer>(
         std::bind(&QueryServer::onAnswer, this, _1, _2, _3));
     server_.setConnectionCallback(
         std::bind(&QueryServer::onConnection, this, _1));
@@ -41,24 +43,24 @@ class QueryServer : noncopyable
   }
 
  private:
-  void onConnection(const TcpConnectionPtr& conn)
+  void onConnection(const TCPConnectionPtr& conn)
   {
-    LOG_INFO << conn->peerAddress().toIpPort() << " -> "
-        << conn->localAddress().toIpPort() << " is "
+    LOG_INFO << conn->peerAddr() << ":" << conn->peerPort() << " -> "
+        << conn->localAddr() << ":" << conn->localPort() << " is "
         << (conn->connected() ? "UP" : "DOWN");
   }
 
-  void onUnknownMessage(const TcpConnectionPtr& conn,
+  void onUnknownMessage(const TCPConnectionPtr& conn,
                         const MessagePtr& message,
-                        Timestamp)
+                        uint64_t)
   {
     LOG_INFO << "onUnknownMessage: " << message->GetTypeName();
     conn->shutdown();
   }
 
-  void onQuery(const muduo::net::TcpConnectionPtr& conn,
+  void onQuery(const TCPConnectionPtr& conn,
                const QueryPtr& message,
-               muduo::Timestamp)
+               uint64_t)
   {
     LOG_INFO << "onQuery:\n" << message->GetTypeName() << message->DebugString();
     Answer answer;
@@ -72,15 +74,15 @@ class QueryServer : noncopyable
     conn->shutdown();
   }
 
-  void onAnswer(const muduo::net::TcpConnectionPtr& conn,
+  void onAnswer(const TCPConnectionPtr& conn,
                 const AnswerPtr& message,
-                muduo::Timestamp)
+                uint64_t)
   {
     LOG_INFO << "onAnswer: " << message->GetTypeName();
     conn->shutdown();
   }
 
-  TcpServer server_;
+  TCPServer server_;
   ProtobufDispatcher dispatcher_;
   ProtobufCodec codec_;
 };
@@ -92,8 +94,7 @@ int main(int argc, char* argv[])
   {
     EventLoop loop;
     uint16_t port = static_cast<uint16_t>(atoi(argv[1]));
-    InetAddress serverAddr(port);
-    QueryServer server(&loop, serverAddr);
+    QueryServer server(&loop, "0.0.0.0", port);
     server.start();
     loop.loop();
   }

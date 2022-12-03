@@ -1,10 +1,3 @@
-// Copyright 2011, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-//
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
 #pragma once
 
 #include "slite/TCPConnection.h"
@@ -23,6 +16,8 @@
 typedef std::shared_ptr<google::protobuf::Message> MessagePtr;
 
 namespace slite {
+
+namespace protobuf {
 //
 // FIXME: merge with RpcCodec
 //
@@ -148,5 +143,7 @@ class ProtobufCodecLiteT
   ProtobufMessageCallback messageCallback_;
   CODEC codec_;
 };
+
+} // namespace protobuf
 
 } // namespace slite

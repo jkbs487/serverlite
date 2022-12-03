@@ -1,12 +1,4 @@
-// Copyright 2011, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-//
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-
-#include "codec.h"
+#include "ProtobufCodec.h"
 
 #include "slite/Logger.h"
 
@@ -18,7 +10,7 @@
 #include <string>
 #include <arpa/inet.h>
 
-using namespace slite;
+using namespace slite::protobuf;
 
 void ProtobufCodec::fillEmptyBuffer(std::string& buf, const google::protobuf::Message& message)
 {

@@ -30,3 +30,11 @@ target_link_libraries(memdb slite_net)
 
 add_executable(simple_http simple_http.cc)
 target_link_libraries(simple_http slite_net slite_http)
+
+if(PROTOBUF_FOUND)
+    add_executable(protobuf_server protobuf_server.cc)
+    target_link_libraries(protobuf_server slite_net slite_protobuf_codec query_proto)
+
+    add_executable(protobuf_client protobuf_client.cc)
+    target_link_libraries(protobuf_client slite_net slite_protobuf_codec query_proto)
+endif()
