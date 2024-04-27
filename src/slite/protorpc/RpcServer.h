@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <map>
 #include "slite/TCPServer.h"
 
 namespace google {
@@ -22,12 +23,14 @@ class Service;
 
 namespace slite
 {
+// namespace protorpc
+// {
 
 class RpcServer
 {
  public:
   RpcServer(EventLoop* loop,
-            const std::string& host, uint32_t port);
+            const std::string& host, uint16_t port);
 
   void setThreadNum(int numThreads)
   {
@@ -48,4 +51,5 @@ class RpcServer
   std::map<std::string, ::google::protobuf::Service*> services_;
 };
 
-}  // namespace slite
+// } // namespace protorpc
+} // namespace slite

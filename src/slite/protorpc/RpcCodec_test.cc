@@ -1,7 +1,7 @@
 #undef NDEBUG
 #include "slite/protorpc/RpcCodec.h"
 #include "slite/protorpc/rpc.pb.h"
-#include "slite/protobuf/codec.h"
+#include "slite/protobuf/ProtobufCodecLite.h"
 
 #include <stdio.h>
 
@@ -45,17 +45,17 @@ int main()
   std::string buf1, buf2;
   {
   RpcCodec codec(rpcMessageCallback);
-  codec.fillEmptyBuffer(&buf1, message);
+  codec.fillEmptyBuffer(buf1, message);
   print(buf1);
   s1 = buf1;
   }
 
   {
-  ProtobufCodec codec(&RpcMessage::default_instance(), messageCallback);
+  ProtobufCodecLite codec(&RpcMessage::default_instance(), "RPC0", messageCallback);
   codec.fillEmptyBuffer(buf2, message);
   print(buf2);
   s2 = buf2;
-  codec.onMessage(TcpConnectionPtr(), &buf1, 0);
+  codec.onMessage(TCPConnectionPtr(), buf1, 0);
   assert(g_msgptr);
   assert(g_msgptr->DebugString() == message.DebugString());
   g_msgptr.reset();
@@ -66,11 +66,11 @@ int main()
 
   {
   std::string buf;
-  ProtobufCodec codec(&RpcMessage::default_instance(), "XYZ", messageCallback);
-  codec.fillEmptyBuffer(&buf, message);
+  ProtobufCodecLite codec(&RpcMessage::default_instance(), "XYZ", messageCallback);
+  codec.fillEmptyBuffer(buf, message);
   print(buf);
   s2 = buf;
-  codec.onMessage(TcpConnectionPtr(), &buf, Timestamp::now());
+  codec.onMessage(TCPConnectionPtr(), buf, 123);
   assert(g_msgptr);
   assert(g_msgptr->DebugString() == message.DebugString());
   }

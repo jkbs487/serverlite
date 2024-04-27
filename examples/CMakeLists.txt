@@ -37,4 +37,6 @@ if(PROTOBUF_FOUND)
 
     add_executable(protobuf_client protobuf_client.cc)
     target_link_libraries(protobuf_client slite_net slite_protobuf_codec query_proto)
+
+    add_subdirectory(rpc)
 endif()

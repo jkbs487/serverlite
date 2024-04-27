@@ -31,8 +31,12 @@ std::string HTTPResponse::toString()
 {
     std::string resp;
     resp += version_ + " " + std::to_string(status_) + " " + statusToString(status_) + "\r\n";
-    if (length_) resp += "Content-Length: " + std::to_string(length_) + "\r\n";
-    if (!type_.empty()) resp += "Content-Type: " + type_ + "\r\n";
+    if (length_) {
+        resp += "Content-Length: " + std::to_string(length_) + "\r\n";
+    }
+    if (!type_.empty()) {
+        resp += "Content-Type: " + type_ + "\r\n";
+    } 
     for (auto head : header_) {
         resp += head.first + ": " + head.second + "\r\n";
     }

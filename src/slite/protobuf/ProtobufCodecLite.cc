@@ -1,4 +1,4 @@
-#include "slite/protobuf/ProtobufCodec.h"
+#include "slite/protobuf/ProtobufCodecLite.h"
 
 #include "slite/Logger.h"
 
@@ -23,15 +23,19 @@ namespace
   int __attribute__ ((unused)) dummy = ProtobufVersionCheck();
 }
 
-void ProtobufCodec::fillEmptyBuffer(std::string& buf, const google::protobuf::Message& message)
+void ProtobufCodecLite::send(const TCPConnectionPtr& conn,
+                             const ::google::protobuf::Message& message)
 {
-  // buf->retrieveAll();
+  // FIXME: serialize to TcpConnection::outputBuffer()
+  std::string buf;
+  fillEmptyBuffer(buf, message);
+  conn->send(buf);
+}
+
+void ProtobufCodecLite::fillEmptyBuffer(std::string& buf, const google::protobuf::Message& message)
+{
   assert(buf.size() == 0);
-  const std::string& typeName = message.GetTypeName();
-  int32_t nameLen = static_cast<int32_t>(typeName.size()+1);
-  int32_t nNameLen = htonl(nameLen);
-  buf.append(reinterpret_cast<const char*>(&nNameLen), sizeof nameLen);
-  buf.append(typeName.c_str(), nameLen);
+  buf.append(tag_);
   // code copied from MessageLite::SerializeToArray() and MessageLite::SerializePartialToArray().
   GOOGLE_DCHECK(message.IsInitialized()) << InitializationErrorMessage("serialize", message);
 
@@ -55,7 +59,7 @@ void ProtobufCodec::fillEmptyBuffer(std::string& buf, const google::protobuf::Me
   
   buf.resize(buf.size() + byte_size);
 
-  uint8_t* start = reinterpret_cast<uint8_t*>(buf.data() + nameLen + sizeof nameLen);
+  uint8_t* start = reinterpret_cast<uint8_t*>(buf.data() + tag_.size());
   uint8_t* end = message.SerializeWithCachedSizesToArray(start);
   if (end - start != byte_size)
   {
@@ -70,8 +74,8 @@ void ProtobufCodec::fillEmptyBuffer(std::string& buf, const google::protobuf::Me
       ::adler32(1,
                 reinterpret_cast<const Bytef*>(buf.data()),
                 static_cast<int>(buf.size()))));
-  buf.append(reinterpret_cast<const char*>(&checkSum), sizeof checkSum);
-  assert(buf.size() == sizeof nameLen + nameLen + byte_size + sizeof checkSum);
+  buf.append(reinterpret_cast<const char*>(&checkSum), kChecksumLen);
+  assert(buf.size() == tag_.size() + byte_size + kChecksumLen);
   int32_t len = htonl(static_cast<int32_t>(buf.size()));
   buf.insert(0, reinterpret_cast<const char*>(&len), sizeof len);
 }
@@ -95,7 +99,7 @@ namespace
   const std::string kUnknownErrorStr = "UnknownError";
 }
 
-const std::string& ProtobufCodec::errorCodeToString(ErrorCode errorCode)
+const std::string& ProtobufCodecLite::errorCodeToString(ErrorCode errorCode)
 {
   switch (errorCode)
   {
@@ -116,12 +120,12 @@ const std::string& ProtobufCodec::errorCodeToString(ErrorCode errorCode)
   }
 }
 
-void ProtobufCodec::defaultErrorCallback(const slite::TCPConnectionPtr& conn,
+void ProtobufCodecLite::defaultErrorCallback(const slite::TCPConnectionPtr& conn,
                                          std::string buf,
                                          int64_t,
                                          ErrorCode errorCode)
 {
-  LOG_ERROR << "ProtobufCodec::defaultErrorCallback - " << errorCodeToString(errorCode);
+  LOG_ERROR << "ProtobufCodecLite::defaultErrorCallback - " << errorCodeToString(errorCode);
   if (conn && conn->connected())
   {
     conn->shutdown();
@@ -135,43 +139,39 @@ int32_t asInt32(const char* buf)
   return ntohl(be32);
 }
 
-void ProtobufCodec::onMessage(const slite::TCPConnectionPtr& conn,
+void ProtobufCodecLite::onMessage(const slite::TCPConnectionPtr& conn,
                               std::string& buf,
                               int64_t receiveTime)
 {
-  while (buf.size() >= kMinMessageLen + kHeaderLen)
-  {
+  while (buf.size() >= static_cast<size_t>(kMinMessageLen + kHeaderLen)) {
     int32_t len;
     ::memcpy(&len, buf.data(), sizeof len);
     len = ntohl(len);
-    if (len > kMaxMessageLen || len < kMinMessageLen)
-    {
+    if (len > kMaxMessageLen || len < kMinMessageLen) {
       errorCallback_(conn, buf, receiveTime, kInvalidLength);
       break;
     }
-    else if (buf.size() >= static_cast<size_t>(len + kHeaderLen))
-    {
-      ErrorCode errorCode = kNoError;
-      MessagePtr message = parse(buf.data()+kHeaderLen, len, &errorCode);
-      if (errorCode == kNoError && message)
-      {
+    else if (buf.size() >= static_cast<size_t>(len + kHeaderLen)) {
+      if (rawMessageCallback_ && !rawMessageCallback_(conn, std::string(buf.data() + kHeaderLen, len), receiveTime)) {
+        buf = buf.substr(kHeaderLen + len, buf.size()-kHeaderLen-len);
+        continue;
+      }
+      MessagePtr message(prototype_->New());
+      ErrorCode errorCode = parse(buf.data()+kHeaderLen, len, message.get());
+      if (errorCode == kNoError) {
         messageCallback_(conn, message, receiveTime);
         buf = buf.substr(kHeaderLen + len, buf.size()-kHeaderLen-len);
-      }
-      else
-      {
+      } else {
         errorCallback_(conn, buf, receiveTime, errorCode);
         break;
       }
-    }
-    else
-    {
+    } else {
       break;
     }
   }
 }
 
-google::protobuf::Message* ProtobufCodec::createMessage(const std::string& typeName)
+google::protobuf::Message* ProtobufCodecLite::createMessage(const std::string& typeName)
 {
   google::protobuf::Message* message = NULL;
   const google::protobuf::Descriptor* descriptor =
@@ -188,53 +188,35 @@ google::protobuf::Message* ProtobufCodec::createMessage(const std::string& typeN
   return message;
 }
 
-MessagePtr ProtobufCodec::parse(const char* buf, int len, ErrorCode* error)
+ProtobufCodecLite::ErrorCode ProtobufCodecLite::parse(const char* buf, int len, ::google::protobuf::Message* message)
 {
-  MessagePtr message;
-
+  ErrorCode error = kNoError;
   // check sum
   int32_t expectedCheckSum = asInt32(buf + len - kHeaderLen);
   int32_t checkSum = static_cast<int32_t>(
       ::adler32(1,
                 reinterpret_cast<const Bytef*>(buf),
                 static_cast<int>(len - kHeaderLen)));
-  if (checkSum == expectedCheckSum)
-  {
-    // get message type name
-    int32_t nameLen = asInt32(buf);
-    if (nameLen >= 2 && nameLen <= len - 2*kHeaderLen)
-    {
-      std::string typeName(buf + kHeaderLen, buf + kHeaderLen + nameLen - 1);
-      // create message object
-      message.reset(createMessage(typeName));
-      if (message)
-      {
+  if (checkSum == expectedCheckSum) {
+    if (memcmp(buf + kHeaderLen, tag_.data(), tag_.size())) {
+      if (message) {
         // parse from buffer
-        const char* data = buf + kHeaderLen + nameLen;
-        int32_t dataLen = len - nameLen - 2*kHeaderLen;
-        if (message->ParseFromArray(data, dataLen))
-        {
-          *error = kNoError;
+        const char* data = buf + tag_.size();
+        int32_t dataLen = len - kChecksumLen - static_cast<int>(tag_.size());
+        if (message->ParseFromArray(data, dataLen)) {
+          error = kNoError;
+        } else {
+          error = kParseError;
         }
-        else
-        {
-          *error = kParseError;
-        }
+      } else {
+        error = kUnknownMessageType;
       }
-      else
-      {
-        *error = kUnknownMessageType;
-      }
+    } else {
+      error = kInvalidNameLen;
     }
-    else
-    {
-      *error = kInvalidNameLen;
-    }
-  }
-  else
-  {
-    *error = kCheckSumError;
+  } else {
+    error = kCheckSumError;
   }
 
-  return message;
+  return error;
 }

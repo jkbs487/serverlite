@@ -150,9 +150,9 @@ void TCPHandle::shutdown()
     ::shutdown(fd_, SHUT_WR);
 }
 
-ssize_t TCPHandle::send(const std::string& data)
+ssize_t TCPHandle::send(const std::string_view& data)
 {
-    ssize_t ret = ::send(fd_, data.c_str(), data.size(), 0);
+    ssize_t ret = ::send(fd_, data.data(), data.size(), 0);
     if (ret == -1 && errno != EWOULDBLOCK)
          LOG_ERROR << "send error: " << strerror(errno);
     return ret;
@@ -217,7 +217,7 @@ bool TCPHandle::getSocketError()
     } else {
         char buffer[512];
         ::bzero(buffer, sizeof buffer);
-        LOG_ERROR << "handleError: " << strerror_r(optval, buffer, sizeof buffer);
+        LOG_DEBUG << "handleError: " << strerror_r(optval, buffer, sizeof buffer);
     }
     return true;
 }

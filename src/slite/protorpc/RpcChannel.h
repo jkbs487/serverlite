@@ -1,14 +1,7 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-//
-// This is a public header file, it must only include public header files.
 #pragma once
 
+#include "slite/TCPClient.h"
+#include "slite/EventLoop.h"
 #include "slite/protorpc/RpcCodec.h"
 
 #include <google/protobuf/service.h>
@@ -74,7 +67,8 @@ class Service;
 
 namespace slite
 {
-
+// namespace protorpc
+// {
 // Abstract interface for an RPC channel.  An RpcChannel represents a
 // communication line to a Service which can be used to call that Service's
 // methods.  The Service may be running on another machine.  Normally, you
@@ -92,6 +86,11 @@ class RpcChannel : public ::google::protobuf::RpcChannel
   explicit RpcChannel(const TCPConnectionPtr& conn);
 
   ~RpcChannel() override;
+
+  void setServer(std::string host, int16_t port) {
+    loop_ = std::make_shared<EventLoop>();
+    client_ = std::make_shared<TCPClient>(host, port, loop_.get(), "RpcClient");
+  }
 
   void setConnection(const TCPConnectionPtr& conn)
   {
@@ -124,6 +123,7 @@ class RpcChannel : public ::google::protobuf::RpcChannel
                     int64_t receiveTime);
 
   void doneCallback(::google::protobuf::Message* response, int64_t id);
+  void connectedCallback(const TCPConnectionPtr& conn, const RpcMessage& request);
 
   struct OutstandingCall
   {
@@ -134,6 +134,9 @@ class RpcChannel : public ::google::protobuf::RpcChannel
   RpcCodec codec_;
   TCPConnectionPtr conn_;
   std::atomic<int64_t> id_;
+  std::shared_ptr<TCPClient> client_;
+  std::shared_ptr<EventLoop> loop_;
+  
 
   std::mutex mutex_;
   std::map<int64_t, OutstandingCall> outstandings_;
@@ -142,4 +145,5 @@ class RpcChannel : public ::google::protobuf::RpcChannel
 };
 typedef std::shared_ptr<RpcChannel> RpcChannelPtr;
 
+// } // namespace protorpc
 }  // namespace slite

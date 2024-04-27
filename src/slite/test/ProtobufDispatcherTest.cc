@@ -1,5 +1,5 @@
 #include "slite/protobuf/ProtobufDispatcher.h"
-#include "query.pb.h"
+#include "slite/test/query.pb.h"
 
 #include <iostream>
 

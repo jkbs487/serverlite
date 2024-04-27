@@ -11,7 +11,7 @@
 #include <functional>
 
 using namespace slite;
-using namespace slite::protobuf;
+// using namespace slite::protobuf;
 using namespace std::placeholders;
 
 typedef std::shared_ptr<slite::Empty> EmptyPtr;
@@ -53,12 +53,9 @@ class QueryClient
         << conn->localAddr() << ":" << conn->localPort() << " is "
         << (conn->connected() ? "UP" : "DOWN");
 
-    if (conn->connected())
-    {
+    if (conn->connected()) {
       codec_.send(conn, *messageToSend);
-    }
-    else
-    {
+    } else {
       loop_->quit();
     }
   }

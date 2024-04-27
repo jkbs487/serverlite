@@ -31,7 +31,8 @@ public:
 
     ~MemoryDBServer()
     {
-        delete loop_;
+		if (loop_)
+			delete loop_;
     }
 
 void start()

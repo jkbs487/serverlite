@@ -47,5 +47,5 @@ add_subdirectory(http)
 
 if(PROTOBUF_FOUND)
     add_subdirectory(protobuf)
-    #add_subdirectory(protorpc)
+    add_subdirectory(protorpc)
 endif()

@@ -22,7 +22,7 @@ public:
     bool accept(std::shared_ptr<TCPHandle>& handle);
     bool connect(uint16_t port, const std::string& ipAddr);
     void shutdown();
-    ssize_t send(const std::string& data);
+    ssize_t send(const std::string_view& data);
     ssize_t recv(std::string& data);
 
     void setReuseAddr();

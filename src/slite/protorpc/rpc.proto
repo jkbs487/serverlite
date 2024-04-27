@@ -1,6 +1,6 @@
 package slite;
 // option go_package = "muduorpc";
-option java_package = "com.chenshuo.muduo.protorpc";
+option java_package = "com.jiangkun.slite.protorpc";
 option java_outer_classname = "RpcProto";
 
 enum MessageType

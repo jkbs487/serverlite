@@ -18,9 +18,8 @@ void slite::defaultConnectionCallback(const TCPConnectionPtr& conn)
 
 void slite::defaultMessageCallback(const TCPConnectionPtr& conn, std::string& buffer, int64_t receiveTime)
 {
-    std::string data;
-    data.swap(buffer);
-    LOG_INFO << "recv: " << data.c_str() << ", bytes: " << data.size();
+    LOG_INFO << "recv: " << buffer << ", bytes: " << buffer.size();
+    buffer.clear();
 }
 
 TCPConnection::TCPConnection(EventLoop *loop, std::shared_ptr<TCPHandle> handle, std::string name):
@@ -82,6 +81,11 @@ void TCPConnection::closeTCPNoDelay()
     handle_->closeTCPNoDelay();
 }
 
+void TCPConnection::send(const char* data, int len)
+{
+    send(std::string(data, len));
+}
+
 void TCPConnection::send(const std::string& data)
 {
     if (loop_->isInLoopThread()) {
@@ -103,7 +107,7 @@ void TCPConnection::sendInLoop(const std::string& data)
 
     // 先还要判断是否已经注册写事件，已注册就跳过
     // 还判断写缓存区是否为空，为空才能直接发
-    if (!channel_->isSending() && sendBuf_.size() == 0) {
+    if (!channel_->isSending() && sendBuffer_.size() == 0) {
         nsend = handle_->send(data);
         if (nsend >= 0) {
             remaining = data.size() - nsend;
@@ -127,7 +131,7 @@ void TCPConnection::sendInLoop(const std::string& data)
     // 如果 SIGPIPE 或者 RST，不注册任何写事件，直接退出
     // 还有剩余未发完，注册写事件
     if (!sendError && remaining > 0) {
-        sendBuf_.append(data.c_str() + nsend, remaining);
+        sendBuffer_.append(data.data() + nsend, remaining);
         if (!channel_->isSending())
             channel_->enableSend();
     }
@@ -144,8 +148,8 @@ void TCPConnection::handleRecv(int64_t receiveTime)
     } else if (ret == 0) {
         handleClose();
     } else {
-        recvBuf_.append(data.c_str(), data.size());
-        messageCallback_(shared_from_this(), recvBuf_, receiveTime);
+        recvBuffer_.append(data.c_str(), data.size());
+        messageCallback_(shared_from_this(), recvBuffer_, receiveTime);
     }
     return;
 }
@@ -154,11 +158,11 @@ void TCPConnection::handleSend()
 {
     loop_->assertInLoopThread();
     if (channel_->isSending()) {
-        ssize_t nsend = handle_->send(sendBuf_);
+        ssize_t nsend = handle_->send(sendBuffer_);
         if (nsend > 0) {
-            sendBuf_.erase(0, nsend);
+            sendBuffer_.erase(0, nsend);
             // 如果写缓存已经全部发送完毕，取消写事件
-            if (sendBuf_.size() == 0) {
+            if (sendBuffer_.size() == 0) {
                 channel_->disableSend();
                 if (writeCompleteCallback_) {
                     loop_->pushTask(std::bind(writeCompleteCallback_, shared_from_this()));

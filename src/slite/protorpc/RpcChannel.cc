@@ -14,19 +14,20 @@
 #include <google/protobuf/descriptor.h>
 
 using namespace slite;
+// using namespace slite::protorpc;
 using namespace std::placeholders;
 
 RpcChannel::RpcChannel()
-  : codec_(std::bind(&RpcChannel::onRpcMessage, this, _1, _2, _3)),
-    services_(NULL)
+    : codec_(std::bind(&RpcChannel::onRpcMessage, this, _1, _2, _3)),
+      services_(NULL)
 {
   LOG_INFO << "RpcChannel::ctor - " << this;
 }
 
-RpcChannel::RpcChannel(const TCPConnectionPtr& conn)
-  : codec_(std::bind(&RpcChannel::onRpcMessage, this, _1, _2, _3)),
-    conn_(conn),
-    services_(NULL)
+RpcChannel::RpcChannel(const TCPConnectionPtr &conn)
+    : codec_(std::bind(&RpcChannel::onRpcMessage, this, _1, _2, _3)),
+      conn_(conn),
+      services_(NULL)
 {
   LOG_INFO << "RpcChannel::ctor - " << this;
 }
@@ -34,24 +35,23 @@ RpcChannel::RpcChannel(const TCPConnectionPtr& conn)
 RpcChannel::~RpcChannel()
 {
   LOG_INFO << "RpcChannel::dtor - " << this;
-  for (const auto& outstanding : outstandings_)
-  {
+  for (const auto &outstanding : outstandings_) {
     OutstandingCall out = outstanding.second;
     delete out.response;
     delete out.done;
   }
 }
 
-  // Call the given method of the remote service.  The signature of this
-  // procedure looks the same as Service::CallMethod(), but the requirements
-  // are less strict in one important way:  the request and response objects
-  // need not be of any specific class as long as their descriptors are
-  // method->input_type() and method->output_type().
-void RpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor* method,
-                            google::protobuf::RpcController* controller,
-                            const ::google::protobuf::Message* request,
-                            ::google::protobuf::Message* response,
-                            ::google::protobuf::Closure* done)
+// Call the given method of the remote service.  The signature of this
+// procedure looks the same as Service::CallMethod(), but the requirements
+// are less strict in one important way:  the request and response objects
+// need not be of any specific class as long as their descriptors are
+// method->input_type() and method->output_type().
+void RpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor *method,
+                            google::protobuf::RpcController *controller,
+                            const ::google::protobuf::Message *request,
+                            ::google::protobuf::Message *response,
+                            ::google::protobuf::Closure *done)
 {
   RpcMessage message;
   message.set_type(REQUEST);
@@ -61,40 +61,42 @@ void RpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor* method,
   message.set_method(method->name());
   message.set_request(request->SerializeAsString()); // FIXME: error check
 
-  OutstandingCall out = { response, done };
+  OutstandingCall out = {response, done};
   {
-  std::lock_guard<std::mutex> lock(mutex_);
-  outstandings_[id] = out;
+    std::lock_guard<std::mutex> lock(mutex_);
+    outstandings_[id] = out;
   }
-  codec_.send(conn_, message);
+
+  client_->setConnectionCallback(std::bind(&RpcChannel::connectedCallback, this, _1, message));
+  client_->setMessageCallback(std::bind(&RpcChannel::onMessage, this, _1, _2, _3));
+  client_->connect();
+  loop_->loop();
 }
 
-void RpcChannel::onMessage(const TCPConnectionPtr& conn,
+void RpcChannel::onMessage(const TCPConnectionPtr &conn,
                            std::string buf,
                            int64_t receiveTime)
 {
   codec_.onMessage(conn, buf, receiveTime);
 }
 
-void RpcChannel::onRpcMessage(const TCPConnectionPtr& conn,
-                              const RpcMessagePtr& messagePtr,
+void RpcChannel::onRpcMessage(const TCPConnectionPtr &conn,
+                              const RpcMessagePtr &messagePtr,
                               int64_t receiveTime)
 {
   assert(conn == conn_);
-  //printf("%s\n", message.DebugString().c_str());
-  RpcMessage& message = *messagePtr;
-  if (message.type() == RESPONSE)
-  {
+  // printf("%s\n", message.DebugString().c_str());
+  RpcMessage &message = *messagePtr;
+  if (message.type() == RESPONSE) {
     int64_t id = message.id();
     assert(message.has_response() || message.has_error());
 
-    OutstandingCall out = { NULL, NULL };
+    OutstandingCall out = {NULL, NULL};
 
     {
       std::lock_guard<std::mutex> lock(mutex_);
       std::map<int64_t, OutstandingCall>::iterator it = outstandings_.find(id);
-      if (it != outstandings_.end())
-      {
+      if (it != outstandings_.end()) {
         out = it->second;
         outstandings_.erase(it);
       }
@@ -107,23 +109,24 @@ void RpcChannel::onRpcMessage(const TCPConnectionPtr& conn,
       }
       if (out.done) {
         out.done->Run();
+        client_->disconnect();
+        loop_->quit();
       }
     }
   } else if (message.type() == REQUEST) {
     // FIXME: extract to a function
     ErrorCode error = WRONG_PROTO;
     if (services_) {
-      std::map<std::string, google::protobuf::Service*>::const_iterator it = services_->find(message.service());
+      std::map<std::string, google::protobuf::Service *>::const_iterator it = services_->find(message.service());
       if (it != services_->end()) {
-        google::protobuf::Service* service = it->second;
+        google::protobuf::Service *service = it->second;
         assert(service != NULL);
-        const google::protobuf::ServiceDescriptor* desc = service->GetDescriptor();
-        const google::protobuf::MethodDescriptor* method
-          = desc->FindMethodByName(message.method());
+        const google::protobuf::ServiceDescriptor *desc = service->GetDescriptor();
+        const google::protobuf::MethodDescriptor *method = desc->FindMethodByName(message.method());
         if (method) {
           std::unique_ptr<google::protobuf::Message> request(service->GetRequestPrototype(method).New());
           if (request->ParseFromString(message.request())) {
-            google::protobuf::Message* response = service->GetResponsePrototype(method).New();
+            google::protobuf::Message *response = service->GetResponsePrototype(method).New();
             // response is deleted in doneCallback
             int64_t id = message.id();
             service->CallMethod(method, NULL, request.get(), response,
@@ -152,13 +155,20 @@ void RpcChannel::onRpcMessage(const TCPConnectionPtr& conn,
   }
 }
 
-void RpcChannel::doneCallback(::google::protobuf::Message* response, int64_t id)
+void RpcChannel::doneCallback(::google::protobuf::Message *response, int64_t id)
 {
   std::unique_ptr<google::protobuf::Message> d(response);
-  RpcMessage message;
+  slite::RpcMessage message;
   message.set_type(RESPONSE);
   message.set_id(id);
   message.set_response(response->SerializeAsString()); // FIXME: error check
   codec_.send(conn_, message);
 }
 
+void RpcChannel::connectedCallback(const TCPConnectionPtr& conn, const RpcMessage& request)
+{
+    if (conn->connected()) {
+        codec_.send(conn, request);
+        this->setConnection(conn);
+    }
+}
