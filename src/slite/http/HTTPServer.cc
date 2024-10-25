@@ -37,22 +37,27 @@ void HTTPServer::addRouteCallback(const std::string& rule, HTTPMethod method, co
     rules_[rule][method] = cb;
 }
 
+void HTTPServer::addNotFoundCallback(const NotFoundCallback& cb)
+{
+    notFoundCb_ = cb;
+}
+
 void HTTPServer::onRequest(HTTPRequest* req, HTTPResponse* resp)
 {
     std::string body;
 
     if (!rules_.count(req->path()) || !rules_[req->path()].count(req->method())) {
-        body += "<h1>404 Not Found</h1>";
-        body += "slite";
+        if (notFoundCb_) {
+            body = notFoundCb_();
+        } else {
+            body = "404 Not Found";
+        }
         resp->setStatus(HTTPResponse::NOT_FOUND);
-        resp->setBody(body);
-        resp->setContentLength(body.size());
-        return;
+    } else {
+        body = rules_[req->path()][req->method()]();
+        resp->setStatus(HTTPResponse::OK);
     }
-
-    body = rules_[req->path()][req->method()]();
     resp->setBody(body);
-    resp->setStatus(HTTPResponse::OK);
     resp->setContentLength(body.size());
 }
 
