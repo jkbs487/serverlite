@@ -23,7 +23,7 @@ int main()
   print();
 
   EventLoop loop;
-  //loop.runAfter(11, std::bind(&EventLoop::quit, &loop));
+  loop.runAfter(11, std::bind(&EventLoop::quit, &loop));
 
   {
     printf("Single thread %p:\n", &loop);

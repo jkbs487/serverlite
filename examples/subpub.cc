@@ -112,7 +112,7 @@ void onServerMessage(const TCPConnectionPtr& conn, std::string& buffer, int64_t 
         } else if (data.substr(0, 5) == "unsub") {
             std::string topic = strip(data.substr(6));
             LOG_INFO << conn->peerAddr() << ":" << conn->peerPort()
-            << " unsub topic " << topic;
+                << " unsub topic " << topic;
             std::set<std::string> topics = std::any_cast<std::set<std::string>>(conn->getContext());
             topics.erase(topic);
             conn->setContext(topics);
@@ -139,6 +139,8 @@ void onServerConnection(const TCPConnectionPtr& conn)
             std::lock_guard<std::mutex> lock(mutex_);
             auto it = std::find(conns[topic].begin(), conns[topic].end(), conn);
             conns[topic].erase(it);
+            LOG_INFO << conn->peerAddr() << ":" << conn->peerPort()
+                << " unsub topic " << topic;
         }
     }
 }

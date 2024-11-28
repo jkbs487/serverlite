@@ -1,11 +1,12 @@
 #include "slite/protobuf/ProtobufCodec.h"
-#include "query.pb.h"
+#include "slite/test/query.pb.h"
 
 #include <stdio.h>
 #include <zlib.h>  // adler32
 #include <arpa/inet.h>
 
-using namespace slite::protobuf;
+using namespace slite;
+// using namespace slite::protobuf;
 
 template<typename To, typename From>
 inline To implicit_cast(From const &f)

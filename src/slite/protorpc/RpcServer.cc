@@ -15,48 +15,47 @@
 #include <google/protobuf/service.h>
 
 using namespace slite;
+// using namespace slite::protorpc;
 using namespace std::placeholders;
 
 RpcServer::RpcServer(EventLoop* loop,
                      const std::string& host, 
-                     uint32_t port)
+                     uint16_t port)
   : server_(host, port, loop, "RpcServer")
 {
-  server_.setConnectionCallback(
-      std::bind(&RpcServer::onConnection, this, _1));
+    server_.setConnectionCallback(
+        std::bind(&RpcServer::onConnection, this, _1));
 //   server_.setMessageCallback(
 //       std::bind(&RpcServer::onMessage, this, _1, _2, _3));
 }
 
 void RpcServer::registerService(google::protobuf::Service* service)
 {
-  const google::protobuf::ServiceDescriptor* desc = service->GetDescriptor();
-  services_[desc->full_name()] = service;
+    const google::protobuf::ServiceDescriptor* desc = service->GetDescriptor();
+    services_[desc->full_name()] = service;
 }
 
 void RpcServer::start()
 {
-  server_.start();
+    server_.start();
 }
 
 void RpcServer::onConnection(const TCPConnectionPtr& conn)
 {
-  LOG_INFO << "RpcServer - " << conn->peerPort() << " -> "
-    << conn->localPort() << " is "
-    << (conn->connected() ? "UP" : "DOWN");
-  if (conn->connected())
-  {
-    RpcChannelPtr channel(new RpcChannel(conn));
-    channel->setServices(&services_);
-    conn->setMessageCallback(
-        std::bind(&RpcChannel::onMessage, channel.get(), _1, _2, _3));
-    conn->setContext(channel);
-  }
-  else
-  {
-    conn->setContext(RpcChannelPtr());
-    // FIXME:
-  }
+    LOG_INFO << "RpcServer - " << conn->peerPort() << " -> "
+        << conn->localPort() << " is "
+        << (conn->connected() ? "UP" : "DOWN");
+    if (conn->connected()) {
+        RpcChannelPtr channel(new RpcChannel(conn));
+        channel->setServices(&services_);
+        conn->setMessageCallback(
+            std::bind(&RpcChannel::onMessage, channel.get(), _1, _2, _3));
+        conn->setContext(channel);
+    }
+    else {
+        conn->setContext(RpcChannelPtr());
+          // FIXME:
+    }
 }
 
 // void RpcServer::onMessage(const TcpConnectionPtr& conn,

@@ -1,23 +1,19 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
+#pragma once
 
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-//
-// This is a public header file, it must only include public header files.
-
-#include "slite/protobuf/codec.h"
+#include "slite/protobuf/ProtobufCodecLite.h"
 
 namespace slite
 {
 
-class TcpConnection;
-typedef std::shared_ptr<TCPConnection> TCPConnectionPtr;
-
 class RpcMessage;
-typedef std::shared_ptr<RpcMessage> RpcMessagePtr;
+// class TcpConnection;
+
+// typedef std::shared_ptr<TCPConnection> TCPConnectionPtr;
+
+using RpcMessagePtr = std::shared_ptr<RpcMessage>;
+
+// namespace protorpc
+// {
 extern const char rpctag[];// = "RPC0";
 
 // wire format
@@ -29,7 +25,7 @@ extern const char rpctag[];// = "RPC0";
 // payload   N-byte
 // checksum  4-byte  adler32 of "RPC0"+payload
 //
+using RpcCodec = ProtobufCodecLiteT<RpcMessage, rpctag>;
 
-typedef ProtobufCodecLiteT<RpcMessage, rpctag> RpcCodec;
-
-}  // namespace muduo
+// } // namespace protobuf
+}  // namespace slite

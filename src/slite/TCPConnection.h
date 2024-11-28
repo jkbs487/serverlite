@@ -26,8 +26,7 @@ public:
     ~TCPConnection();
     
     void send(const std::string& data);
-    //void send(const char* data, size_t len);
-    void sendFile(std::string filePath);
+    void send(const char* data, int len);
 
     void setConnectionCallback(const ConnectionCallback& cb) 
     { connectionCallback_ = cb; }
@@ -99,8 +98,8 @@ private:
     std::any context_;
     std::string name_;
     EventLoop* loop_;
-    std::string recvBuf_;
-    std::string sendBuf_;
+    std::string recvBuffer_;
+    std::string sendBuffer_;
     std::shared_ptr<TCPHandle> handle_;
     ConnState state_;
     std::unique_ptr<Channel>channel_;

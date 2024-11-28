@@ -1,5 +1,6 @@
 #include "slite/TCPClient.h"
 #include "slite/EventLoop.h"
+#include "slite/Logger.h"
 
 int count;
 
@@ -34,11 +35,12 @@ void close(const TCPConnectionPtr& conn)
 
 int main()
 {
+    Logger::setLogLevel(Logger::DEBUG);
     EventLoop loop;
     g_loop = &loop;
     TCPClient discardClient("127.0.0.1", 20005, &loop, "client");
     //discardClient.setConnectionCallback(onConnection);
-    //discardClient.setWriteCompleteCallback(close);
+
     discardClient.connect();
     loop.loop();
 }

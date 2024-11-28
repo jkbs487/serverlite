@@ -13,11 +13,11 @@
 //   int32_t  checkSum; // adler32 of nameLen, typeName and protobufData
 // }
 
-typedef std::shared_ptr<google::protobuf::Message> MessagePtr;
+using MessagePtr = std::shared_ptr<google::protobuf::Message>;
 
 namespace slite {
 
-namespace protobuf {
+// namespace protobuf {
 //
 // FIXME: merge with RpcCodec
 //
@@ -35,11 +35,11 @@ public:
       kParseError,
     };
 
-    typedef std::function<void (const slite::TCPConnectionPtr&,
+    typedef std::function<void (const TCPConnectionPtr&,
                                   const MessagePtr&,
                                   int64_t)> ProtobufMessageCallback;
 
-    typedef std::function<void (const slite::TCPConnectionPtr&,
+    typedef std::function<void (const TCPConnectionPtr&,
                                   std::string,
                                   int64_t,
                                   ErrorCode)> ErrorCallback;
@@ -56,11 +56,11 @@ public:
     {
     }
 
-    void onMessage(const slite::TCPConnectionPtr& conn,
+    void onMessage(const TCPConnectionPtr& conn,
                     std::string& buf,
                     int64_t receiveTime);
 
-    void send(const slite::TCPConnectionPtr& conn,
+    void send(const TCPConnectionPtr& conn,
               const google::protobuf::Message& message)
     {
         // FIXME: serialize to TcpConnection::outputBuffer()
@@ -90,60 +90,6 @@ private:
     const static int kMaxMessageLen = 64*1024*1024; // same as codec_stream.h kDefaultTotalBytesLimit
 };
 
-template<typename MSG, const char* TAG, typename CODEC=ProtobufCodec>  // TAG must be a variable with external linkage, not a string literal
-class ProtobufCodecLiteT
-{
-  static_assert(std::is_base_of<ProtobufCodec, CODEC>::value, "CODEC should be derived from ProtobufCodecLite");
- public:
-  typedef std::shared_ptr<MSG> ConcreteMessagePtr;
-  typedef std::function<void (const TCPConnectionPtr&,
-                              const ConcreteMessagePtr&,
-                              int64_t)> ProtobufMessageCallback;
-  typedef ProtobufCodec::ErrorCallback ErrorCallback;
-
-  explicit ProtobufCodecLiteT(const ProtobufMessageCallback& messageCb,
-                              const ErrorCallback& errorCb = ProtobufCodec::defaultErrorCallback)
-    : messageCallback_(messageCb),
-      codec_(&MSG::default_instance(),
-             TAG,
-             std::bind(&ProtobufCodecLiteT::onRpcMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-             errorCb)
-  {
-  }
-
-  const std::string& tag() const { return codec_.tag(); }
-
-  void send(const TCPConnectionPtr& conn,
-            const MSG& message)
-  {
-    codec_.send(conn, message);
-  }
-
-  void onMessage(const TCPConnectionPtr& conn,
-                 std::string buf,
-                 int64_t receiveTime)
-  {
-    codec_.onMessage(conn, buf, receiveTime);
-  }
-
-  // internal
-  void onRpcMessage(const TCPConnectionPtr& conn,
-                    const MessagePtr& message,
-                    int64_t receiveTime)
-  {
-    messageCallback_(conn, std::static_pointer_cast<MSG>(message), receiveTime);
-  }
-
-  void fillEmptyBuffer(std::string buf, const MSG& message)
-  {
-    codec_.fillEmptyBuffer(buf, message);
-  }
-
- private:
-  ProtobufMessageCallback messageCallback_;
-  CODEC codec_;
-};
-
-} // namespace protobuf
+// } // namespace protobuf
 
 } // namespace slite

@@ -10,7 +10,7 @@ class SimpleHttpServer
 {
 public:
     SimpleHttpServer(const std::string& host, uint16_t port, slite::EventLoop* loop)
-    : server_(host, port, loop, "SimpleHttpServer") 
+    : server_(host, port, loop, "SimpleHttpServer")
     {
         server_.addRouteCallback("/hello", HTTPMethod::GET, std::bind(&SimpleHttpServer::onHello, this));
         server_.addRouteCallback("/", HTTPMethod::GET, std::bind(&SimpleHttpServer::onIndex, this));
