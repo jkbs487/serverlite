@@ -36,7 +36,7 @@ set(HEADERS
   RpcServer.h
   rpc.proto
   rpcservice.proto
-  ${PROJECT_BINARY_DIR}/slite/protorpc/rpc.pb.h
+  ${PROJECT_BINARY_DIR}/src/slite/protorpc/rpc.pb.h
   )
 install(FILES ${HEADERS} DESTINATION include/slite/protorpc)
 

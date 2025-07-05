@@ -10,6 +10,7 @@ void solved(sudoku::SudokuResponse* resp)
 }
 
 int main() {
+    // slite::Logger::setLogLevel(slite::Logger::DEBUG);
     slite::RpcChannel channel;
     channel.setServer("127.0.0.1", 9981);
     sudoku::SudokuService::Stub stub_(&channel);
@@ -17,5 +18,4 @@ int main() {
     request.set_checkerboard("001010");
     sudoku::SudokuResponse* response = new sudoku::SudokuResponse;
     stub_.Solve(NULL, &request, response, google::protobuf::NewCallback(solved, response));
-    sleep(2);
 }

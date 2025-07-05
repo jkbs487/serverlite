@@ -6,6 +6,8 @@
 
 #include <cstdio>
 #include <map>
+#include <filesystem>
+#include <fstream>
 
 using namespace slite::http;
 using namespace std::placeholders;
@@ -42,15 +44,19 @@ void HTTPServer::onRequest(HTTPRequest* req, HTTPResponse* resp)
     std::string body;
 
     if (!rules_.count(req->path()) || !rules_[req->path()].count(req->method())) {
-        body += "<h1>404 Not Found</h1>";
-        body += "slite";
-        resp->setStatus(HTTPResponse::NOT_FOUND);
-        resp->setBody(body);
-        resp->setContentLength(body.size());
-        return;
+        if (std::filesystem::exists(req->path())) {
+            get_file_list(body, req->path());
+        } else {
+            body += "<h1>404 Not Found</h1>";
+            body += "slite";
+            resp->setStatus(HTTPResponse::NOT_FOUND);   
+            resp->setBody(body);
+            resp->setContentLength(body.size());
+            return;
+        }
+    } else {
+        body = rules_[req->path()][req->method()]();
     }
-
-    body = rules_[req->path()][req->method()]();
     resp->setBody(body);
     resp->setStatus(HTTPResponse::OK);
     resp->setContentLength(body.size());
@@ -61,4 +67,36 @@ void HTTPServer::onConnection(const TCPConnectionPtr& conn)
     if (conn->connected()) {
         conn->setContext(HTTPRequest());
     }
+}
+
+void HTTPServer::get_file_list(std::string& body, const std::string& path) {
+    body += "<!DOCTYPE html>";
+    body += "<html lang=\"zh-CN\">";
+    try {
+        if (std::filesystem::is_directory(path)) {
+            for (auto &p : std::filesystem::directory_iterator(path)) {
+                LOG_INFO << "body: " << body;
+                body += "<a href=" + p.path().string() + ">" + p.path().filename().string() + "</a><br>";
+            }
+        } else if (std::filesystem::is_regular_file(path)) {
+            std::ifstream file(path);
+            std::string line;
+            if (path.rfind(".png") != std::string::npos) {
+                body += "   <img src=" + path + "></img>";
+            } else if (path.rfind(".cc") != std::string::npos) {
+                body += "<code>";
+                while (std::getline(file, line)) {
+                    body += line;
+                }
+                body += "</code>";
+            } else {
+                while (std::getline(file, line)) {
+                    body += "<p>" + line + "</p>";
+                }
+            }
+        }
+    } catch(std::exception& e) {
+        LOG_ERROR << e.what();
+    }
+    body += "</html>";
 }

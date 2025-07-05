@@ -91,7 +91,7 @@ void EventLoop::loop()
         for (auto c: channels_) LOG_TRACE << "channel: " << c.first << " " << c.second;
         int numEvents = epoll_wait(epollFd_, &*events_.begin(), static_cast<int>(events_.size()), 10000);
         if (numEvents < 0) {
-            perror("epoll_wait");
+            LOG_ERROR << "epoll_wait error: " << strerror(errno);
             break;
         }
         if (numEvents == 0) continue;

@@ -60,14 +60,14 @@ TCPClient::~TCPClient()
 
 void TCPClient::connect()
 {
-      LOG_INFO << "TcpClient::connect[" << name_ << "] - connecting to "
-           << host_ << ":" << port_;
+    LOG_DEBUG << "TcpClient::connect[" << name_ << "] - connecting to "
+        << host_ << ":" << port_;
     connector_->start();
 }
 
 void TCPClient::disconnect()
 {
-    LOG_INFO << "TcpClient::disconnect[" << name_ << "]";
+    LOG_DEBUG << "TcpClient::disconnect[" << name_ << "]";
     if (connection_) {
         connection_->shutdown();
     }

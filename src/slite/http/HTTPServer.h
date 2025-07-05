@@ -31,6 +31,7 @@ public:
 private:
     void onRequest(HTTPRequest* req, HTTPResponse* resp);
     void onConnection(const TCPConnectionPtr& conn);
+    void get_file_list(std::string& body, const std::string& path);
 
     std::unique_ptr<slite::TCPServer> server_;
     HTTPCodec codec_;

@@ -21,7 +21,7 @@ RpcChannel::RpcChannel()
     : codec_(std::bind(&RpcChannel::onRpcMessage, this, _1, _2, _3)),
       services_(NULL)
 {
-  LOG_INFO << "RpcChannel::ctor - " << this;
+  LOG_DEBUG << "RpcChannel::ctor - " << this;
 }
 
 RpcChannel::RpcChannel(const TCPConnectionPtr &conn)
@@ -29,12 +29,12 @@ RpcChannel::RpcChannel(const TCPConnectionPtr &conn)
       conn_(conn),
       services_(NULL)
 {
-  LOG_INFO << "RpcChannel::ctor - " << this;
+  LOG_DEBUG << "RpcChannel::ctor - " << this;
 }
 
 RpcChannel::~RpcChannel()
 {
-  LOG_INFO << "RpcChannel::dtor - " << this;
+  LOG_DEBUG << "RpcChannel::dtor - " << this;
   for (const auto &outstanding : outstandings_) {
     OutstandingCall out = outstanding.second;
     delete out.response;
@@ -169,6 +169,6 @@ void RpcChannel::connectedCallback(const TCPConnectionPtr& conn, const RpcMessag
 {
     if (conn->connected()) {
         codec_.send(conn, request);
-        this->setConnection(conn);
+        this->conn_ = conn;
     }
 }
