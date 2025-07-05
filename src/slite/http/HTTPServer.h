@@ -16,6 +16,7 @@ namespace http
 {
 
 using RouteCallback = std::function<std::string()>;
+using NotFoundCallback = std::function<std::string()>;
 using RouteMap = std::map<std::string, std::map<HTTPMethod, RouteCallback>>;
 
 class HTTPServer
@@ -27,6 +28,7 @@ public:
     void start();
     void setThreadNum(int num);
     void addRouteCallback(const std::string& rule, HTTPMethod method, const RouteCallback& cb);
+    void addNotFoundCallback(const NotFoundCallback& cb);
 
 private:
     void onRequest(HTTPRequest* req, HTTPResponse* resp);
@@ -36,6 +38,7 @@ private:
     std::unique_ptr<slite::TCPServer> server_;
     HTTPCodec codec_;
     RouteMap rules_;
+    NotFoundCallback notFoundCb_;
 };
 
 }
