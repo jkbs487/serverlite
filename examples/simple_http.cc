@@ -15,6 +15,7 @@ public:
         server_.addRouteCallback("/hello", HTTPMethod::GET, std::bind(&SimpleHttpServer::onHello, this));
         server_.addRouteCallback("/", HTTPMethod::GET, std::bind(&SimpleHttpServer::onIndex, this));
         server_.addNotFoundCallback(std::bind(&SimpleHttpServer::onNotFound, this));
+        server_.openFileMode();
     }
 
     void start()

@@ -44,32 +44,34 @@ void HTTPServer::addNotFoundCallback(const NotFoundCallback& cb)
     notFoundCb_ = cb;
 }
 
+void HTTPServer::openFileMode()
+{
+    file_mode_ = true;
+}
+
 void HTTPServer::onRequest(HTTPRequest* req, HTTPResponse* resp)
 {
     std::string body;
 
     if (!rules_.count(req->path()) || !rules_[req->path()].count(req->method())) {
-        if (std::filesystem::exists(req->path())) {
-            get_file_list(body, req->path());
+        if (file_mode_ && std::filesystem::exists(req->path())) {
+            HTTPResponse::HTTPStatus status = get_file_list(body, req->path());
+            resp->setStatus(status);
         } else {
-            body += "<h1>404 Not Found</h1>";
-            body += "slite";
-            resp->setStatus(HTTPResponse::NOT_FOUND);   
-            resp->setBody(body);
-            resp->setContentLength(body.size());
-            return;
+            if (notFoundCb_) {
+                body = notFoundCb_();
+            } else {
+                body += "<h1>404 Not Found</h1>";
+                body += "slite";
+                resp->setStatus(HTTPResponse::NOT_FOUND);   
+                resp->setBody(body);
+                resp->setContentLength(body.size());
+                return;
+            }
         }
     } else {
         body = rules_[req->path()][req->method()]();
-        if (notFoundCb_) {
-            body = notFoundCb_();
-        } else {
-            body = "404 Not Found";
-        }
         resp->setStatus(HTTPResponse::NOT_FOUND);
-    } else {
-        body = rules_[req->path()][req->method()]();
-        resp->setStatus(HTTPResponse::OK);
     }
     resp->setBody(body);
     resp->setContentLength(body.size());
@@ -82,7 +84,7 @@ void HTTPServer::onConnection(const TCPConnectionPtr& conn)
     }
 }
 
-void HTTPServer::get_file_list(std::string& body, const std::string& path) {
+HTTPResponse::HTTPStatus HTTPServer::get_file_list(std::string& body, const std::string& path) {
     body += "<!DOCTYPE html>";
     body += "<html lang=\"zh-CN\">";
     try {
@@ -110,6 +112,9 @@ void HTTPServer::get_file_list(std::string& body, const std::string& path) {
         }
     } catch(std::exception& e) {
         LOG_ERROR << e.what();
+        body += "<p>Server Error</p>";
+        return HTTPResponse::SERVER_ERROR;
     }
     body += "</html>";
+    return HTTPResponse::OK;
 }

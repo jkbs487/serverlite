@@ -29,16 +29,18 @@ public:
     void setThreadNum(int num);
     void addRouteCallback(const std::string& rule, HTTPMethod method, const RouteCallback& cb);
     void addNotFoundCallback(const NotFoundCallback& cb);
+    void openFileMode();
 
 private:
     void onRequest(HTTPRequest* req, HTTPResponse* resp);
     void onConnection(const TCPConnectionPtr& conn);
-    void get_file_list(std::string& body, const std::string& path);
+    HTTPResponse::HTTPStatus get_file_list(std::string& body, const std::string& path);
 
     std::unique_ptr<slite::TCPServer> server_;
     HTTPCodec codec_;
     RouteMap rules_;
     NotFoundCallback notFoundCb_;
+    bool file_mode_{false};
 };
 
 }
